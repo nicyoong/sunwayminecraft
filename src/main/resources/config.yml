@@ -1,0 +1,25 @@
+# The number of ticks between each color change for the beacon
+# 20 ticks = 1 second
+ticksPerTransition: 40
+
+# List of beacon glass colors to cycle through.
+# These should be valid Minecraft Material names for stained glass.
+beaconColors:
+  - MAGENTA_STAINED_GLASS
+  - PINK_STAINED_GLASS
+  - RED_STAINED_GLASS
+  - ORANGE_STAINED_GLASS
+  - YELLOW_STAINED_GLASS
+  - WHITE_STAINED_GLASS
+  - LIGHT_BLUE_STAINED_GLASS
+
+# List of beacon locations to automatically add
+beaconLocations:
+  - world: "world"
+    x: 100
+    y: 64
+    z: 200
+  - world: "world_nether"
+    x: -50
+    y: 70
+    z: 30

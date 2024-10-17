@@ -1,0 +1,4 @@
+name: SunwayMinecraft
+version: '1.0-SNAPSHOT'
+main: com.sunwayMinecraft.SunwayMinecraft
+api-version: '1.20'
