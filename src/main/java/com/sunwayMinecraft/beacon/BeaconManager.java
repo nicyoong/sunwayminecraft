@@ -99,7 +99,7 @@ public class BeaconManager {
                 currentBinaryCycle++;
 
                 // If we've completed a full cycle through all binary combinations ((32-1) for 5 blocks)
-                if (currentBinaryCycle >= 31) { // 1 << 5 = 32
+                if (currentBinaryCycle >= 16) { // 1 << 4 = 16
                     currentBinaryCycle = 0; // Reset the binary cycle
                     currentColorIndex = (currentColorIndex + 1) % colorCycle.size(); // Move to the next color
                 }
@@ -121,11 +121,12 @@ public class BeaconManager {
     // Update the color of a specific beacon based on the binary cycle index
     private void updateBeaconColor(Location location, int binaryCycleIndex) {
         // Define the binary sequence mapping
+        // Easter egg.
+        // If we write the numbers out in 5 bit binary
+        // it produces a beautiful pattern. Try it!
         int[] binarySequence = {
-                0,  8, 16,  4, 24, 12, 20,  2,
-                28, 10, 18,  6, 26, 14, 22,  1,
-                30,  9, 17,  5, 25, 13, 21,  3,
-                29, 11, 19,  7, 27, 15, 23, 31
+                0, 16, 24, 20, 28, 18, 26, 22,
+                30, 17, 25, 21, 29, 19, 27, 23
         };
 
         // Loop through the 5 bits (for 5 glass blocks)
