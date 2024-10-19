@@ -1,0 +1,33 @@
+name: SunwayMinecraft
+version: '1.0-SNAPSHOT'
+main: com.sunwayMinecraft.SunwayMinecraft
+api-version: '1.20'
+
+commands:
+  pausebeacons:
+    description: "Pause the beacon color transitions."
+    usage: "/pausebeacons"
+    permission: "sunwayminecraft.beacons.pause"
+
+  resumebeacons:
+    description: "Resume the beacon color transitions."
+    usage: "/resumebeacons"
+    permission: "sunwayminecraft.beacons.resume"
+
+  reloadsunwayconfig:
+    description: "Reloads the SunwayMinecraft plugin configuration."
+    usage: "/reloadsunwayconfig"
+    permission: "sunwayminecraft.config.reload"
+
+permissions:
+  sunwayminecraft.beacons.pause:
+    description: "Allows the user to pause beacon color transitions."
+    default: op
+
+  sunwayminecraft.beacons.resume:
+    description: "Allows the user to resume beacon color transitions."
+    default: op
+
+  sunwayminecraft.config.reload:
+    description: "Allows the user to reload the SunwayMinecraft plugin configuration."
+    default: op

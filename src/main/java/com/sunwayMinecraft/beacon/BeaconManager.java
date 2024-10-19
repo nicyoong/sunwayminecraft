@@ -1,5 +1,6 @@
 package com.sunwayMinecraft.beacon;
 
+import com.sunwayMinecraft.utils.ConfigLoader;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -8,6 +9,7 @@ import org.bukkit.block.Block;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitScheduler;
+import org.bukkit.configuration.file.FileConfiguration;
 
 import java.util.HashMap;
 import java.util.ArrayList;
@@ -46,12 +48,10 @@ public class BeaconManager {
         this.colorCycle = getColorCycleFromConfig();
     }
 
-    public void addBeacon(Location location) {
-        beaconColors.put(location, 0); // Start with the default color index
-    }
-
-    private void loadBeaconsFromConfig() {
-        List<Map<?, ?>> beacons = plugin.getConfig().getMapList("beaconLocations");
+    private void loadBeaconsFromFile() {
+        // Load the beacon locations configuration
+        FileConfiguration beaconConfig = ConfigLoader.loadBeaconLocations(plugin);
+        List<Map<?, ?>> beacons = beaconConfig.getMapList("beaconLocations");
 
         for (Map<?, ?> beaconData : beacons) {
             try {
@@ -66,14 +66,18 @@ public class BeaconManager {
                 // Add the beacon location
                 addBeacon(location);
             } catch (Exception e) {
-                plugin.getLogger().log(Level.WARNING, "Invalid beacon location in config: " + beaconData);
+                plugin.getLogger().log(Level.WARNING, "Invalid beacon location in beaconlocations.yml: " + beaconData);
             }
         }
     }
 
+    public void addBeacon(Location location) {
+        beaconColors.put(location, 0); // Start with the default color index
+    }
+
     // Initialize the manager and start color transitions
     public void initialize() {
-        loadBeaconsFromConfig(); // Load beacons from config file
+        loadBeaconsFromFile();; // Load beacons from config file
         colorCycle = getColorCycleFromConfig(); // Ensure this is correctly called to populate colors
         currentOldColor = colorCycle.get(0); // Set the initial old color to the first color
         startColorTransitionTask();
@@ -211,12 +215,25 @@ public class BeaconManager {
         return materials;
     }
 
+    public void pauseColorTransition() {
+        if (colorTransitionTask != null) {
+            colorTransitionTask.cancel(); // Cancel the current task, pausing transitions
+            plugin.getLogger().log(Level.INFO, "Beacon color transitions paused.");
+        }
+    }
+
+    public void resumeColorTransition() {
+        if (colorTransitionTask == null || colorTransitionTask.isCancelled()) {
+            startColorTransitionTask(); // Restart the task from where it left off
+            plugin.getLogger().log(Level.INFO, "Beacon color transitions resumed.");
+        }
+    }
+
     // Optionally, add a method to reload configuration dynamically
     public void reloadConfiguration() {
-        // Reload ticks per transition from config
         this.ticksPerTransition = getTicksPerTransitionFromConfig();
-        // Reload color cycle from config
         this.colorCycle = getColorCycleFromConfig();
+        loadBeaconsFromFile(); // Reload the beacons from the file
         plugin.getLogger().log(Level.INFO, "Configuration reloaded.");
     }
 }
