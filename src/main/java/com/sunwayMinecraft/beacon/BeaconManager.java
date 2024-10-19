@@ -34,6 +34,9 @@ public class BeaconManager {
     // Dynamic color cycle list loaded from config
     private List<Material> colorCycle;
 
+    // Track the current step in the binary cycle
+    private int currentBinaryCycle = 0;
+
     // Constructor to initialize the BeaconManager
     public BeaconManager(JavaPlugin plugin) {
         this.plugin = plugin;
@@ -85,9 +88,13 @@ public class BeaconManager {
 
     // Start a task to handle color transitions for beacons
     private void startColorTransitionTask() {
+
+        // Cancel any existing task to prevent multiple tasks from running
+        if (colorTransitionTask != null) {
+            colorTransitionTask.cancel();
+        }
+
         colorTransitionTask = new BukkitRunnable() {
-            // Track the current step in the binary cycle
-            int currentBinaryCycle = 0;
 
             @Override
             public void run() {
