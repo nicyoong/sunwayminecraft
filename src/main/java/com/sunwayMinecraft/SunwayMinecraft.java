@@ -52,6 +52,12 @@ public final class SunwayMinecraft extends JavaPlugin {
             getLogger().warning("Command 'reloadsunwayconfig' not found in plugin.yml!");
         }
 
+        if (getCommand("setbeaconticks") != null) {
+            getCommand("setbeaconticks").setExecutor(new CommandHandler(beaconManager));
+        } else {
+            getLogger().warning("Command 'setbeaconticks' not found in plugin.yml!");
+        }
+
         getLogger().log(Level.INFO, "SunwayMinecraft plugin has been enabled.");
     }
 

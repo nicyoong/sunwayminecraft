@@ -19,6 +19,11 @@ commands:
     usage: "/reloadsunwayconfig"
     permission: "sunwayminecraft.config.reload"
 
+  setbeaconticks:
+    description: "Set the number of ticks per beacon color transition."
+    usage: "/setbeaconticks <ticks>"
+    permission: "beaconmanager.setticks"
+
 permissions:
   sunwayminecraft.beacons.pause:
     description: "Allows the user to pause beacon color transitions."
@@ -30,4 +35,8 @@ permissions:
 
   sunwayminecraft.config.reload:
     description: "Allows the user to reload the SunwayMinecraft plugin configuration."
+    default: op
+
+  sunwayminecraft.beacons.setticks:
+    description: "Allows setting the number of ticks per beacon color transition."
     default: op

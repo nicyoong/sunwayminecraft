@@ -80,7 +80,7 @@ public class BeaconManager {
 
     // Initialize the manager and start color transitions
     public void initialize() {
-        loadBeaconsFromFile();; // Load beacons from config file
+        loadBeaconsFromFile(); // Load beacons from config file
         colorCycle = getColorCycleFromConfig(); // Ensure this is correctly called to populate colors
         currentOldColor = colorCycle.get(0); // Set the initial old color to the first color
         startColorTransitionTask();
@@ -220,6 +220,18 @@ public class BeaconManager {
         }
 
         return materials;
+    }
+
+    // Public method to dynamically update ticks per transition and restart the task
+    public void setTicksPerTransition(long newTicks) {
+        // Update the ticks per transition
+        this.ticksPerTransition = newTicks;
+
+        // Restart the color transition task to apply the new timing
+        startColorTransitionTask();
+
+        // Log the update for confirmation
+        plugin.getLogger().log(Level.INFO, "Ticks per transition updated to " + newTicks + " ticks.");
     }
 
     public void pauseColorTransition() {

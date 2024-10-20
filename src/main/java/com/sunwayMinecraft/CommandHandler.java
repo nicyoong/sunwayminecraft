@@ -24,6 +24,8 @@ public class CommandHandler implements CommandExecutor {
                 return handleResumeBeacons(sender);
             case "reloadsunwayconfig":
                 return handleReloadConfig(sender);
+            case "setbeaconticks":
+                return handleSetBeaconTicks(sender, args);
             default:
                 return false; // Invalid command
         }
@@ -67,4 +69,38 @@ public class CommandHandler implements CommandExecutor {
         sender.sendMessage("Configuration reloaded successfully.");
         return true;
     }
+
+    private boolean handleSetBeaconTicks(CommandSender sender, String[] args) {
+        // Check for permission
+        if (!sender.hasPermission("beaconmanager.setticks")) {
+            sender.sendMessage("You do not have permission to set the beacon ticks.");
+            return true;
+        }
+
+        // Check if the correct number of arguments is provided
+        if (args.length != 1) {
+            sender.sendMessage("Usage: /setbeaconticks <ticks>");
+            return false;
+        }
+
+        try {
+            // Parse the ticks value from the command argument
+            long ticks = Long.parseLong(args[0]);
+
+            // Ensure ticks is a positive number and does not exceed 400
+            if (ticks <= 0 || ticks > 400) {
+                sender.sendMessage("Please provide a number of ticks between 1 and 400.");
+                return false;
+            }
+
+            // Update the ticks per transition in BeaconManager
+            beaconManager.setTicksPerTransition(ticks);
+            sender.sendMessage("Ticks per transition successfully set to " + ticks);
+        } catch (NumberFormatException e) {
+            sender.sendMessage("Invalid number. Please provide a valid integer.");
+        }
+
+        return true;
+    }
+
 }
