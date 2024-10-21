@@ -30,6 +30,10 @@ public final class SunwayMinecraft extends JavaPlugin {
         // chestManager = new ChestManager(this);
         // chestManager.initialize(); // Initializes chest functionality
 
+        // Initialize the Switchboard Manager
+        // switchManager = new switchManager(this);
+        // switchManager.initialize(); // Initializes switches for lights
+
         // Register command handler
         CommandHandler commandHandler = new CommandHandler(beaconManager);
 

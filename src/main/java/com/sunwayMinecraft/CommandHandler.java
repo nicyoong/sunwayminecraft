@@ -85,7 +85,7 @@ public class CommandHandler implements CommandExecutor {
 
         try {
             // Parse the ticks value from the command argument
-            long ticks = Long.parseLong(args[0]);
+            int ticks = Integer.parseInt(args[0]);
 
             // Ensure ticks is a positive number and does not exceed 400
             if (ticks <= 0 || ticks > 400) {
