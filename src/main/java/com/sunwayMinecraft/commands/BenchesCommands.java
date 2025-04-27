@@ -30,4 +30,20 @@ public class BenchesCommands implements CommandExecutor {
                 return false;
         }
     }
+
+    private boolean handleReload(CommandSender sender) {
+        if (!sender.hasPermission("benches.reload")) {
+            sender.sendMessage("§cYou don't have permission to reload bench configurations!");
+            return true;
+        }
+
+        try {
+            regionManager.reloadRegions();
+            sender.sendMessage("§aSuccessfully reloaded bench configurations!");
+            return true;
+        } catch (Exception e) {
+            sender.sendMessage("§cError reloading bench configs: " + e.getMessage());
+            return true;
+        }
+    }
 }
