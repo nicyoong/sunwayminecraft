@@ -22,7 +22,12 @@ commands:
   setbeaconticks:
     description: "Set the number of ticks per beacon color transition."
     usage: "/setbeaconticks <ticks>"
-    permission: "beaconmanager.setticks"
+    permission: "sunwayminecraft.beacons.setticks"
+
+  reloadsunwaybenches:
+    description: "Reload bench configurations"
+    usage: "/reloadsunwaybenches"
+    permission: "sunwayminecraft.benches.reload"
 
 permissions:
   sunwayminecraft.beacons.pause:
@@ -39,4 +44,8 @@ permissions:
 
   sunwayminecraft.beacons.setticks:
     description: "Allows setting the number of ticks per beacon color transition."
+    default: op
+
+  sunwayminecraft.benches.reload:
+    description: "Allows reloading bench configurations"
     default: op
