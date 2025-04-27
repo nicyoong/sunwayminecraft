@@ -61,4 +61,8 @@ public class RegionManager {
         configManager.reloadConfig();
         loadRegions();
     }
+
+    public boolean isInRegion(Location location) {
+        return regions.stream().anyMatch(region -> region.contains(location));
+    }
 }
