@@ -15,4 +15,9 @@ public class BenchesConfigManager {
         initializeConfig();
     }
     
+    private void initializeConfig() {
+        plugin.saveResource("benches.yml", false);
+        File configFile = new File(plugin.getDataFolder(), "benches.yml");
+        config = YamlConfiguration.loadConfiguration(configFile);
+    }
 }
