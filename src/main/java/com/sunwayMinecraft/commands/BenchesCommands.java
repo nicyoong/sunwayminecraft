@@ -9,6 +9,7 @@ import java.util.List;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 
 public class BenchesCommands implements CommandExecutor {
     private final BenchesConfigManager configManager;
@@ -83,6 +84,23 @@ public class BenchesCommands implements CommandExecutor {
         sender.sendMessage("§6Bench Info: §e" + args[0]);
         sender.sendMessage("§7World: §f" + region.getWorldName());
         sender.sendMessage("§7Bounds: §f" + formatLocation(region.getMin()) + " - " + formatLocation(region.getMax()));
+        return true;
+    }
+
+    private boolean handleRegionCheck(CommandSender sender) {
+        if (!(sender instanceof Player)) {
+            sender.sendMessage("§cOnly players can use this!");
+            return true;
+        }
+
+        Player player = (Player) sender;
+        String regionName = regionManager.getRegionAt(player.getLocation());
+
+        if (regionName != null) {
+            player.sendMessage("§aYou're in bench region: §e" + regionName);
+        } else {
+            player.sendMessage("§cNot in any bench region");
+        }
         return true;
     }
 }
