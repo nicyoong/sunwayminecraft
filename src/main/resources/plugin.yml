@@ -29,6 +29,21 @@ commands:
     usage: "/reloadsunwaybenches"
     permission: "sunwayminecraft.benches.reload"
 
+  listbenches:
+    description: "List all bench regions"
+    usage: "/listbenches"
+    permission: "sunwayminecraft.benches.list"
+
+  benchinfo:
+    description: "Show bench region details"
+    usage: "/benchinfo <name>"
+    permission: "sunwayminecraft.benches.info"
+
+  checkbenchregion:
+    description: "Check current bench region"
+    usage: "/checkbenchregion"
+    permission: "sunwayminecraft.benches.check"
+
 permissions:
   sunwayminecraft.beacons.pause:
     description: "Allows the user to pause beacon color transitions."
@@ -49,3 +64,15 @@ permissions:
   sunwayminecraft.benches.reload:
     description: "Allows reloading bench configurations"
     default: op
+
+  sunwayminecraft.benches.list:
+    description: "List bench regions"
+    default: op
+
+  sunwayminecraft.benches.info:
+    description: "View bench details"
+    default: op
+
+  sunwayminecraft.benches.check:
+    description: "Check current bench region"
+    default: true
