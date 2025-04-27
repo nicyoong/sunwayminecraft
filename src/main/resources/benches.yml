@@ -1,0 +1,21 @@
+benches:
+  town_bench:
+    world: world
+    pos1:
+      x: 100
+      y: 64
+      z: 200
+    pos2:
+      x: 102
+      y: 66
+      z: 202
+  park_bench:
+    world: world_nether
+    pos1:
+      x: -50
+      y: 70
+      z: 300
+    pos2:
+      x: -48
+      y: 72
+      z: 302
