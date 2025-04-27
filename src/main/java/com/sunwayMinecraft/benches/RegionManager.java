@@ -41,4 +41,19 @@ public class RegionManager {
             }
         }
     }
+
+    private Location parseLocation(FileConfiguration config, String path, String worldName) {
+        World world = Bukkit.getWorld(worldName);
+        if (world == null) {
+            plugin.getLogger().warning("Invalid world '" + worldName + "' in bench configuration");
+            return null;
+        }
+
+        return new Location(
+                world,
+                config.getDouble(path + ".x"),
+                config.getDouble(path + ".y"),
+                config.getDouble(path + ".z")
+        );
+    }
 }
