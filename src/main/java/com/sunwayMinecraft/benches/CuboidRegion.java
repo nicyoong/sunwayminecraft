@@ -34,6 +34,9 @@ public class CuboidRegion {
         return new Location(getWorld(), maxX, maxY, maxZ);
     }
 
+    private World getWorld() {
+        return Bukkit.getWorld(worldName);
+    }
 
     public boolean contains(Location location) {
         return location.getWorld().getName().equals(worldName) &&
