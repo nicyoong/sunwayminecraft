@@ -59,4 +59,8 @@ public class BenchInteractListener implements Listener {
             }
         }
     }
+
+    private boolean isStair(Material material) {
+        return material.name().endsWith("_STAIRS");
+    }
 }
