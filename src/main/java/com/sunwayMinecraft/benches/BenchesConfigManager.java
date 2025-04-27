@@ -14,7 +14,7 @@ public class BenchesConfigManager {
         // Defer reload to separate method
         initializeConfig();
     }
-    
+
     private void initializeConfig() {
         plugin.saveResource("benches.yml", false);
         File configFile = new File(plugin.getDataFolder(), "benches.yml");

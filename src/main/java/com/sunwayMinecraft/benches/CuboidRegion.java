@@ -29,7 +29,7 @@ public class CuboidRegion {
     public Location getMin() {
         return new Location(getWorld(), minX, minY, minZ);
     }
-    
+
     public Location getMax() {
         return new Location(getWorld(), maxX, maxY, maxZ);
     }
