@@ -24,4 +24,8 @@ public class BenchesConfigManager {
     public void reloadConfig() {
         initializeConfig();
     }
+
+    public FileConfiguration getConfig() {
+        return config;
+    }
 }
