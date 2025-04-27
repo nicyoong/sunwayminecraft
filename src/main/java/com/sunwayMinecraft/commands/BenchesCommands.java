@@ -1,6 +1,7 @@
 package com.sunwayMinecraft.commands;
 
 import com.sunwayMinecraft.benches.BenchesConfigManager;
+import com.sunwayMinecraft.benches.CuboidRegion;
 import com.sunwayMinecraft.benches.RegionManager;
 
 import java.util.List;
@@ -59,6 +60,29 @@ public class BenchesCommands implements CommandExecutor {
         List<String> benches = regionManager.getRegionNames();
         sender.sendMessage("§6Configured Benches (§e" + benches.size() + "§6):");
         benches.forEach(name -> sender.sendMessage("§7- §f" + name));
+        return true;
+    }
+
+    private boolean handleBenchInfo(CommandSender sender, String[] args) {
+        if (!sender.hasPermission("benches.info")) {
+            sender.sendMessage("§cNo permission!");
+            return true;
+        }
+
+        if (args.length < 1) {
+            sender.sendMessage("§cUsage: /benchinfo <name>");
+            return false;
+        }
+
+        CuboidRegion region = regionManager.getRegion(args[0]);
+        if (region == null) {
+            sender.sendMessage("§cNo bench found with that name!");
+            return true;
+        }
+
+        sender.sendMessage("§6Bench Info: §e" + args[0]);
+        sender.sendMessage("§7World: §f" + region.getWorldName());
+        sender.sendMessage("§7Bounds: §f" + formatLocation(region.getMin()) + " - " + formatLocation(region.getMax()));
         return true;
     }
 }
