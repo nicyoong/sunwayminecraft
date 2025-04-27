@@ -4,25 +4,23 @@ import com.sunwayMinecraft.SunwayMinecraft;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
-import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.Bisected;
 import org.bukkit.block.data.type.Stairs;
+import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.scheduler.BukkitScheduler;
 
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 public class BenchInteractListener implements Listener {
     private final SunwayMinecraft plugin;
     private final RegionManager regionManager;
     private final EffectApplier effectApplier;
-    private final Set<UUID> cooldowns = new HashSet<>();
+    private final Map<UUID, Long> cooldownEndTimes = new HashMap<>(); // Changed to Map
+    private final int COOLDOWN_TICKS = 80;
 
     public BenchInteractListener(SunwayMinecraft plugin, RegionManager regionManager) {
         this.plugin = plugin;
@@ -48,23 +46,33 @@ public class BenchInteractListener implements Listener {
         if (!isHandEmpty(player)) return;
         if (!isValidStair(clickedBlock, clickedFace)) return;
 
-        if (isStair(clickedBlock.getType())) {
-            Location location = clickedBlock.getLocation();
+        Location location = clickedBlock.getLocation();
 
-            if (regionManager.isInRegion(location)) {
-                UUID playerId = player.getUniqueId();
+        if (regionManager.isInRegion(location)) {
+            UUID playerId = player.getUniqueId();
+            long currentTime = System.currentTimeMillis();
 
-                if (!cooldowns.contains(playerId)) {
-                    cooldowns.add(playerId);
-                    effectApplier.applyRegeneration(player);
+            // Check if in cooldown
+            if (cooldownEndTimes.containsKey(playerId)) {
+                long remainingMillis = cooldownEndTimes.get(playerId) - currentTime;
 
-                    // Remove cooldown after 1 second (20 ticks)
-                    BukkitScheduler scheduler = plugin.getServer().getScheduler();
-                    scheduler.runTaskLater(plugin, () -> {
-                        cooldowns.remove(playerId);
-                    }, 20);
+                if (remainingMillis > 0) {
+                    // Calculate ceiling seconds
+                    int secondsLeft = (int) Math.ceil(remainingMillis / 1000.0);
+                    player.sendMessage("§eBench is on cooldown! Wait " + secondsLeft + " more seconds.");
+                    return;
                 }
             }
+
+            // Apply effects and cooldown
+            effectApplier.applyRegeneration(player);
+            long cooldownEnd = currentTime + (COOLDOWN_TICKS * 50); // Convert ticks to milliseconds
+            cooldownEndTimes.put(playerId, cooldownEnd);
+
+            // Schedule cooldown removal
+            plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+                cooldownEndTimes.remove(playerId);
+            }, COOLDOWN_TICKS);
         }
     }
 
