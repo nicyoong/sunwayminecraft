@@ -1,11 +1,15 @@
 package com.sunwayMinecraft;
 
 import com.sunwayMinecraft.beacon.BeaconManager; // Importing the BeaconManager
-// import com.sunwayMinecraft.chest.ChestManager; // Importing the ChestManager
+import com.sunwayMinecraft.benches.BenchesConfigManager;
+import com.sunwayMinecraft.commands.BeaconCommands; // Importing the BeaconCommands class
+import com.sunwayMinecraft.benches.RegionManager;
+import com.sunwayMinecraft.commands.BenchesCommands;
+import com.sunwayMinecraft.benches.BenchInteractListener;
+// Import the other managers and commands classes as needed
 import com.sunwayMinecraft.utils.ConfigLoader; // Importing the ConfigLoader
+import org.bukkit.command.CommandExecutor;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandSender;
 
 import java.util.logging.Level;
 
