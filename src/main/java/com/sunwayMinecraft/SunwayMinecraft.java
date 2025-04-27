@@ -16,7 +16,13 @@ import java.util.logging.Level;
 public final class SunwayMinecraft extends JavaPlugin {
 
     private BeaconManager beaconManager; // Instance for managing beacons
+    private BenchesConfigManager benchesConfigManager;
+    private RegionManager regionManager;
+    // Uncomment and initialize these when needed
     // private ChestManager chestManager; // Instance for managing chests
+    // private SwitchManager switchManager; // Instance for managing switches
+    // private ContainerInspector containerInspector; // Instance for inspecting containers
+    // Start instance for the crash game
 
     @Override
     public void onEnable() {
@@ -30,41 +36,21 @@ public final class SunwayMinecraft extends JavaPlugin {
         beaconManager = new BeaconManager(this);
         beaconManager.initialize(); // Initializes beacons and starts color changing logic
 
-        // Initialize the Chest Manager (you can implement future functionality)
+        // Uncomment and initialize when needed
         // chestManager = new ChestManager(this);
         // chestManager.initialize(); // Initializes chest functionality
 
-        // Initialize the Switchboard Manager
-        // switchManager = new switchManager(this);
+        // switchManager = new SwitchManager(this);
         // switchManager.initialize(); // Initializes switches for lights
 
-        // Register command handler
-        CommandHandler commandHandler = new CommandHandler(beaconManager);
+        // containerInspector = new ContainerInspector(this);
+        // containerInspector.initialize(); // Initializes container inspector
 
-        // Register commands with null checks
-        if (getCommand("pausebeacons") != null) {
-            getCommand("pausebeacons").setExecutor(commandHandler);
-        } else {
-            getLogger().warning("Command 'pausebeacons' not found in plugin.yml!");
-        }
+        // Initialize bench system
+        initializeBenchSystem();
 
-        if (getCommand("resumebeacons") != null) {
-            getCommand("resumebeacons").setExecutor(commandHandler);
-        } else {
-            getLogger().warning("Command 'resumebeacons' not found in plugin.yml!");
-        }
-
-        if (getCommand("reloadsunwayconfig") != null) {
-            getCommand("reloadsunwayconfig").setExecutor(new CommandHandler(beaconManager));
-        } else {
-            getLogger().warning("Command 'reloadsunwayconfig' not found in plugin.yml!");
-        }
-
-        if (getCommand("setbeaconticks") != null) {
-            getCommand("setbeaconticks").setExecutor(new CommandHandler(beaconManager));
-        } else {
-            getLogger().warning("Command 'setbeaconticks' not found in plugin.yml!");
-        }
+        // Register command handlers
+        registerCommands();
 
         getLogger().log(Level.INFO, "SunwayMinecraft plugin has been enabled.");
     }
@@ -74,5 +60,35 @@ public final class SunwayMinecraft extends JavaPlugin {
         // Plugin shutdown logic
         getLogger().log(Level.INFO, "Disabling SunwayMinecraft plugin...");
         // Clean up resources if needed
+    }
+
+    private void initializeBenchSystem() {
+        benchesConfigManager = new BenchesConfigManager(this);
+        regionManager = new RegionManager(this, benchesConfigManager);
+
+        BenchInteractListener listener = new BenchInteractListener(this, regionManager);
+        listener.register(); // Explicit registration after full initialization
+    }
+
+    private void registerCommands() {
+        BeaconCommands beaconCommands = new BeaconCommands(beaconManager);
+
+        // Register beacon commands
+        registerCommand("pausebeacons", beaconCommands);
+        registerCommand("resumebeacons", beaconCommands);
+        registerCommand("reloadsunwayconfig", beaconCommands);
+        registerCommand("setbeaconticks", beaconCommands);
+
+        BenchesCommands benchesCommands = new BenchesCommands(benchesConfigManager, regionManager);
+        registerCommand("benches", benchesCommands);
+    }
+
+    // Utility method to register commands with null checks
+    private void registerCommand(String commandName, CommandExecutor executor) {
+        if (getCommand(commandName) != null) {
+            getCommand(commandName).setExecutor(executor);
+        } else {
+            getLogger().warning("Command '" + commandName + "' not found in plugin.yml!");
+        }
     }
 }
