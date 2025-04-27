@@ -80,6 +80,9 @@ public final class SunwayMinecraft extends JavaPlugin {
         registerCommand("setbeaconticks", beaconCommands);
 
         BenchesCommands benchesCommands = new BenchesCommands(benchesConfigManager, regionManager);
+        registerCommand("listbenches", benchesCommands);
+        registerCommand("benchinfo", benchesCommands);
+        registerCommand("checkbenchregion", benchesCommands);
         registerCommand("reloadsunwaybenches", benchesCommands);
     }
 
