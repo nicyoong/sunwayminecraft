@@ -29,6 +29,11 @@ public class CuboidRegion {
     public Location getMin() {
         return new Location(getWorld(), minX, minY, minZ);
     }
+    
+    public Location getMax() {
+        return new Location(getWorld(), maxX, maxY, maxZ);
+    }
+
 
     public boolean contains(Location location) {
         return location.getWorld().getName().equals(worldName) &&
