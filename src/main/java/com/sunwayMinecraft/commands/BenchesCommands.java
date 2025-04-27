@@ -16,25 +16,23 @@ public class BenchesCommands implements CommandExecutor {
     }
 
     @Override
-    public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
-        if (args.length != 1 || !args[0].equalsIgnoreCase("reload")) {
-            sender.sendMessage("Usage: /benches reload");
+    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        if (!command.getName().equalsIgnoreCase("reloadsunwaybenches")) {
             return false;
         }
 
         if (!sender.hasPermission("benches.reload")) {
-            sender.sendMessage("You don't have permission for this!");
+            sender.sendMessage("§cYou don't have permission to reload bench configurations!");
             return true;
         }
 
         try {
-            // Reload configuration and regions
             configManager.reloadConfig();
             regionManager.reloadRegions();
-            sender.sendMessage("Benches configuration reloaded successfully!");
+            sender.sendMessage("§aSuccessfully reloaded bench configurations!");
             return true;
         } catch (Exception e) {
-            sender.sendMessage("Error reloading benches config: " + e.getMessage());
+            sender.sendMessage("§cError reloading bench configs: " + e.getMessage());
             return true;
         }
     }
