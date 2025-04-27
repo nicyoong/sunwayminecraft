@@ -26,4 +26,16 @@ public class BenchesCommands implements CommandExecutor {
             sender.sendMessage("You don't have permission for this!");
             return true;
         }
+
+        try {
+            // Reload configuration and regions
+            configManager.reloadConfig();
+            regionManager.reloadRegions();
+            sender.sendMessage("Benches configuration reloaded successfully!");
+            return true;
+        } catch (Exception e) {
+            sender.sendMessage("Error reloading benches config: " + e.getMessage());
+            return true;
+        }
+    }
 }
