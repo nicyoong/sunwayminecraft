@@ -26,4 +26,9 @@ public class BenchInteractListener implements Listener {
         this.regionManager = regionManager;
         this.effectApplier = new EffectApplier();
     }
+
+    // Separate registration method
+    public void register() {
+        plugin.getServer().getPluginManager().registerEvents(this, plugin);
+    }
 }
