@@ -1,6 +1,8 @@
 package com.sunwayMinecraft.benches;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.World;
 
 public class CuboidRegion {
     private final String worldName;
@@ -17,6 +19,11 @@ public class CuboidRegion {
         this.maxX = Math.max(pos1.getBlockX(), pos2.getBlockX());
         this.maxY = Math.max(pos1.getBlockY(), pos2.getBlockY());
         this.maxZ = Math.max(pos1.getBlockZ(), pos2.getBlockZ());
+    }
+
+    // New methods for data access
+    public String getWorldName() {
+        return worldName;
     }
 
     public boolean contains(Location location) {
