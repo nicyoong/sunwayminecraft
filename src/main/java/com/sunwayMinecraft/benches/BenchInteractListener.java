@@ -40,6 +40,8 @@ public class BenchInteractListener implements Listener {
 
         if (clickedBlock == null) return;
 
+        if (!isHandEmpty(player)) return;
+
         if (isStair(clickedBlock.getType())) {
             Location location = clickedBlock.getLocation();
 
@@ -58,6 +60,10 @@ public class BenchInteractListener implements Listener {
                 }
             }
         }
+    }
+
+    private boolean isHandEmpty(Player player) {
+        return player.getInventory().getItemInMainHand().getType() == Material.AIR;
     }
 
     private boolean isStair(Material material) {
