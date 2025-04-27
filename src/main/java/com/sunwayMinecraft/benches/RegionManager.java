@@ -66,4 +66,8 @@ public class RegionManager {
         return regions.values().stream()
                 .anyMatch(region -> region.contains(location));
     }
+
+    public List<String> getRegionNames() {
+        return new ArrayList<>(regions.keySet());
+    }
 }
