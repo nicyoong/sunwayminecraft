@@ -74,4 +74,12 @@ public class RegionManager {
     public CuboidRegion getRegion(String name) {
         return regions.get(name);
     }
+
+    public String getRegionAt(Location loc) {
+        return regions.entrySet().stream()
+                .filter(e -> e.getValue().contains(loc))
+                .map(Map.Entry::getKey)
+                .findFirst()
+                .orElse(null);
+    }
 }
