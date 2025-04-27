@@ -93,8 +93,4 @@ public class BenchInteractListener implements Listener {
         // Check click location (must be top face)
         return clickedFace == BlockFace.UP;
     }
-
-    private boolean isStair(Material material) {
-        return material.name().endsWith("_STAIRS");
-    }
 }
