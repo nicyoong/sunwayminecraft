@@ -10,5 +10,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class RegionManager {
-    
+    private final JavaPlugin plugin;
+    private final BenchesConfigManager configManager;
+    private final List<CuboidRegion> regions = new ArrayList<>();
+
+    public RegionManager(JavaPlugin plugin, BenchesConfigManager configManager) {
+        this.plugin = plugin;
+        this.configManager = configManager;
+        loadRegions();
+    }
 }
