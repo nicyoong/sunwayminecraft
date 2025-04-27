@@ -56,4 +56,9 @@ public class RegionManager {
                 config.getDouble(path + ".z")
         );
     }
+
+    public void reloadRegions() {
+        configManager.reloadConfig();
+        loadRegions();
+    }
 }
