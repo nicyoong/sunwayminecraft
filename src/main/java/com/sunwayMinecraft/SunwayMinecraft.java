@@ -80,7 +80,7 @@ public final class SunwayMinecraft extends JavaPlugin {
         registerCommand("setbeaconticks", beaconCommands);
 
         BenchesCommands benchesCommands = new BenchesCommands(benchesConfigManager, regionManager);
-        registerCommand("benches", benchesCommands);
+        registerCommand("reloadsunwaybenches", benchesCommands);
     }
 
     // Utility method to register commands with null checks
