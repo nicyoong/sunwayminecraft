@@ -26,6 +26,10 @@ public class CuboidRegion {
         return worldName;
     }
 
+    public Location getMin() {
+        return new Location(getWorld(), minX, minY, minZ);
+    }
+
     public boolean contains(Location location) {
         return location.getWorld().getName().equals(worldName) &&
                 location.getBlockX() >= minX && location.getBlockX() <= maxX &&
