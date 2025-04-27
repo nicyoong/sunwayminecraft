@@ -103,4 +103,8 @@ public class BenchesCommands implements CommandExecutor {
         }
         return true;
     }
+
+    private String formatLocation(Location loc) {
+        return String.format("X:%.0f Y:%.0f Z:%.0f", loc.getX(), loc.getY(), loc.getZ());
+    }
 }
