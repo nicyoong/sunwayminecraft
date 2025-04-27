@@ -14,4 +14,16 @@ public class BenchesCommands implements CommandExecutor {
         this.configManager = configManager;
         this.regionManager = regionManager;
     }
+
+    @Override
+    public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
+        if (args.length != 1 || !args[0].equalsIgnoreCase("reload")) {
+            sender.sendMessage("Usage: /benches reload");
+            return false;
+        }
+
+        if (!sender.hasPermission("benches.reload")) {
+            sender.sendMessage("You don't have permission for this!");
+            return true;
+        }
 }
