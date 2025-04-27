@@ -6,13 +6,12 @@ import org.bukkit.World;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class RegionManager {
     private final JavaPlugin plugin;
     private final BenchesConfigManager configManager;
-    private final List<CuboidRegion> regions = new ArrayList<>();
+    private final Map<String, CuboidRegion> regions = new HashMap<>();
 
     public RegionManager(JavaPlugin plugin, BenchesConfigManager configManager) {
         this.plugin = plugin;
@@ -33,7 +32,8 @@ public class RegionManager {
                     Location pos2 = parseLocation(config, basePath + "pos2", worldName);
 
                     if (pos1 != null && pos2 != null) {
-                        regions.add(new CuboidRegion(worldName, pos1, pos2));
+                        // Store with region name as key
+                        regions.put(regionKey, new CuboidRegion(worldName, pos1, pos2));
                     }
                 } catch (Exception e) {
                     plugin.getLogger().warning("Failed to load bench region '" + regionKey + "': " + e.getMessage());
