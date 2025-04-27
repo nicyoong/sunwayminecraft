@@ -20,4 +20,8 @@ public class BenchesConfigManager {
         File configFile = new File(plugin.getDataFolder(), "benches.yml");
         config = YamlConfiguration.loadConfiguration(configFile);
     }
+
+    public void reloadConfig() {
+        initializeConfig();
+    }
 }
