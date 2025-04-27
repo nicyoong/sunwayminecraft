@@ -18,4 +18,11 @@ public class CuboidRegion {
         this.maxY = Math.max(pos1.getBlockY(), pos2.getBlockY());
         this.maxZ = Math.max(pos1.getBlockZ(), pos2.getBlockZ());
     }
+
+    public boolean contains(Location location) {
+        return location.getWorld().getName().equals(worldName) &&
+                location.getBlockX() >= minX && location.getBlockX() <= maxX &&
+                location.getBlockY() >= minY && location.getBlockY() <= maxY &&
+                location.getBlockZ() >= minZ && location.getBlockZ() <= maxZ;
+    }
 }
