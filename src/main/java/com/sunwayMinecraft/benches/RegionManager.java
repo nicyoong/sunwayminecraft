@@ -70,4 +70,8 @@ public class RegionManager {
     public List<String> getRegionNames() {
         return new ArrayList<>(regions.keySet());
     }
+
+    public CuboidRegion getRegion(String name) {
+        return regions.get(name);
+    }
 }
