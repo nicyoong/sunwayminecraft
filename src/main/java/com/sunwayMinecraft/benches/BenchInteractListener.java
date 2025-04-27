@@ -4,6 +4,8 @@ import com.sunwayMinecraft.SunwayMinecraft;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
+import org.bukkit.block.data.Bisected;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -41,6 +43,7 @@ public class BenchInteractListener implements Listener {
         if (clickedBlock == null) return;
 
         if (!isHandEmpty(player)) return;
+        if (!isValidStair(clickedBlock, clickedFace)) return;
 
         if (isStair(clickedBlock.getType())) {
             Location location = clickedBlock.getLocation();
@@ -64,6 +67,20 @@ public class BenchInteractListener implements Listener {
 
     private boolean isHandEmpty(Player player) {
         return player.getInventory().getItemInMainHand().getType() == Material.AIR;
+    }
+
+    private boolean isValidStair(Block block, BlockFace clickedFace) {
+        // Check if block is a stair
+        if (!block.getType().name().endsWith("_STAIRS")) return false;
+
+        // Get block state
+        if (!(block.getBlockData() instanceof Stairs stair)) return false;
+
+        // Check orientation (only allow bottom half stairs)
+        if (stair.getHalf() != Bisected.Half.BOTTOM) return false;
+
+        // Check click location (must be top face)
+        return clickedFace == BlockFace.UP;
     }
 
     private boolean isStair(Material material) {
