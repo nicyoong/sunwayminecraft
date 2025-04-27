@@ -11,6 +11,10 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.scheduler.BukkitScheduler;
 
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
+
 public class BenchInteractListener {
     
 }
