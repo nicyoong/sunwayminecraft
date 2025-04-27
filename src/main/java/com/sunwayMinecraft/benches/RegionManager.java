@@ -63,6 +63,7 @@ public class RegionManager {
     }
 
     public boolean isInRegion(Location location) {
-        return regions.stream().anyMatch(region -> region.contains(location));
+        return regions.values().stream()
+                .anyMatch(region -> region.contains(location));
     }
 }
