@@ -31,4 +31,32 @@ public class BenchInteractListener implements Listener {
     public void register() {
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
     }
+
+    public void onPlayerInteract(PlayerInteractEvent event) {
+        if (event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
+
+        Player player = event.getPlayer();
+        Block clickedBlock = event.getClickedBlock();
+
+        if (clickedBlock == null) return;
+
+        if (isStair(clickedBlock.getType())) {
+            Location location = clickedBlock.getLocation();
+
+            if (regionManager.isInRegion(location)) {
+                UUID playerId = player.getUniqueId();
+
+                if (!cooldowns.contains(playerId)) {
+                    cooldowns.add(playerId);
+                    effectApplier.applyRegeneration(player);
+
+                    // Remove cooldown after 1 second (20 ticks)
+                    BukkitScheduler scheduler = plugin.getServer().getScheduler();
+                    scheduler.runTaskLater(plugin, () -> {
+                        cooldowns.remove(playerId);
+                    }, 20);
+                }
+            }
+        }
+    }
 }
