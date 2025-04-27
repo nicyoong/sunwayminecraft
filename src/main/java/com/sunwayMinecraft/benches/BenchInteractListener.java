@@ -16,5 +16,14 @@ import java.util.Set;
 import java.util.UUID;
 
 public class BenchInteractListener implements Listener {
-    
+    private final SunwayMinecraft plugin;
+    private final RegionManager regionManager;
+    private final EffectApplier effectApplier;
+    private final Set<UUID> cooldowns = new HashSet<>();
+
+    public BenchInteractListener(SunwayMinecraft plugin, RegionManager regionManager) {
+        this.plugin = plugin;
+        this.regionManager = regionManager;
+        this.effectApplier = new EffectApplier();
+    }
 }
