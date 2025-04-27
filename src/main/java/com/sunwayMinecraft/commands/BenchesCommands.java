@@ -1,15 +1,14 @@
 package com.sunwayMinecraft.commands;
 
 import com.sunwayMinecraft.benches.BenchesConfigManager;
-import com.sunwayMinecraft.benches.CuboidRegion;
 import com.sunwayMinecraft.benches.RegionManager;
-
-import java.util.List;
-
+import com.sunwayMinecraft.benches.CuboidRegion;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.Location;
+import java.util.List;
 
 public class BenchesCommands implements CommandExecutor {
     private final BenchesConfigManager configManager;
