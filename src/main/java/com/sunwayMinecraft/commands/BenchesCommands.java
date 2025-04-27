@@ -17,23 +17,17 @@ public class BenchesCommands implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (!command.getName().equalsIgnoreCase("reloadsunwaybenches")) {
-            return false;
-        }
-
-        if (!sender.hasPermission("benches.reload")) {
-            sender.sendMessage("§cYou don't have permission to reload bench configurations!");
-            return true;
-        }
-
-        try {
-            configManager.reloadConfig();
-            regionManager.reloadRegions();
-            sender.sendMessage("§aSuccessfully reloaded bench configurations!");
-            return true;
-        } catch (Exception e) {
-            sender.sendMessage("§cError reloading bench configs: " + e.getMessage());
-            return true;
+        switch (command.getName().toLowerCase()) {
+            case "reloadsunwaybenches":
+                return handleReload(sender);
+            case "listbenches":
+                return handleListBenches(sender);
+            case "benchinfo":
+                return handleBenchInfo(sender, args);
+            case "checkbenchregion":
+                return handleRegionCheck(sender);
+            default:
+                return false;
         }
     }
 }
