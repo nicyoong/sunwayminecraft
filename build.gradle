@@ -12,12 +12,24 @@ repositories {
         url = "https://repo.papermc.io/repository/maven-public/"
     }
     maven {
+        name = "spigotmc-repo"
+        url = "https://hub.spigotmc.org/nexus/content/repositories/snapshots/"
+    }
+    maven {
+        name = "mojang"
+        url = "https://libraries.minecraft.net/"
+    }
+    maven {
         name = "sonatype"
         url = "https://oss.sonatype.org/content/groups/public/"
     }
     maven {
         name = "jitpack"
         url = "https://jitpack.io"
+    }
+    maven {
+        name "essentialsx-releases"
+        url "https://repo.essentialsx.net/releases/"
     }
 }
 
@@ -31,6 +43,18 @@ dependencies {
 
     // 1.20.6 Paper API
     compileOnly("io.papermc.paper:paper-api:1.20.6-R0.1-SNAPSHOT")
+
+    // Bukkit API (match your server version)
+    compileOnly 'org.spigotmc:spigot-api:1.20.6-R0.1-SNAPSHOT'
+
+    // Mojang authlib (match your server version)
+    compileOnly 'com.mojang:authlib:3.19.0'
+
+    // Vault
+    compileOnly ("com.github.MilkBowl:VaultAPI:1.7")
+
+    // Essentials
+    compileOnly ("net.essentialsx:EssentialsX:2.19.0")
 }
 
 test {
@@ -50,7 +74,7 @@ java {
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
 
-    options.compilerArgs << "-Xlint:deprecation"
+    options.compilerArgs << "-Xlint:all"
 
     if (targetJavaVersion >= 10 || JavaVersion.current().isJava10Compatible()) {
         options.release.set(targetJavaVersion)
