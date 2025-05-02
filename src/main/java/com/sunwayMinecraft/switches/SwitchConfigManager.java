@@ -18,4 +18,11 @@ public class SwitchConfigManager {
         this.plugin = plugin;
         this.configFile = new File(plugin.getDataFolder(), "switches.yml");
     }
+
+    public void reload() {
+        if (!configFile.exists()) {
+            plugin.saveResource("switches.yml", false);
+        }
+        switchConfig = YamlConfiguration.loadConfiguration(configFile);
+    }
 }
