@@ -34,4 +34,32 @@ public class SwitchesCommands {
         this.lightManager = new LightManager(lightConfig);
         this.switchManager = new SwitchManager(switchConfig, lightConfig);
     }
+
+    @Override
+    public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage("§cThis command can only be used by players!");
+            return true;
+        }
+
+        try {
+            switch (cmd.getName().toLowerCase()) {
+                case "scanlights" -> handleScanLights(player);
+                case "exportlights" -> handleExportLights(player, args);
+                case "listlightregions" -> handleListRegions(player);
+                case "checklightregion" -> handleCheckRegion(player);
+                case "lightinfo" -> handleLightInfo(player);
+                case "reloadsunwayswitches" -> handleReload(sender);
+                default -> {
+                    return false;
+                }
+            }
+        } catch (IllegalArgumentException e) {
+            player.sendMessage("§cError: " + e.getMessage());
+        } catch (Exception e) {
+            player.sendMessage("§cAn unexpected error occurred!");
+            plugin.getLogger().severe(e.getMessage());
+        }
+        return true;
+    }
 }
