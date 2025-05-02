@@ -1,97 +1,119 @@
 package com.sunwayMinecraft;
 
-import com.sunwayMinecraft.beacon.BeaconManager; // Importing the BeaconManager
+import com.sunwayMinecraft.beacon.BeaconManager;
 import com.sunwayMinecraft.benches.BenchesConfigManager;
-import com.sunwayMinecraft.commands.BeaconCommands; // Importing the BeaconCommands class
+import com.sunwayMinecraft.commands.BeaconCommands;
 import com.sunwayMinecraft.benches.RegionManager;
 import com.sunwayMinecraft.commands.BenchesCommands;
 import com.sunwayMinecraft.benches.BenchInteractListener;
-// Import the other managers and commands classes as needed
-import com.sunwayMinecraft.utils.ConfigLoader; // Importing the ConfigLoader
+import com.sunwayMinecraft.commands.SwitchesCommands;
+import com.sunwayMinecraft.switches.*;
+import com.sunwayMinecraft.utils.ConfigLoader;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.plugin.java.JavaPlugin;
-
 import java.util.logging.Level;
 
 public final class SunwayMinecraft extends JavaPlugin {
 
-    private BeaconManager beaconManager; // Instance for managing beacons
+    // Existing managers
+    private BeaconManager beaconManager;
     private BenchesConfigManager benchesConfigManager;
     private RegionManager regionManager;
-    // Uncomment and initialize these when needed
-    // private ChestManager chestManager; // Instance for managing chests
-    // private SwitchManager switchManager; // Instance for managing switches
-    // private ContainerInspector containerInspector; // Instance for inspecting containers
-    // Start instance for the crash game
+
+    // Switch system additions
+    private LightConfigManager lightConfigManager;
+    private SwitchConfigManager switchConfigManager;
+    private SwitchManager switchManager;
+    private SwitchListener switchListener;
 
     @Override
     public void onEnable() {
-        // Plugin startup logic
         getLogger().log(Level.INFO, "Enabling SunwayMinecraft plugin...");
 
-        // Load the configuration file
+        // Load main configuration
         ConfigLoader.getConfig(this);
 
-        // Initialize the Beacon Manager
-        beaconManager = new BeaconManager(this);
-        beaconManager.initialize(); // Initializes beacons and starts color changing logic
-
-        // Uncomment and initialize when needed
-        // chestManager = new ChestManager(this);
-        // chestManager.initialize(); // Initializes chest functionality
-
-        // switchManager = new SwitchManager(this);
-        // switchManager.initialize(); // Initializes switches for lights
-
-        // containerInspector = new ContainerInspector(this);
-        // containerInspector.initialize(); // Initializes container inspector
-
-        // Initialize bench system
+        // Initialize systems
+        initializeBeaconSystem();
         initializeBenchSystem();
+        initializeSwitchSystem();  // New switch system initialization
 
-        // Register command handlers
+        // Register commands
         registerCommands();
 
         getLogger().log(Level.INFO, "SunwayMinecraft plugin has been enabled.");
     }
 
-    @Override
-    public void onDisable() {
-        // Plugin shutdown logic
-        getLogger().log(Level.INFO, "Disabling SunwayMinecraft plugin...");
-        // Clean up resources if needed
-    }
-
-    private void initializeBenchSystem() {
-        benchesConfigManager = new BenchesConfigManager(this);
-        regionManager = new RegionManager(this, benchesConfigManager);
-
-        BenchInteractListener listener = new BenchInteractListener(this, regionManager);
-        listener.register(); // Explicit registration after full initialization
-    }
-
+    // Modified command registration
     private void registerCommands() {
+        // Beacon commands
         BeaconCommands beaconCommands = new BeaconCommands(beaconManager);
-
-        // Register beacon commands
         registerCommand("pausebeacons", beaconCommands);
         registerCommand("resumebeacons", beaconCommands);
         registerCommand("reloadsunwayconfig", beaconCommands);
         registerCommand("setbeaconticks", beaconCommands);
 
+        // Bench commands
         BenchesCommands benchesCommands = new BenchesCommands(benchesConfigManager, regionManager);
         registerCommand("listbenches", benchesCommands);
         registerCommand("benchinfo", benchesCommands);
         registerCommand("checkbenchregion", benchesCommands);
         registerCommand("reloadsunwaybenches", benchesCommands);
+
+        // Switch system commands
+        SwitchesCommands switchesCommands = new SwitchesCommands(
+                this,
+                lightConfigManager,
+                switchConfigManager
+        );
+        registerCommand("scanlights", switchesCommands);
+        registerCommand("exportlights", switchesCommands);
+        registerCommand("listlightregions", switchesCommands);
+        registerCommand("checklightregion", switchesCommands);
+        registerCommand("lightinfo", switchesCommands);
+        registerCommand("reloadsunwayswitches", switchesCommands);
     }
 
-    // Utility method to register commands with null checks
+    // Rest of the existing class remains unchanged
+    @Override
+    public void onDisable() {
+        getLogger().log(Level.INFO, "Disabling SunwayMinecraft plugin...");
+    }
+
+    private void initializeBenchSystem() {
+        benchesConfigManager = new BenchesConfigManager(this);
+        regionManager = new RegionManager(this, benchesConfigManager);
+        BenchInteractListener listener = new BenchInteractListener(this, regionManager);
+        listener.register();
+    }
+
     private void registerCommand(String commandName, CommandExecutor executor) {
         if (getCommand(commandName) != null) {
             getCommand(commandName).setExecutor(executor);
         } else {
             getLogger().warning("Command '" + commandName + "' not found in plugin.yml!");
         }
+    }
+
+    private void initializeBeaconSystem() {
+        beaconManager = new BeaconManager(this);
+        beaconManager.initialize();
+    }
+
+    private void initializeSwitchSystem() {
+        // Initialize managers first
+        lightConfigManager = new LightConfigManager(this);
+        switchConfigManager = new SwitchConfigManager(this);
+
+        // Load initial configurations
+        lightConfigManager.reload();
+        switchConfigManager.reload();
+
+        // Create switch manager with initialized configs
+        switchManager = new SwitchManager(switchConfigManager, lightConfigManager);
+
+        // Register listener with proper dependencies
+        SwitchListener listener = new SwitchListener(switchManager, switchConfigManager);
+        getServer().getPluginManager().registerEvents(listener, this);
     }
 }
