@@ -21,5 +21,6 @@ public class SwitchManager {
             if (opposite != null) {
                 block.setType(opposite);
             }
-       
+        }
+    }
 }
