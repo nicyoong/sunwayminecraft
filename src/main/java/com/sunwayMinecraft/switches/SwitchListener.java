@@ -7,7 +7,7 @@ import org.bukkit.block.Block;
 import java.util.Map;
 import org.bukkit.Location;
 
-public @interface SwitchListener {
+public class SwitchListener implements Listener {
     private final SwitchManager switchManager;
     private final SwitchConfigManager switchConfig;
 
