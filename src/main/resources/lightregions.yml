@@ -1,0 +1,28 @@
+# Light Regions Configuration
+# Volume must not exceed 1,000,000 blocks (maxX-minX+1) * (maxY-minY+1) * (maxZ-minZ+1)
+
+regions:
+  lobby_lights:
+    world: world
+    min:
+      x: 100
+      y: 60
+      z: 200
+    max:
+      x: 150
+      y: 70
+      z: 250
+
+  arena_glowstones:
+    world: world
+    min:
+      x: -300
+      y: 40
+      z: -500
+    max:
+      x: -250
+      y: 55
+      z: -450
+
+# Example valid volume calculation:
+# (150-100+1) * (70-60+1) * (250-200+1) = 51 * 11 * 51 = 28,611 blocks (OK)
