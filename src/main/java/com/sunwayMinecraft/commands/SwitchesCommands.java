@@ -143,4 +143,49 @@ public class SwitchesCommands {
             player.sendMessage("§eYou're not in any light region.");
         }
     }
+
+    private void handleLightInfo(Player player) {
+        Block target = player.getTargetBlockExact(5);
+        if (target == null || !LightManager.isLightBlock(target.getType())) {
+            throw new IllegalArgumentException("§cLook at a light block (Sea Lantern, Glowstone, or Jack-o-Lantern)");
+        }
+
+        Location blockLoc = target.getLocation();
+        World currentWorld = player.getWorld();
+
+        // Get regions with proper world validation
+        List<LightRegion> regions = lightConfig.getRegions().values().stream()
+                .filter(r -> r.world().getName().equals(currentWorld.getName()))
+                .filter(r -> r.contains(blockLoc))
+                .collect(Collectors.toList());
+
+        // Get switches with precise location comparison
+        List<ButtonSwitch> switches = switchConfig.getSwitches().values().stream()
+                .filter(s -> s.lightLocations().stream()
+                        .anyMatch(loc ->
+                                loc != null &&
+                                        loc.getWorld() != null &&
+                                        loc.getWorld().getName().equals(currentWorld.getName()) &&
+                                        loc.getBlockX() == blockLoc.getBlockX() &&
+                                        loc.getBlockY() == blockLoc.getBlockY() &&
+                                        loc.getBlockZ() == blockLoc.getBlockZ()
+                        ))
+                .collect(Collectors.toList());
+        player.sendMessage("§6=== Light Block Info ===");
+        player.sendMessage(formatBlockLocation(target));
+
+        if (!regions.isEmpty()) {
+            player.sendMessage("§aBelongs to regions:");
+            regions.forEach(r -> player.sendMessage("§b- " + r.name()));
+        } else {
+            player.sendMessage("§cNot part of any light region!");
+        }
+
+        if (!switches.isEmpty()) {
+            player.sendMessage("§aControlled by buttons:");
+            switches.forEach(s -> player.sendMessage("§b- " + formatLocation(s.buttonLocation())));
+        } else {
+            player.sendMessage("§cNot linked to any switches!");
+        }
+    }
 }
