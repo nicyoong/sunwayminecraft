@@ -115,4 +115,19 @@ public class SwitchesCommands {
             throw new IllegalArgumentException("§cFailed to write file: " + e.getMessage());
         }
     }
+
+    private void handleListRegions(Player player) {
+        Map<String, LightRegion> regions = lightConfig.getRegions();
+        if (regions.isEmpty()) {
+            player.sendMessage("§eNo light regions defined.");
+            return;
+        }
+
+        player.sendMessage("§6Defined light regions:");
+        regions.forEach((name, region) -> {
+            if (name != null) {
+                player.sendMessage("§a- " + name);
+            }
+        });
+    }
 }
