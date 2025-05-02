@@ -17,4 +17,28 @@ public class LightManager {
     public LightManager(LightConfigManager configManager) {
         this.configManager = configManager;
     }
+
+    public List<Block> scanRegion(LightRegion region, Player player) throws IllegalArgumentException {
+        World world = region.world();
+        int volume = (region.maxX() - region.minX() + 1) *
+                (region.maxY() - region.minY() + 1) *
+                (region.maxZ() - region.minZ() + 1);
+
+        if (volume > 1_000_000) {
+            throw new IllegalArgumentException("Region is too large! Max 1M blocks");
+        }
+
+        List<Block> lightBlocks = new ArrayList<>();
+        for (int x = region.minX(); x <= region.maxX(); x++) {
+            for (int y = region.minY(); y <= region.maxY(); y++) {
+                for (int z = region.minZ(); z <= region.maxZ(); z++) {
+                    Block block = world.getBlockAt(x, y, z);
+                    if (LIGHT_MAPPINGS.containsKey(block.getType())) {
+                        lightBlocks.add(block);
+                    }
+                }
+            }
+        }
+        return lightBlocks;
+    }
 }
