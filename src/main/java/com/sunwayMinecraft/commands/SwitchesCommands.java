@@ -86,4 +86,12 @@ public class SwitchesCommands {
             return true;
         }
     }
+
+    private void handleScanLights(Player player) {
+        LightRegion region = getCurrentRegion(player);
+        List<Block> lights = lightManager.scanRegion(region, player);
+
+        player.sendMessage("§6Found " + lights.size() + " light blocks:");
+        lights.forEach(b -> player.sendMessage(formatBlockLocation(b)));
+    }
 }
