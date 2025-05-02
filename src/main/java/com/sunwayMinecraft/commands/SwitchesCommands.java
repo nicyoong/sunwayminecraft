@@ -153,7 +153,6 @@ public class SwitchesCommands implements CommandExecutor {
         Location blockLoc = target.getLocation();
         World currentWorld = player.getWorld();
 
-        // Get regions with proper world validation
         List<LightRegion> regions = lightConfig.getRegions().values().stream()
                 .filter(r -> r.world().getName().equals(currentWorld.getName()))
                 .filter(r -> r.contains(blockLoc))
