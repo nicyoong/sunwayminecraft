@@ -17,7 +17,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class SwitchesCommands {
+public class SwitchesCommands implements CommandExecutor {
     private final JavaPlugin plugin;
     private final LightConfigManager lightConfig;
     private final SwitchConfigManager switchConfig;
