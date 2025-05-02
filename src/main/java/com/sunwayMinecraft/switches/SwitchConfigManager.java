@@ -64,4 +64,37 @@ public class SwitchConfigManager {
         }
         return switches;
     }
+
+    private Location parseLocation(String str) {
+        if (str == null || str.trim().isEmpty()) {
+            plugin.getLogger().warning("Empty location string");
+            return null;
+        }
+
+        // Split and trim parts
+        String[] parts = str.trim().split("\\s*,\\s*");
+        if (parts.length != 4) {
+            plugin.getLogger().warning("Invalid location format (expected world,x,y,z): " + str);
+            return null;
+        }
+
+        // Validate world
+        String worldName = parts[0];
+        World world = plugin.getServer().getWorld(worldName);
+        if (world == null) {
+            plugin.getLogger().warning("World '" + worldName + "' does not exist");
+            return null;
+        }
+
+        // Parse coordinates
+        try {
+            int x = Integer.parseInt(parts[1]);
+            int y = Integer.parseInt(parts[2]);
+            int z = Integer.parseInt(parts[3]);
+            return new Location(world, x, y, z);
+        } catch (NumberFormatException e) {
+            plugin.getLogger().warning("Invalid coordinates in location: " + str);
+            return null;
+        }
+    }
 }
