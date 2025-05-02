@@ -188,4 +188,19 @@ public class SwitchesCommands {
             player.sendMessage("§cNot linked to any switches!");
         }
     }
+
+    private LightRegion getCurrentRegion(Player player) {
+        Location loc = player.getLocation();
+        List<LightRegion> regions = lightConfig.getRegions().values().stream()
+                .filter(r -> r.contains(loc))
+                .collect(Collectors.toList());
+
+        if (regions.isEmpty()) {
+            throw new IllegalArgumentException("§cYou're not in any light region!");
+        }
+        if (regions.size() > 1) {
+            throw new IllegalArgumentException("§cYou're in multiple regions! Please move to a unique region.");
+        }
+        return regions.get(0);
+    }
 }
