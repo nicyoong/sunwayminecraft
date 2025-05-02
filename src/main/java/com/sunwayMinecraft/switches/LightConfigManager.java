@@ -9,5 +9,12 @@ import java.io.File;
 import java.util.*;
 
 public class LightConfigManager {
-    
+    private final JavaPlugin plugin;
+    private FileConfiguration lightConfig;
+    private File configFile;
+
+    public LightConfigManager(JavaPlugin plugin) {
+        this.plugin = plugin;
+        this.configFile = new File(plugin.getDataFolder(), "lightregions.yml");
+    }
 }
