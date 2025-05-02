@@ -130,4 +130,17 @@ public class SwitchesCommands {
             }
         });
     }
+
+    private void handleCheckRegion(Player player) {
+        Location loc = player.getLocation();
+        Optional<LightRegion> region = lightConfig.getRegions().values().stream()
+                .filter(r -> r.contains(loc))
+                .findFirst();
+
+        if (region.isPresent()) {
+            player.sendMessage("§aYou're in light region: §6" + region.get().name());
+        } else {
+            player.sendMessage("§eYou're not in any light region.");
+        }
+    }
 }
