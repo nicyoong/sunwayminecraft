@@ -15,4 +15,16 @@ public @interface SwitchListener {
         this.switchManager = switchManager;
         this.switchConfig = switchConfig;
     }
+
+    @EventHandler
+    public void onButtonPress(PlayerInteractEvent event) {
+        Block block = event.getClickedBlock();
+        if (block == null || !block.getType().toString().endsWith("_BUTTON")) return;
+
+        Map<Location, ButtonSwitch> switches = switchConfig.getSwitches();
+        ButtonSwitch buttonSwitch = switches.get(block.getLocation());
+        if (buttonSwitch != null) {
+            switchManager.toggleLights(buttonSwitch, event.getPlayer());
+        }
+    }
 }
