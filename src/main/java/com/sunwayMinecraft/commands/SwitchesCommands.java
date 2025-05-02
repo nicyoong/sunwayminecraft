@@ -94,4 +94,25 @@ public class SwitchesCommands {
         player.sendMessage("§6Found " + lights.size() + " light blocks:");
         lights.forEach(b -> player.sendMessage(formatBlockLocation(b)));
     }
+
+    private void handleExportLights(Player player, String[] args) {
+        if (args.length < 1) throw new IllegalArgumentException("§cUsage: /exportlights <filename>");
+
+        LightRegion region = getCurrentRegion(player);
+        List<Block> lights = lightManager.scanRegion(region, player);
+        File outputFile = new File(plugin.getDataFolder(), args[0]);
+
+        try (FileWriter writer = new FileWriter(outputFile)) {
+            for (Block block : lights) {
+                writer.write(block.getType() + "," +
+                        block.getX() + "," +
+                        block.getY() + "," +
+                        block.getZ() + "\n");
+            }
+            player.sendMessage("§aSuccessfully exported " + lights.size() +
+                    " lights to " + outputFile.getName());
+        } catch (IOException e) {
+            throw new IllegalArgumentException("§cFailed to write file: " + e.getMessage());
+        }
+    }
 }
