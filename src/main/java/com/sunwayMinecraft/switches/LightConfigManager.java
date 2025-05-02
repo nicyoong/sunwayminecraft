@@ -17,4 +17,11 @@ public class LightConfigManager {
         this.plugin = plugin;
         this.configFile = new File(plugin.getDataFolder(), "lightregions.yml");
     }
+
+    public void reload() {
+        if (!configFile.exists()) {
+            plugin.saveResource("lightregions.yml", false);
+        }
+        lightConfig = YamlConfiguration.loadConfiguration(configFile);
+    }
 }
