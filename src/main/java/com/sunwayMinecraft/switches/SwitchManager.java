@@ -13,4 +13,13 @@ public class SwitchManager {
         this.switchConfig = switchConfig;
         this.lightConfig = lightConfig;
     }
+
+    public void toggleLights(ButtonSwitch buttonSwitch, Player player) {
+        for (Location loc : buttonSwitch.lightLocations()) {
+            Block block = loc.getBlock();
+            Material opposite = LightManager.getOppositeMaterial(block.getType());
+            if (opposite != null) {
+                block.setType(opposite);
+            }
+       
 }
