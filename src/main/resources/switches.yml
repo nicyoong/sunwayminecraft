@@ -1,0 +1,20 @@
+# Button-Light Mappings
+# Use coordinates from /exportlights output
+
+buttons:
+  "world,120,65,210":
+    lights:
+      - "world,125,66,215"
+      - "world,126,66,215"
+      - "world,127,66,215"
+
+  "world,-280,45,-480":
+    lights:
+      - "world,-275,46,-475"
+      - "world,-274,46,-475"
+      - "world,-273,46,-475"
+
+# Format:
+# [world],[x],[y],[z] (button location)
+# lights: list of [world],[x],[y],[z] (light locations)
+# Valid light types: SEA_LANTERN, GLOWSTONE, JACK_O_LANTERN
