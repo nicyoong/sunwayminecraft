@@ -45,4 +45,14 @@ public class LightManager {
     public static boolean isLightBlock(Material material) {
         return LIGHT_MAPPINGS.containsKey(material);
     }
+
+    public static Material getOppositeMaterial(Material material) {
+        return LIGHT_MAPPINGS.getOrDefault(material,
+                LIGHT_MAPPINGS.entrySet().stream()
+                        .filter(e -> e.getValue() == material)
+                        .map(Map.Entry::getKey)
+                        .findFirst()
+                        .orElse(null)
+        );
+    }
 }
