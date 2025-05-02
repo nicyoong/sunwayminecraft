@@ -10,5 +10,12 @@ import java.io.File;
 import java.util.*;
 
 public class SwitchConfigManager {
-    
+    private final JavaPlugin plugin;
+    private FileConfiguration switchConfig;
+    private File configFile;
+
+    public SwitchConfigManager(JavaPlugin plugin) {
+        this.plugin = plugin;
+        this.configFile = new File(plugin.getDataFolder(), "switches.yml");
+    }
 }
