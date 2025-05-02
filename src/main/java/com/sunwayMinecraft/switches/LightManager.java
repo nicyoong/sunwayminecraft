@@ -41,4 +41,8 @@ public class LightManager {
         }
         return lightBlocks;
     }
+
+    public static boolean isLightBlock(Material material) {
+        return LIGHT_MAPPINGS.containsKey(material);
+    }
 }
