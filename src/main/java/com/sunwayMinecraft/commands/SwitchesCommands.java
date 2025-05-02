@@ -219,4 +219,8 @@ public class SwitchesCommands {
                 loc.getBlockY(),
                 loc.getBlockZ());
     }
+
+    private String formatMaterial(Material material) {
+        return "§e" + material.toString().replace("_", " ").toLowerCase();
+    }
 }
