@@ -62,4 +62,28 @@ public class SwitchesCommands {
         }
         return true;
     }
+
+    private boolean handleReload(CommandSender sender) {
+        if (!sender.hasPermission("sunwayminecraft.switches.reload")) {
+            sender.sendMessage("§cNo permission!");
+            return true;
+        }
+
+        try {
+            // Reload configs using instance methods
+            lightConfig.reload();
+            switchConfig.reload();
+
+            // Reinitialize dependent components with instances
+            switchManager = new SwitchManager(switchConfig, lightConfig);
+
+            sender.sendMessage("§aReloaded configurations:");
+            sender.sendMessage("§a- Light regions: " + lightConfig.getRegions().size());
+            sender.sendMessage("§a- Button switches: " + switchConfig.getSwitches().size());
+            return true;
+        } catch (Exception e) {
+            sender.sendMessage("§cReload failed: " + e.getMessage());
+            return true;
+        }
+    }
 }
