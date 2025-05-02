@@ -203,4 +203,20 @@ public class SwitchesCommands {
         }
         return regions.get(0);
     }
+
+    private String formatBlockLocation(Block block) {
+        return "§b" + String.format("%s @ [%d, %d, %d]",
+                formatMaterial(block.getType()),
+                block.getX(),
+                block.getY(),
+                block.getZ());
+    }
+
+    private String formatLocation(Location loc) {
+        return String.format("World: %s, X: %d, Y: %d, Z: %d",
+                loc.getWorld().getName(),
+                loc.getBlockX(),
+                loc.getBlockY(),
+                loc.getBlockZ());
+    }
 }
