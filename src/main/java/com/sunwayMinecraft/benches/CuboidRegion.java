@@ -4,6 +4,31 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 
+/**
+ * Represents a 3D cuboid region in the Minecraft world, defined by two corner locations.
+ * The region is defined by a minimum and maximum coordinate in the X, Y, and Z dimensions.
+ * 
+ * The CuboidRegion class allows for easy access to the boundaries of the region, checks 
+ * to see if a specific location is within the region, and retrieves the world associated 
+ * with the region. The region is initialized using two `Location` objects that define 
+ * opposite corners of the cuboid.
+ * 
+ * Key functionality includes:
+ * - The constructor initializes the region based on two given locations (opposite corners).
+ * - Methods to retrieve the minimum and maximum corners of the region.
+ * - A method `contains()` to check if a given location is within the boundaries of the cuboid.
+ * - Access to the world the region belongs to.
+ * 
+ * The main methods provided by this class are:
+ * - `getWorldName()`: Returns the name of the world the region is located in.
+ * - `getMin()`: Returns the minimum corner of the region as a `Location`.
+ * - `getMax()`: Returns the maximum corner of the region as a `Location`.
+ * - `getWorld()`: Returns the world instance associated with the region.
+ * - `contains()`: Checks if a given location is inside the cuboid region.
+ * 
+ * The region is defined in terms of the `minX`, `minY`, `minZ`, `maxX`, `maxY`, and `maxZ` 
+ * coordinates, which are determined by the two provided locations.
+ */
 public class CuboidRegion {
     private final String worldName;
     private final int minX, minY, minZ;
