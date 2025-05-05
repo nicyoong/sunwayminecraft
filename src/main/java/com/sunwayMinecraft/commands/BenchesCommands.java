@@ -139,6 +139,27 @@ public class BenchesCommands implements CommandExecutor {
         }
     }
 
+    /**
+     * Handles the `/listbenches` command, which lists all configured bench regions in the plugin.
+     * 
+     * The method performs the following steps:
+     * 1. Checks if the sender has the required permission (`benches.list`) to list the benches. 
+     *    If the sender does not have permission, a message is sent indicating that they 
+     *    do not have permission to perform this action.
+     * 2. If the sender has permission, the method retrieves a list of bench region names 
+     *    from the `regionManager`.
+     * 3. The list of bench names is then displayed to the sender. The number of configured 
+     *    benches is shown, followed by each bench name.
+     * 4. Each bench is printed in a formatted way to the sender, listing all the available 
+     *    bench regions.
+     * 
+     * This command is typically used by administrators to see all available bench regions 
+     * that have been defined.
+     * 
+     * @param sender The sender of the command, which can be a player, console, or other entity.
+     * @return A boolean indicating whether the command was successfully handled. Always returns `true` 
+     *         since this command has a clear success or failure message.
+     */
     private boolean handleListBenches(CommandSender sender) {
         if (!sender.hasPermission("benches.list")) {
             sender.sendMessage("§cNo permission!");
