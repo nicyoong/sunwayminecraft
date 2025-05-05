@@ -47,6 +47,20 @@ public class BenchInteractListener implements Listener {
     private final Map<UUID, Long> cooldownEndTimes = new HashMap<>(); // Changed to Map
     private final int COOLDOWN_TICKS = 80;
 
+    /**
+     * Constructs a new BenchInteractListener instance with the provided SunwayMinecraft plugin 
+     * and RegionManager.
+     * 
+     * This constructor initializes the listener by setting the plugin and region manager instances, 
+     * which are necessary for handling interactions with benches and checking whether the player 
+     * is within a specific region. It also creates an instance of `EffectApplier`, which is used 
+     * to apply effects to players interacting with the bench.
+     * 
+     * @param plugin The SunwayMinecraft plugin instance, used to interact with the plugin's server 
+     *               and event system.
+     * @param regionManager The RegionManager instance, used to check if the player is within a 
+     *                      specific region where bench interactions are allowed.
+     */
     public BenchInteractListener(SunwayMinecraft plugin, RegionManager regionManager) {
         this.plugin = plugin;
         this.regionManager = regionManager;
