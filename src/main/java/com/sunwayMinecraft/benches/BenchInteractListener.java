@@ -15,6 +15,31 @@ import org.bukkit.event.player.PlayerInteractEvent;
 
 import java.util.*;
 
+/**
+ * This class listens for player interactions with benches in the Minecraft world. It handles 
+ * the interaction event when a player right-clicks on a bench block (stairs) and applies 
+ * effects such as regeneration and speed, provided that the player is not on cooldown.
+ * 
+ * The BenchInteractListener listens for the `PlayerInteractEvent` when the player right-clicks 
+ * a block. If the block is a valid stair and the player is not holding an item in their main 
+ * hand, the listener will apply certain effects to the player. A cooldown is enforced to prevent 
+ * players from repeatedly triggering the effects too quickly.
+ * 
+ * Key functionality includes:
+ * - Checking if the player is interacting with a valid bench (stairs) in the world.
+ * - Applying the regeneration effect to the player, and speed if their health is full.
+ * - Enforcing a cooldown to prevent multiple uses in quick succession.
+ * - Ensuring that only players with an empty hand can interact with the bench.
+ * 
+ * The listener also manages a cooldown system using a `Map` of player UUIDs and cooldown end times.
+ * The cooldown is set in ticks (80 ticks) and is tracked in milliseconds.
+ * 
+ * The main methods provided by this class are:
+ * - `onPlayerInteract()`: Handles the right-click event when the player interacts with a bench.
+ * - `isHandEmpty()`: Checks if the player's main hand is empty (they are not holding any item).
+ * - `isValidStair()`: Checks if the block the player interacts with is a valid stair block (bottom half).
+ * - `register()`: Registers this listener with the plugin's event system.
+ */
 public class BenchInteractListener implements Listener {
     private final SunwayMinecraft plugin;
     private final RegionManager regionManager;
