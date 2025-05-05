@@ -102,6 +102,27 @@ public class BenchesCommands implements CommandExecutor {
         }
     }
 
+    /**
+     * Handles the `/reloadsunwaybenches` command, which reloads the bench configurations and regions 
+     * from the plugin's configuration file.
+     * 
+     * The method performs the following steps:
+     * 1. Checks if the sender has the required permission (`benches.reload`) to reload the bench configurations. 
+     *    If the sender does not have permission, a message is sent indicating that they cannot perform the action.
+     * 2. If the sender has permission, the method attempts to reload the bench regions 
+     *    using the `regionManager.reloadRegions()` method.
+     * 3. If the reload is successful, a success message is sent to the sender indicating 
+     *    that the bench configurations were reloaded.
+     * 4. If an exception occurs during the reload, an error message is sent to the sender with details 
+     *    of the exception.
+     * 
+     * This command is typically used by administrators to refresh the configuration or to reload newly 
+     * added/modified bench regions.
+     * 
+     * @param sender The sender of the command, which can be a player, console, or other entity.
+     * @return A boolean indicating whether the command was successfully handled. Always returns `true` 
+     *         since this command has a clear success or failure message.
+     */
     private boolean handleReload(CommandSender sender) {
         if (!sender.hasPermission("benches.reload")) {
             sender.sendMessage("§cYou don't have permission to reload bench configurations!");
