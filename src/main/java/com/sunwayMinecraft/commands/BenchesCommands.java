@@ -60,6 +60,32 @@ public class BenchesCommands implements CommandExecutor {
         this.regionManager = regionManager;
     }
 
+    /**
+     * Handles the execution of various commands related to benches in the plugin. This method 
+     * is called when a command is issued by a player or admin. It processes commands like reloading 
+     * configurations, listing bench regions, providing information about specific benches, and checking 
+     * a player's current region.
+     * 
+     * The method performs the following actions:
+     * - It checks the name of the command being executed and routes it to the appropriate handler method.
+     * - The switch-case structure handles the following commands:
+     *   - `/reloadsunwaybenches`: Calls the `handleReload()` method to reload the bench configurations.
+     *   - `/listbenches`: Calls the `handleListBenches()` method to list all configured bench regions.
+     *   - `/benchinfo <name>`: Calls the `handleBenchInfo()` method to show detailed information 
+     *     about a specific bench region.
+     *   - `/checkbenchregion`: Calls the `handleRegionCheck()` method to check if a player is in a 
+     *     bench region and notify them.
+     * 
+     * If the command does not match any of the cases, the method returns `false` to indicate that 
+     * the command is not recognized.
+     * 
+     * @param sender The sender of the command (player, console, etc.).
+     * @param command The command that was executed.
+     * @param label The alias of the command that was used.
+     * @param args The arguments provided with the command.
+     * @return A boolean indicating whether the command was successfully executed. Returns `true` if 
+     *         the command is handled, `false` otherwise.
+     */
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         switch (command.getName().toLowerCase()) {
