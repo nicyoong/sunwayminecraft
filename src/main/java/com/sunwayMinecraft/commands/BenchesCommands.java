@@ -44,6 +44,17 @@ public class BenchesCommands implements CommandExecutor {
     private final BenchesConfigManager configManager;
     private final RegionManager regionManager;
 
+    /**
+     * Constructs a new BenchesCommands instance with the provided BenchesConfigManager and RegionManager.
+     * 
+     * This constructor initializes the command handler by setting the configuration manager and the 
+     * region manager instances, which are necessary for interacting with bench configurations and 
+     * checking bench regions. The `BenchesConfigManager` is used to manage and reload bench configurations, 
+     * while the `RegionManager` is responsible for handling cuboid regions for the benches.
+     * 
+     * @param configManager The BenchesConfigManager instance, used to manage bench configuration data.
+     * @param regionManager The RegionManager instance, used to manage and check bench regions in the world.
+     */
     public BenchesCommands(BenchesConfigManager configManager, RegionManager regionManager) {
         this.configManager = configManager;
         this.regionManager = regionManager;
