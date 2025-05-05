@@ -8,6 +8,36 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.*;
 
+/**
+ * The RegionManager class manages a set of cuboid regions for benches in the Minecraft world.
+ * It is responsible for loading the regions from the plugin's configuration, checking if a
+ * specific location is inside any of the defined regions, and providing access to region data.
+ *
+ * The regions are stored in a map, with the region name as the key and the `CuboidRegion`
+ * instance as the value. Each region is defined by two opposite corner locations (pos1 and pos2),
+ * and the world where the region is located.
+ *
+ * Key functionality includes:
+ * - Loading bench regions from the configuration file (`benches.yml`), which contains
+ *   information about the region's world and corner positions.
+ * - Checking if a given location is within any of the defined cuboid regions.
+ * - Providing methods to access regions by name, get the region names, or get the region at a
+ *   specific location.
+ * - Reloading regions from the configuration file.
+ *
+ * The main methods provided by this class are:
+ * - `reloadRegions()`: Reloads the configuration and loads the regions again.
+ * - `isInRegion(Location location)`: Checks if the provided location is inside any of the 
+ *    cuboid regions.
+ * - `getRegionNames()`: Returns a list of all region names.
+ * - `getRegion(String name)`: Retrieves a `CuboidRegion` by its name.
+ * - `getRegionAt(Location loc)`: Retrieves the name of the region that contains the 
+ *    provided location.
+ *
+ * The region data is loaded from a configuration file, and the regions are stored in a `Map`
+ * where the key is the region name (from the configuration file) and the value is the 
+ * `CuboidRegion` object.
+ */
 public class RegionManager {
     private final JavaPlugin plugin;
     private final BenchesConfigManager configManager;
