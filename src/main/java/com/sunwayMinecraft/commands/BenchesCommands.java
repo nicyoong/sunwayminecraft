@@ -172,6 +172,34 @@ public class BenchesCommands implements CommandExecutor {
         return true;
     }
 
+    /**
+     * Handles the `/benchinfo <name>` command, which provides detailed information about a 
+     * specific bench region.
+     * 
+     * The method performs the following steps:
+     * 1. Checks if the sender has the required permission (`benches.info`) to view bench information. 
+     *    If the sender does not have permission, a message is sent indicating that they cannot 
+     * access this information.
+     * 2. Verifies that the sender has provided the required argument (`<name>`) in the command. 
+     * If no argument is provided,
+     *    a usage message is sent to guide the user on how to correctly use the command.
+     * 3. Retrieves the `CuboidRegion` associated with the provided name from the `regionManager`.
+     * 4. If no region with the provided name exists, a message is sent indicating that no bench 
+     * was found with that name.
+     * 5. If the region exists, the method sends detailed information about the bench to the 
+     * sender, including:
+     *    - The world name where the bench is located.
+     *    - The coordinates of the minimum and maximum bounds of the region.
+     * 
+     * This command is useful for administrators who want to check the specifics of a bench 
+     * region's location and size.
+     * 
+     * @param sender The sender of the command, which can be a player, console, or other entity.
+     * @param args The arguments provided with the command, where the first argument is the 
+     *             name of the bench region.
+     * @return A boolean indicating whether the command was successfully handled. Returns 
+     *         `true` if handled, `false` if the command requires additional input or is invalid.
+     */
     private boolean handleBenchInfo(CommandSender sender, String[] args) {
         if (!sender.hasPermission("benches.info")) {
             sender.sendMessage("§cNo permission!");
