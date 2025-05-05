@@ -10,6 +10,36 @@ import org.bukkit.entity.Player;
 import org.bukkit.Location;
 import java.util.List;
 
+/**
+ * The BenchesCommands class handles commands related to benches in the Minecraft plugin.
+ * It processes several commands such as reloading configurations, listing benches, 
+ * providing bench information, and checking the player's current region.
+ * 
+ * The class implements the `CommandExecutor` interface, allowing it to handle various 
+ * commands that players or admins can execute in the game. The commands include:
+ * - `/reloadsunwaybenches`: Reloads the bench configurations and regions.
+ * - `/listbenches`: Lists all configured bench regions.
+ * - `/benchinfo <name>`: Displays information about a specific bench region.
+ * - `/checkbenchregion`: Checks if a player is in any configured bench region.
+ * 
+ * Key functionality includes:
+ * - Permission checks to ensure the sender has the required permission to execute each command.
+ * - Reloading the bench region configurations from the configuration file.
+ * - Listing the names of all configured bench regions.
+ * - Displaying detailed information about a specific bench region, such as 
+ *   its world and coordinates.
+ * - Checking the player's current location to determine if they are in a bench region.
+ * 
+ * The main methods provided by this class are:
+ * - `handleReload()`: Reloads the bench configuration and region data.
+ * - `handleListBenches()`: Lists all configured bench regions.
+ * - `handleBenchInfo()`: Provides information about a specific bench region.
+ * - `handleRegionCheck()`: Checks if a player is inside a bench region and notifies them.
+ * - `formatLocation()`: Formats a location into a string for display.
+ * 
+ * Commands are routed based on the command name, with each case in the switch statement handling 
+ * a specific type of action or query related to benches.
+ */
 public class BenchesCommands implements CommandExecutor {
     private final BenchesConfigManager configManager;
     private final RegionManager regionManager;
