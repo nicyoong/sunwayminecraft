@@ -47,6 +47,19 @@ public class BenchesConfigManager {
         initializeConfig();
     }
 
+    /**
+     * Initializes the configuration by saving the default `benches.yml` file to the plugin's
+     * data folder (if it does not already exist) and then loading the configuration file
+     * into a `FileConfiguration` object.
+     *
+     * This method first ensures that the `benches.yml` resource is saved to the plugin's
+     * data folder. If the file doesn't exist, it is copied from the plugin's resources.
+     * After saving the resource, it loads the configuration file into a `FileConfiguration`
+     * object, which can be used to access and modify the settings stored in the file.
+     *
+     * The method is responsible for setting up the configuration and making it available
+     * for further use within the plugin.
+     */
     private void initializeConfig() {
         plugin.saveResource("benches.yml", false);
         File configFile = new File(plugin.getDataFolder(), "benches.yml");
