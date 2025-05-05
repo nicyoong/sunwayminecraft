@@ -263,6 +263,17 @@ public class BenchesCommands implements CommandExecutor {
         return true;
     }
 
+    /**
+     * Formats a `Location` object into a string representing its coordinates.
+     * 
+     * The method formats the X, Y, and Z coordinates of the given location into a readable 
+     * string, with the coordinates rounded to the nearest integer values. This is useful 
+     * for displaying location information in a human-readable format.
+     * 
+     * @param loc The `Location` object to format.
+     * @return A formatted string in the form "X: <x> Y: <y> Z: <z>", where `<x>`, `<y>`, and 
+     *         `<z>` are the rounded coordinates.
+     */
     private String formatLocation(Location loc) {
         return String.format("X:%.0f Y:%.0f Z:%.0f", loc.getX(), loc.getY(), loc.getZ());
     }
