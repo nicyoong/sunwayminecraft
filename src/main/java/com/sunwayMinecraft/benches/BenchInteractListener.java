@@ -72,6 +72,38 @@ public class BenchInteractListener implements Listener {
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
     }
 
+    /**
+     * This method handles the `PlayerInteractEvent` when a player right-clicks a block. It checks 
+     * whether the clicked block is a valid stair (bench) and applies effects to the player if they 
+     * are not on cooldown. The effects include regeneration and speed (if the player's health is full).
+     * 
+     * The method follows these steps:
+     * 1. Verifies that the action is a right-click on a block.
+     * 
+     * 2. Checks if the clicked block is not null and if the player is holding an empty hand.
+     * 
+     * 3. Validates if the clicked block is a valid stair and if the player clicked the correct side 
+     *    (top of the stair).
+     * 
+     * 4. If the player is within an allowed region (determined by the `RegionManager`), it checks 
+     *    whether the player is currently on cooldown.
+     * 
+     * 5. If the player is on cooldown, the remaining time is displayed in seconds, and the effect 
+     *    is not applied.
+     * 
+     * 6. If the cooldown has expired or is not present, the regeneration effect is applied to the 
+     *    player. If the player's health is at maximum, the speed effect is applied as well.
+     * 
+     * 7. A cooldown is applied by storing the player's UUID and the cooldown end time in 
+     *    the `cooldownEndTimes` map.
+     * 
+     * 8. The cooldown end time is scheduled to be removed after a set number of ticks (80 ticks, 
+     *    equivalent to 4 seconds).
+     * 
+     * The player will not be able to interact with the bench again until the cooldown expires.
+     * 
+     * @param event The PlayerInteractEvent triggered when the player right-clicks a block.
+     */
     @EventHandler
     public void onPlayerInteract(PlayerInteractEvent event) {
         if (event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
