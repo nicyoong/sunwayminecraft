@@ -223,6 +223,29 @@ public class BenchesCommands implements CommandExecutor {
         return true;
     }
 
+    /**
+     * Handles the `/checkbenchregion` command, which checks if a player is currently inside a 
+     * bench region.
+     * 
+     * The method performs the following steps:
+     * 1. Verifies that the sender is a player. If the sender is not a player (e.g., console), 
+     *    a message is sent indicating that only players can use this command.
+     * 2. If the sender is a player, it retrieves the name of the bench region that the player 
+     *    is currently in using the `regionManager.getRegionAt()` method, based on the player's 
+     *    current location.
+     * 3. If the player is inside a bench region, a message is sent to the player indicating 
+     *    which bench region they are in.
+     * 4. If the player is not in any bench region, a message is sent to inform them that they 
+     *    are not in any bench region.
+     * 
+     * This command is useful for players to check if they are inside a bench region and receive 
+     * relevant information about it.
+     * 
+     * @param sender The sender of the command, which must be a player.
+     * @return A boolean indicating whether the command was successfully handled. Always returns 
+     * `true` since this command 
+     *         provides feedback to the player about their current region.
+     */
     private boolean handleRegionCheck(CommandSender sender) {
         if (!(sender instanceof Player)) {
             sender.sendMessage("§cOnly players can use this!");
