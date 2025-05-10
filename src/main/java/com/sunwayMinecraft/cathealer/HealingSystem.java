@@ -46,4 +46,11 @@ public class HealingSystem {
                 .filter(cat -> isValidHealingCat(cat, owner))
                 .count();
     }
+
+    private boolean isValidHealingCat(Cat cat, Player owner) {
+        return cat.isTamed() &&
+                owner.equals(cat.getOwner()) &&
+                !cat.isSitting() &&
+                isWithinRadius(cat.getLocation(), owner.getLocation(), 10);
+    }
 }
