@@ -53,4 +53,8 @@ public class HealingSystem {
                 !cat.isSitting() &&
                 isWithinRadius(cat.getLocation(), owner.getLocation(), 10);
     }
+
+    private boolean isWithinRadius(Location a, Location b, double radius) {
+        return a.distanceSquared(b) <= (radius * radius);
+    }
 }
