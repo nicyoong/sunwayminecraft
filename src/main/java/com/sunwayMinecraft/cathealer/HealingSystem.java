@@ -10,5 +10,18 @@ import org.bukkit.attribute.Attribute;
 import java.util.Collection;
 
 public class HealingSystem {
-    
+    private final JavaPlugin plugin;
+
+    public HealingSystem(JavaPlugin plugin) {
+        this.plugin = plugin;
+    }
+
+    public void start() {
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                processAllPlayers();
+            }
+        }.runTaskTimer(plugin, 0L, 50L); // 50 ticks = 2.5 seconds
+    }
 }
