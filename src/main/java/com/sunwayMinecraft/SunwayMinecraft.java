@@ -4,6 +4,7 @@ import com.sunwayMinecraft.beacon.BeaconManager;
 import com.sunwayMinecraft.benches.BenchesConfigManager;
 import com.sunwayMinecraft.commands.BeaconCommands;
 import com.sunwayMinecraft.benches.RegionManager;
+import com.sunwayMinecraft.cathealer.HealingSystem;
 import com.sunwayMinecraft.commands.BenchesCommands;
 import com.sunwayMinecraft.benches.BenchInteractListener;
 import com.sunwayMinecraft.commands.SwitchesCommands;
@@ -115,5 +116,9 @@ public final class SunwayMinecraft extends JavaPlugin {
         // Register listener with proper dependencies
         SwitchListener listener = new SwitchListener(switchManager, switchConfigManager);
         getServer().getPluginManager().registerEvents(listener, this);
+    }
+
+    private void initializeCatHealingSystem() {
+        new HealingSystem(this).start();
     }
 }
