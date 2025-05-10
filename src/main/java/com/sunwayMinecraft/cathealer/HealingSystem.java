@@ -24,4 +24,16 @@ public class HealingSystem {
             }
         }.runTaskTimer(plugin, 0L, 50L); // 50 ticks = 2.5 seconds
     }
+
+    private void processAllPlayers() {
+        Collection<? extends Player> players = Bukkit.getOnlinePlayers();
+        players.forEach(this::processPlayer);
+    }
+
+    private void processPlayer(Player player) {
+        int activeCats = countActiveCats(player);
+        if (activeCats > 0) {
+            applyCatHealing(player, activeCats);
+        }
+    }
 }
