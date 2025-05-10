@@ -36,4 +36,14 @@ public class HealingSystem {
             applyCatHealing(player, activeCats);
         }
     }
+
+    private int countActiveCats(Player owner) {
+        Location ownerLocation = owner.getLocation();
+        return (int) owner.getWorld().getNearbyEntities(ownerLocation, 10, 10, 10)
+                .stream()
+                .filter(Cat.class::isInstance)
+                .map(Cat.class::cast)
+                .filter(cat -> isValidHealingCat(cat, owner))
+                .count();
+    }
 }
