@@ -37,7 +37,8 @@ public final class SunwayMinecraft extends JavaPlugin {
         // Initialize systems
         initializeBeaconSystem();
         initializeBenchSystem();
-        initializeSwitchSystem();  // New switch system initialization
+        initializeSwitchSystem();
+        initializeCatHealingSystem();
 
         // Register commands
         registerCommands();
