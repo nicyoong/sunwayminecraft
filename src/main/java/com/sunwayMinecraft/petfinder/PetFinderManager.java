@@ -16,4 +16,10 @@ public class PetFinderManager {
     public PetFinderFeature(Main plugin) {
         this.plugin = plugin;
     }
+
+    public void startSearch(CommandSender sender, UUID targetUUID, BoundingBox area) {
+        if (isSearchRunning) {
+            sender.sendMessage("§cA search is already in progress.");
+            return;
+        }
 }
