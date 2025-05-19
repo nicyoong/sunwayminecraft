@@ -59,4 +59,13 @@ public class PetSearchTask extends BukkitRunnable {
     private boolean isInArea(Location loc) {
         return area.contains(loc.getX(), loc.getY(), loc.getZ());
     }
+
+    private void addToResults(Entity pet) {
+        Location loc = pet.getLocation();
+        String type = pet instanceof Wolf ? "Dog" : "Cat";
+        boolean sitting = pet instanceof Sitting && ((Sitting) pet).isSitting();
+
+        results.add(String.format("§7- §e%s §7at §b%s §7(%s§7)",
+                type, formatLocation(loc), sitting ? "§cSitting" : "§aStanding"));
+    }
 }
