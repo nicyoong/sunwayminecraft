@@ -39,4 +39,15 @@ public class PetFinderCommands implements CommandExecutor {
         petFinder.startSearch(sender, targetUUID, null);
     }
 
-}
+    private void handleAreaSearch(CommandSender sender, String[] args) {
+        if (!sender.hasPermission("petfinder.admin")) {
+            sender.sendMessage("§cYou need admin permission for area searches.");
+            return;
+        }
+
+        if (args.length < 6) {
+            sender.sendMessage("§cUsage: /findpetsinarea <x1> <y1> <z1> <x2> <y2> <z2> [player]");
+            return;
+        }
+
+    }
