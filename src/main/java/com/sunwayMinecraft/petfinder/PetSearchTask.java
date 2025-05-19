@@ -1,5 +1,12 @@
 package com.sunwayMinecraft.petfinder;
 
-public class PetSearchTask {
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.entity.*;
+import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.util.BoundingBox;
+import java.util.*;
+
+public class PetSearchTask extends BukkitRunnable {
     
 }
