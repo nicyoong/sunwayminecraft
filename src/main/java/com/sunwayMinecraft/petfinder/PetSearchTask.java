@@ -23,7 +23,7 @@ public class PetSearchTask extends BukkitRunnable {
     private final PetFinderManager manager;
     private final List<String> results = new ArrayList<>();
 
-    public PetSearchTask(JavaPlugin plugin, CommandSender sender, @NotNull List<Entity> entities,
+    public PetSearchTask(JavaPlugin plugin, CommandSender sender, List<Entity> entities,
                          UUID targetUUID, BoundingBox area, PetFinderManager manager) {
         this.sender = sender;
         this.entities = new ArrayList<>(entities);

@@ -10,7 +10,7 @@ import org.bukkit.entity.Cat;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.BoundingBox;
-import org.bukkit.entity.*
+import org.bukkit.entity.*;
 
 import java.util.*;
 
@@ -37,7 +37,7 @@ public class PetFinderManager {
             addEntitiesByType(world, Cat.class, entitiesToCheck, area);
         }
 
-        new PetSearchTask(plugin, sender, new ArrayList<>(Entity), targetUUID, area, this)
+        new PetSearchTask(plugin, sender, new ArrayList<>(entitiesToCheck), targetUUID, area, this);
     }
     public void setSearchComplete() {
         isSearchRunning = false;
