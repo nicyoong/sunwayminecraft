@@ -32,6 +32,5 @@ public class PetFinderManager {
             addEntitiesByType(world, Cat.class, entitiesToCheck, area);
         }
 
-        new SearchTask(sender, entitiesToCheck, targetUUID, area).runTaskTimer(plugin, 0L, 1L);
+        new PetSearchTask(sender, entitiesToCheck, targetUUID, area).runTaskTimer(plugin, 0L, 1L);
     }
-}
