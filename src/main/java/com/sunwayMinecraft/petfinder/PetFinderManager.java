@@ -35,8 +35,17 @@ public class PetFinderManager {
         }
 
         new PetSearchTask(plugin, sender, entities, targetUUID, area, this).runTaskTimer(plugin, 0L, 1L);
+    }
+    public void setSearchComplete() {
+        isSearchRunning = false;
+    }
 
-        public void setSearchComplete() {
-            isSearchRunning = false;
+    private <T extends Entity> void addEntitiesByType(World world, Class<T> entityClass,
+                                                      List<Entity> list, BoundingBox area) {
+        for (T entity : world.getEntitiesByClass(entityClass)) {
+            if (area == null || area.contains(entity.getLocation().toVector())) {
+                list.add(entity);
+            }
         }
+    }
     }
