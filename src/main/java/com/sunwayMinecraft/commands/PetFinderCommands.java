@@ -32,4 +32,11 @@ public class PetFinderCommands implements CommandExecutor {
 
         return false;
     }
+
+    private void handleFindPets(CommandSender sender, String[] args) {
+        UUID targetUUID = parseTargetUUID(sender, args);
+        if (targetUUID == null) return;
+        petFinder.startSearch(sender, targetUUID, null);
+    }
+
 }
