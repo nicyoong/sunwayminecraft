@@ -35,4 +35,8 @@ public class PetFinderManager {
         }
 
         new PetSearchTask(plugin, sender, entities, targetUUID, area, this).runTaskTimer(plugin, 0L, 1L);
+
+        public void setSearchComplete() {
+            isSearchRunning = false;
+        }
     }
