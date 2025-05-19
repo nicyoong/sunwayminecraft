@@ -10,5 +10,10 @@ import org.bukkit.util.BoundingBox;
 import java.util.*;
 
 public class PetFinderManager {
+    private final Main plugin;
+    private boolean isSearchRunning = false;
 
+    public PetFinderFeature(Main plugin) {
+        this.plugin = plugin;
+    }
 }
