@@ -64,3 +64,18 @@ public class PetFinderCommands implements CommandExecutor {
             sender.sendMessage("§cInvalid coordinates format!");
         }
     }
+
+    private BoundingBox parseBoundingBox(String[] args) throws NumberFormatException {
+        double x1 = Double.parseDouble(args[0]);
+        double y1 = Double.parseDouble(args[1]);
+        double z1 = Double.parseDouble(args[2]);
+        double x2 = Double.parseDouble(args[3]);
+        double y2 = Double.parseDouble(args[4]);
+        double z2 = Double.parseDouble(args[5]);
+
+        return new BoundingBox(
+                Math.min(x1, x2), Math.min(y1, y2), Math.min(z1, z2),
+                Math.max(x1, x2), Math.max(y1, y2), Math.max(z1, z2)
+        );
+    }
+}
