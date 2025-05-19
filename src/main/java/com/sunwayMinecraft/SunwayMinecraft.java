@@ -134,7 +134,5 @@ public final class SunwayMinecraft extends JavaPlugin {
 
     private void initializePetFinderSystem() {
         petFinderManager = new PetFinderManager(this);
-
-
     }
 }
