@@ -78,4 +78,26 @@ public class PetFinderCommands implements CommandExecutor {
                 Math.max(x1, x2), Math.max(y1, y2), Math.max(z1, z2)
         );
     }
+
+    private UUID parseTargetUUID(CommandSender sender, String[] args) {
+        if (args.length > 0) {
+            if (!sender.hasPermission("petfinder.admin")) {
+                sender.sendMessage("§cYou don't have permission to specify players.");
+                return null;
+            }
+
+            Player target = Bukkit.getPlayer(args[0]);
+            if (target == null) {
+                sender.sendMessage("§cPlayer not found.");
+                return null;
+            }
+            return target.getUniqueId();
+        }
+
+        if (!(sender instanceof Player)) {
+            sender.sendMessage("§cConsole must specify a player.");
+            return null;
+        }
+        return ((Player) sender).getUniqueId();
+    }
 }
