@@ -4,10 +4,13 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.*;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.Wolf;
+import org.bukkit.entity.Cat;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.BoundingBox;
+import org.bukkit.entity.*
 
 import java.util.*;
 

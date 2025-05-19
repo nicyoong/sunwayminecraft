@@ -3,7 +3,11 @@ package com.sunwayMinecraft.petfinder;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.*;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.Tameable;
+import org.bukkit.entity.Wolf;
+import org.bukkit.entity.Cat;
+import org.bukkit.entity.Sittable;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.BoundingBox;
@@ -65,7 +69,7 @@ public class PetSearchTask extends BukkitRunnable {
     private void addToResults(Entity pet) {
         Location loc = pet.getLocation();
         String type = pet instanceof Wolf ? "Dog" : "Cat";
-        boolean sitting = pet instanceof Sitting && ((Sitting) pet).isSitting();
+        boolean sitting = pet instanceof Sittable && ((Sittable) pet).isSitting();
 
         results.add(String.format("§7- §e%s §7at §b%s §7(%s§7)",
                 type, formatLocation(loc), sitting ? "§cSitting" : "§aStanding"));
