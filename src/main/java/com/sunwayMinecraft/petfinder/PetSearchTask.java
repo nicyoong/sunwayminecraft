@@ -45,4 +45,14 @@ public class PetSearchTask extends BukkitRunnable {
             this.cancel();
         }
     }
+
+    private boolean isValidPet(Entity entity) {
+        if (entity.isDead() || !entity.isValid()) return false;
+        if (!(entity instanceof Tameable)) return false;
+
+        Tameable pet = (Tameable) entity;
+        return pet.isTamed() &&
+                pet.getOwner() != null &&
+                (targetUUID == null || pet.getOwner().getUniqueId().equals(targetUUID));
+    }
 }
