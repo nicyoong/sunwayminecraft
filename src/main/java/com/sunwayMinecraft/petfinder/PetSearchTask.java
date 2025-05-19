@@ -2,7 +2,9 @@ package com.sunwayMinecraft.petfinder;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.*;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.BoundingBox;
 import java.util.*;
@@ -15,7 +17,7 @@ public class PetSearchTask extends BukkitRunnable {
     private final PetFinderManager manager;
     private final List<String> results = new ArrayList<>();
 
-    public PetSearchTask(Main plugin, CommandSender sender, List<Entity> entities,
+    public PetSearchTask(JavaPlugin plugin, CommandSender sender, List<Entity> entities,
                          UUID targetUUID, BoundingBox area, PetFinderManager manager) {
         this.sender = sender;
         this.entities = new ArrayList<>(entities);
