@@ -17,4 +17,19 @@ public class PetFinderCommands implements CommandExecutor {
     public PetFinderCommands(PetFinderManager petFinder) {
         this.petFinder = petFinder;
     }
+
+    @Override
+    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        if (command.getName().equalsIgnoreCase("findpets")) {
+            handleFindPets(sender, args);
+            return true;
+        }
+
+        if (command.getName().equalsIgnoreCase("findpetsinarea")) {
+            handleAreaSearch(sender, args);
+            return true;
+        }
+
+        return false;
+    }
 }
