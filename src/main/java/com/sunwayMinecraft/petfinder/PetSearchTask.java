@@ -23,4 +23,26 @@ public class PetSearchTask extends BukkitRunnable {
         this.area = area;
         this.manager = manager;
     }
+
+    @Override
+    public void run() {
+        int batchSize = 50;
+        int processed = 0;
+
+        while (processed < batchSize && !entities.isEmpty()) {
+            Entity entity = entities.remove(0);
+            processed++;
+
+            if (!isValidPet(entity)) continue;
+            if (area != null && !isInArea(entity.getLocation())) continue;
+
+            addToResults(entity);
+        }
+
+        if (entities.isEmpty()) {
+            sendFinalResults();
+            manager.setSearchComplete();
+            this.cancel();
+        }
+    }
 }
