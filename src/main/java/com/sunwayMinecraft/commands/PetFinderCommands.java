@@ -50,4 +50,17 @@ public class PetFinderCommands implements CommandExecutor {
             return;
         }
 
+        try {
+            BoundingBox area = parseBoundingBox(args);
+            UUID targetUUID = args.length > 6 ? parseTargetUUID(sender, Arrays.copyOfRange(args, 6, args.length)) : null;
+
+            if (targetUUID == null && !(sender instanceof Player)) {
+                sender.sendMessage("§cSpecify a player for console area searches.");
+                return;
+            }
+
+            petFinder.startSearch(sender, targetUUID, area);
+        } catch (NumberFormatException e) {
+            sender.sendMessage("§cInvalid coordinates format!");
+        }
     }
