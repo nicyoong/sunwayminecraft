@@ -73,4 +73,13 @@ public class PetSearchTask extends BukkitRunnable {
         return String.format("World: §6%s §7X: §b%.0f §7Y: §b%.0f §7Z: §b%.0f",
                 loc.getWorld().getName(), loc.getX(), loc.getY(), loc.getZ());
     }
+
+    private void sendFinalResults() {
+        if (results.isEmpty()) {
+            sender.sendMessage("§eNo matching pets found.");
+        } else {
+            sender.sendMessage("§aFound §e" + results.size() + " §apets:");
+            results.forEach(sender::sendMessage);
+        }
+    }
 }
