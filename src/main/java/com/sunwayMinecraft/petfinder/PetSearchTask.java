@@ -68,4 +68,9 @@ public class PetSearchTask extends BukkitRunnable {
         results.add(String.format("§7- §e%s §7at §b%s §7(%s§7)",
                 type, formatLocation(loc), sitting ? "§cSitting" : "§aStanding"));
     }
+
+    private String formatLocation(Location loc) {
+        return String.format("World: §6%s §7X: §b%.0f §7Y: §b%.0f §7Z: §b%.0f",
+                loc.getWorld().getName(), loc.getX(), loc.getY(), loc.getZ());
+    }
 }
