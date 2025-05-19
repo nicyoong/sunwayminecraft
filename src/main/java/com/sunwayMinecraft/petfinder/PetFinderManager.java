@@ -22,4 +22,16 @@ public class PetFinderManager {
             sender.sendMessage("§cA search is already in progress.");
             return;
         }
+
+        isSearchRunning = true;
+        sender.sendMessage("§aStarting pet search..." + (area != null ? " In specified area." : ""));
+
+        List<Entity> entitiesToCheck = new ArrayList<>();
+        for (World world : Bukkit.getWorlds()) {
+            addEntitiesByType(world, Wolf.class, entitiesToCheck, area);
+            addEntitiesByType(world, Cat.class, entitiesToCheck, area);
+        }
+
+        new SearchTask(sender, entitiesToCheck, targetUUID, area).runTaskTimer(plugin, 0L, 1L);
+    }
 }
