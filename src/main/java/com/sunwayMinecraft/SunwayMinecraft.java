@@ -7,7 +7,9 @@ import com.sunwayMinecraft.benches.RegionManager;
 import com.sunwayMinecraft.cathealer.HealingSystem;
 import com.sunwayMinecraft.commands.BenchesCommands;
 import com.sunwayMinecraft.benches.BenchInteractListener;
+import com.sunwayMinecraft.commands.PetFinderCommands;
 import com.sunwayMinecraft.commands.SwitchesCommands;
+import com.sunwayMinecraft.petfinder.PetFinderManager;
 import com.sunwayMinecraft.switches.*;
 import com.sunwayMinecraft.utils.ConfigLoader;
 import org.bukkit.command.CommandExecutor;
@@ -20,6 +22,7 @@ public final class SunwayMinecraft extends JavaPlugin {
     private BeaconManager beaconManager;
     private BenchesConfigManager benchesConfigManager;
     private RegionManager regionManager;
+    private PetFinderManager petFinderManager;
 
     // Switch system additions
     private LightConfigManager lightConfigManager;
@@ -39,6 +42,7 @@ public final class SunwayMinecraft extends JavaPlugin {
         initializeBenchSystem();
         initializeSwitchSystem();
         initializeCatHealingSystem();
+        initializePetFinderSystem();
 
         // Register commands
         registerCommands();
@@ -74,6 +78,11 @@ public final class SunwayMinecraft extends JavaPlugin {
         registerCommand("checklightregion", switchesCommands);
         registerCommand("lightinfo", switchesCommands);
         registerCommand("reloadsunwayswitches", switchesCommands);
+
+        // Pet finder commands
+        PetFinderCommands petFinderCommands = new PetFinderCommands(petFinderManager);
+        registerCommand("findpets", petFinderCommands);
+        registerCommand("findpetsinarea", petFinderCommands);
     }
 
     // Rest of the existing class remains unchanged
@@ -121,5 +130,11 @@ public final class SunwayMinecraft extends JavaPlugin {
 
     private void initializeCatHealingSystem() {
         new HealingSystem(this).start();
+    }
+
+    private void initializePetFinderSystem() {
+        petFinderManager = new PetFinderManager(this);
+
+
     }
 }
