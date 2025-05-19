@@ -11,8 +11,10 @@ import org.bukkit.entity.Sittable;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.BoundingBox;
+import org.jetbrains.annotations.NotNull;
 import java.util.*;
 
+// this class should be tested
 public class PetSearchTask extends BukkitRunnable {
     private final CommandSender sender;
     private final List<Entity> entities;
@@ -21,7 +23,7 @@ public class PetSearchTask extends BukkitRunnable {
     private final PetFinderManager manager;
     private final List<String> results = new ArrayList<>();
 
-    public PetSearchTask(JavaPlugin plugin, CommandSender sender, List<Entity> entities,
+    public PetSearchTask(JavaPlugin plugin, CommandSender sender, @NotNull List<Entity> entities,
                          UUID targetUUID, BoundingBox area, PetFinderManager manager) {
         this.sender = sender;
         this.entities = new ArrayList<>(entities);

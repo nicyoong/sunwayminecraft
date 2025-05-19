@@ -31,13 +31,13 @@ public class PetFinderManager {
         isSearchRunning = true;
         sender.sendMessage("§aStarting pet search..." + (area != null ? " In specified area." : ""));
 
-        List<Entity> entitiesToCheck = new ArrayList<>();
+        List<Entity> entitiesToCheck = new ArrayList<Entity>();
         for (World world : Bukkit.getWorlds()) {
             addEntitiesByType(world, Wolf.class, entitiesToCheck, area);
             addEntitiesByType(world, Cat.class, entitiesToCheck, area);
         }
 
-        new PetSearchTask(plugin, sender, entities, targetUUID, area, this).runTaskTimer(plugin, 0L, 1L);
+        new PetSearchTask(plugin, sender, new ArrayList<>(Entity), targetUUID, area, this)
     }
     public void setSearchComplete() {
         isSearchRunning = false;
