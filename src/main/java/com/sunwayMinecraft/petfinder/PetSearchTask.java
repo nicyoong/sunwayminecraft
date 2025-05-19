@@ -55,4 +55,8 @@ public class PetSearchTask extends BukkitRunnable {
                 pet.getOwner() != null &&
                 (targetUUID == null || pet.getOwner().getUniqueId().equals(targetUUID));
     }
+
+    private boolean isInArea(Location loc) {
+        return area.contains(loc.getX(), loc.getY(), loc.getZ());
+    }
 }
