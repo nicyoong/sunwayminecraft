@@ -29,6 +29,7 @@ public final class SunwayMinecraft extends JavaPlugin {
     private SwitchConfigManager switchConfigManager;
     private SwitchManager switchManager;
     private SwitchListener switchListener;
+    private MidnightLightScheduler midnightScheduler;
 
     @Override
     public void onEnable() {
@@ -126,6 +127,13 @@ public final class SunwayMinecraft extends JavaPlugin {
         // Register listener with proper dependencies
         SwitchListener listener = new SwitchListener(switchManager, switchConfigManager);
         getServer().getPluginManager().registerEvents(listener, this);
+        startSchedulers();
+    }
+
+    private void startSchedulers() {
+        // Check every second (20 ticks) for midnight
+        midnightScheduler = new MidnightLightScheduler(switchConfigManager);
+        midnightScheduler.runTaskTimer(this, 0L, 20L);
     }
 
     private void initializeCatHealingSystem() {
