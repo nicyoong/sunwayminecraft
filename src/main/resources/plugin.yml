@@ -54,6 +54,31 @@ commands:
     usage: "/findpetsinarea <x1> <y1> <z1> <x2> <y2> <z2> [player]"
     permission: "sunwayminecraft.petfinder.admin"
 
+  scanlights:
+    description: "Scan for light blocks in current region"
+    usage: "/scanlights"
+    permission: "sunwayminecraft.switches.scanlights"
+
+  exportlights:
+    description: "Export light positions to file"
+    usage: "/exportlights <filename>"
+    permission: "sunwayminecraft.switches.exportlights"
+
+  listlightregions:
+    description: "List all defined light regions"
+    usage: "/listlightregions"
+    permission: "sunwayminecraft.switches.listregions"
+
+  checklightregion:
+    description: "Check if you're in a light region"
+    usage: "/checklightregion"
+    permission: "sunwayminecraft.switches.checkregion"
+
+  lightinfo:
+    description: "Show information about targeted light block"
+    usage: "/lightinfo"
+    permission: "sunwayminecraft.switches.info"
+
 permissions:
   sunwayminecraft.beacons.pause:
     description: "Allows the user to pause beacon color transitions."
@@ -94,3 +119,29 @@ permissions:
   sunwayminecraft.petfinder.admin:
     description: "Allows advanced pet finding features"
     default: op
+
+  sunwayminecraft.switches.scanlights:
+    description: "Allows scanning for light blocks"
+    default: op
+
+  sunwayminecraft.switches.exportlights:
+    description: "Allows exporting light positions to files"
+    default: op
+
+  sunwayminecraft.switches.listregions:
+    description: "Allows listing light regions"
+    default: op
+
+  sunwayminecraft.switches.checkregion:
+    description: "Allows checking light region membership"
+    default: op
+
+  sunwayminecraft.switches.info:
+    description: "Allows viewing light block information"
+    default: op
+
+  sunwayminecraft.switches.admin:
+    description: "Full access to all switch commands"
+    default: op
+    children:
+      sunwayminecraft.switches.*: true

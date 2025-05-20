@@ -127,10 +127,10 @@ public final class SunwayMinecraft extends JavaPlugin {
         // Register listener with proper dependencies
         SwitchListener listener = new SwitchListener(switchManager, switchConfigManager);
         getServer().getPluginManager().registerEvents(listener, this);
-        startSchedulers();
+        startLightSchedulers();
     }
 
-    private void startSchedulers() {
+    private void startLightSchedulers() {
         // Check every second (20 ticks) for midnight
         midnightScheduler = new MidnightLightScheduler(switchConfigManager);
         midnightScheduler.runTaskTimer(this, 0L, 20L);
