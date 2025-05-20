@@ -27,6 +27,8 @@ public class PetSearchTask extends BukkitRunnable {
     private int totalChunks;
     private int processedChunks = 0;
     private final LinkedList<String> lastChunks = new LinkedList<>();
+    private int dogCount = 0;
+    private int catCount = 0;
 
     public PetSearchTask(JavaPlugin plugin, CommandSender sender, List<Entity> entities,
                           UUID targetUUID, BoundingBox area, PetFinderManager manager,
@@ -100,9 +102,20 @@ public class PetSearchTask extends BukkitRunnable {
 
     private void addToResults(Entity pet) {
         Location loc = pet.getLocation();
-        String type = pet instanceof Wolf ? "Dog" : "Cat";
-        boolean sitting = pet instanceof Sittable && ((Sittable) pet).isSitting();
+        String type;
 
+        // Count specific types
+        if (pet instanceof Wolf) {
+            type = "Dog";
+            dogCount++;
+        } else if (pet instanceof Cat) {
+            type = "Cat";
+            catCount++;
+        } else {
+            return; // Should never happen with our filters
+        }
+
+        boolean sitting = pet instanceof Sittable && ((Sittable) pet).isSitting();
         results.add(String.format("§7- §e%s §7at §b%s §7(%s§7)",
                 type, formatLocation(loc), sitting ? "§cSitting" : "§aStanding"));
     }
@@ -113,10 +126,18 @@ public class PetSearchTask extends BukkitRunnable {
     }
 
     private void sendFinalResults() {
-        if (results.isEmpty()) {
+        if (dogCount == 0 && catCount == 0) {
             sender.sendMessage("§eNo matching pets found.");
         } else {
-            sender.sendMessage("§aFound §e" + results.size() + " §apets:");
+            // New formatted count message
+            String countMessage = String.format(
+                    "§aFound §e%d §apets: §e%d §adogs and §e%d §acats:",
+                    dogCount + catCount,
+                    dogCount,
+                    catCount
+            );
+
+            sender.sendMessage(countMessage);
             results.forEach(sender::sendMessage);
         }
     }

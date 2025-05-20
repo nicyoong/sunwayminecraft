@@ -1,2 +1,7 @@
 /build
 /.gradle
+.idea/gradle.xml
+.gradle/file-system.probe
+.gradle/buildOutputCleanup/outputFiles.bin
+.gradle/buildOutputCleanup/cache.properties
+.gradle/buildOutputCleanup/buildOutputCleanup.lock
