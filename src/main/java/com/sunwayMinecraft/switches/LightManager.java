@@ -71,8 +71,4 @@ public class LightManager {
     public static Material getOriginalMaterial(Material off) {
         return REVERSE_MAPPINGS.get(off);
     }
-
-    public static boolean isLightBlock(Material material) {
-        return LIGHT_MAPPINGS.containsKey(material);
-    }
 }
