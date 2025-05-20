@@ -28,4 +28,20 @@ public class MidnightLightScheduler extends BukkitRunnable {
             lastTriggeredTime = -1; // Reset tracking
         }
     }
+
+    private void toggleAllLights() {
+        switchConfig.getSwitches().values().forEach(buttonSwitch -> {
+            buttonSwitch.lightLocations().forEach(loc -> {
+                World locWorld = loc.getWorld();
+                if (locWorld == null || !locWorld.isChunkLoaded(loc.getBlockX() >> 4, loc.getBlockZ() >> 4)) {
+                    return;
+                }
+
+                Block block = loc.getBlock();
+                if (LightManager.isLightBlock(block.getType())) {
+                    block.setType(LightManager.getOppositeMaterial(block.getType()));
+                }
+            });
+        });
+    }
 }
