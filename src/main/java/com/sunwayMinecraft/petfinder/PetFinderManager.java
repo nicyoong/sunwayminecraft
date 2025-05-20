@@ -37,7 +37,19 @@ public class PetFinderManager {
             addEntitiesByType(world, Cat.class, entitiesToCheck, area);
         }
 
-        new PetSearchTask(plugin, sender, new ArrayList<>(entitiesToCheck), targetUUID, area, this);
+        Set<String> uniqueChunks = new HashSet<>();
+        for (Entity entity : entitiesToCheck) {
+            Location loc = entity.getLocation();
+            uniqueChunks.add(String.format("%s:%d,%d",
+                    loc.getWorld().getName(),
+                    loc.getBlockX() >> 4,
+                    loc.getBlockZ() >> 4
+            ));
+        }
+
+        new PetSearchTask(plugin, sender, new ArrayList<>(entitiesToCheck), targetUUID, area, this,
+                uniqueChunks.size())
+                .runTaskTimer(plugin, 0L, 1L);
     }
     public void setSearchComplete() {
         isSearchRunning = false;

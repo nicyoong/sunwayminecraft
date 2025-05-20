@@ -11,25 +11,33 @@ import org.bukkit.entity.Sittable;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.BoundingBox;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import java.util.*;
 
 // this class should be tested
 public class PetSearchTask extends BukkitRunnable {
+    private final JavaPlugin plugin;
     private final CommandSender sender;
     private final List<Entity> entities;
     private final UUID targetUUID;
     private final BoundingBox area;
     private final PetFinderManager manager;
     private final List<String> results = new ArrayList<>();
+    private int totalChunks;
+    private int processedChunks = 0;
+    private final LinkedList<String> lastChunks = new LinkedList<>();
 
     public PetSearchTask(JavaPlugin plugin, CommandSender sender, List<Entity> entities,
-                         UUID targetUUID, BoundingBox area, PetFinderManager manager) {
+                          UUID targetUUID, BoundingBox area, PetFinderManager manager,
+                          int totalChunks) {
+        this.plugin = plugin;
         this.sender = sender;
         this.entities = new ArrayList<>(entities);
         this.targetUUID = targetUUID;
         this.area = area;
         this.manager = manager;
+        this.totalChunks = totalChunks;
     }
 
     @Override
@@ -51,6 +59,28 @@ public class PetSearchTask extends BukkitRunnable {
             sendFinalResults();
             manager.setSearchComplete();
             this.cancel();
+        }
+
+        if (!entities.isEmpty()) {
+            Entity entity = entities.get(0);
+            Location loc = entity.getLocation();
+            String chunkID = String.format("%s:%d,%d",
+                    loc.getWorld().getName(),
+                    loc.getBlockX() >> 4,  // Chunk X
+                    loc.getBlockZ() >> 4   // Chunk Z
+            );
+
+            if (!lastChunks.contains(chunkID)) {
+                lastChunks.addFirst(chunkID);
+                if (lastChunks.size() > 10) lastChunks.removeLast();
+                processedChunks++;
+            }
+        }
+
+        // Log every 10 chunks
+        if (processedChunks % 10 == 0 && !lastChunks.isEmpty()) {
+            plugin.getLogger().info("Total chunks: " + totalChunks);
+            plugin.getLogger().info("Recent chunks: " + String.join(", ", lastChunks));
         }
     }
 
