@@ -8,10 +8,12 @@ import org.bukkit.scheduler.BukkitRunnable;
 
 public class MidnightLightScheduler extends BukkitRunnable {
     private final SwitchConfigManager switchConfig;
-    private long lastTriggeredTime = -1;
+    private final String worldName;
+    private int lastProcessedTime = -1;
 
-    public MidnightLightScheduler(SwitchConfigManager switchConfig) {
+    public MidnightLightScheduler(SwitchConfigManager switchConfig, String worldName) {
         this.switchConfig = switchConfig;
+        this.worldName = worldName;
     }
 
     @Override
@@ -19,22 +21,27 @@ public class MidnightLightScheduler extends BukkitRunnable {
         World world = Bukkit.getWorld("world"); // Use your world name
         if (world == null) return;
 
-        long time = world.getFullTime() % 24000;
+        long currentTime = world.getTime();
 
         // Handle midnight (turn off)
-        if (time == 18000 && lastTriggeredTime != 18000) {
-            toggleAllLights(false); // false = turn off
-            lastTriggeredTime = time;
+        if (isBetween(currentTime, 17980, 18020) && lastProcessedTime != 18000) {
+            toggleAllLights(false);
+            lastProcessedTime = 18000;
         }
-        // Handle dawn (turn on)
-        else if (time == 0 && lastTriggeredTime != 0) {
-            toggleAllLights(true); // true = turn on
-            lastTriggeredTime = time;
+        // Toggle on at 0 ± 1 tick (dawn)
+        else if (isBetween(currentTime, 23959, 23999) && lastProcessedTime != 0) {
+            toggleAllLights(true);
+            lastProcessedTime = 0;
         }
-        // Reset tracking between cycles
-        else if (time != 18000 && time != 0) {
-            lastTriggeredTime = -1;
+        // Reset tracking if outside both ranges
+        else if (!isBetween(currentTime, 17980, 18020) && !isBetween(currentTime, 23959, 23999)) {
+            lastProcessedTime = -1;
         }
+    }
+
+    private boolean isBetween(long value, long min, long max) {
+        return (value >= min && value <= max) ||
+                (min > max && (value >= min || value <= max));
     }
 
     private void toggleAllLights(boolean turnOn) {

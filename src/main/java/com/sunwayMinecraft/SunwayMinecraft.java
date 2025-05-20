@@ -132,7 +132,8 @@ public final class SunwayMinecraft extends JavaPlugin {
 
     private void startLightSchedulers() {
         // Check every second (20 ticks) for midnight
-        midnightScheduler = new MidnightLightScheduler(switchConfigManager);
+        String targetWorld = "world"; // Set your actual world name here
+        midnightScheduler = new MidnightLightScheduler(switchConfigManager, targetWorld);
         midnightScheduler.runTaskTimer(this, 0L, 20L);
     }
 
