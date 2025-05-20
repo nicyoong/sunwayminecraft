@@ -1,6 +1,7 @@
 package com.sunwayMinecraft.switches;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -15,21 +16,28 @@ public class MidnightLightScheduler extends BukkitRunnable {
 
     @Override
     public void run() {
-        World world = Bukkit.getWorld("world"); // Change if using different world
+        World world = Bukkit.getWorld("world"); // Use your world name
         if (world == null) return;
 
         long time = world.getFullTime() % 24000;
 
-        // Check if it's midnight (18000 ticks) and we haven't triggered yet
+        // Handle midnight (turn off)
         if (time == 18000 && lastTriggeredTime != 18000) {
-            toggleAllLights();
+            toggleAllLights(false); // false = turn off
             lastTriggeredTime = time;
-        } else if (time != 18000) {
-            lastTriggeredTime = -1; // Reset tracking
+        }
+        // Handle dawn (turn on)
+        else if (time == 0 && lastTriggeredTime != 0) {
+            toggleAllLights(true); // true = turn on
+            lastTriggeredTime = time;
+        }
+        // Reset tracking between cycles
+        else if (time != 18000 && time != 0) {
+            lastTriggeredTime = -1;
         }
     }
 
-    private void toggleAllLights() {
+    private void toggleAllLights(boolean turnOn) {
         switchConfig.getSwitches().values().forEach(buttonSwitch -> {
             buttonSwitch.lightLocations().forEach(loc -> {
                 World locWorld = loc.getWorld();
@@ -38,10 +46,18 @@ public class MidnightLightScheduler extends BukkitRunnable {
                 }
 
                 Block block = loc.getBlock();
-                if (LightManager.isLightBlock(block.getType())) {
-                    block.setType(LightManager.getOppositeMaterial(block.getType()));
+                Material targetMaterial = getTargetMaterial(block.getType(), turnOn);
+
+                if (targetMaterial != null) {
+                    block.setType(targetMaterial);
                 }
             });
         });
+    }
+
+    private Material getTargetMaterial(Material current, boolean turnOn) {
+        return turnOn ?
+                LightManager.getOriginalMaterial(current) : // Dawn: restore original
+                LightManager.getOffMaterial(current);       // Midnight: turn off
     }
 }

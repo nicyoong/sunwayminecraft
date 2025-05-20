@@ -14,6 +14,8 @@ public class LightManager {
 
     private final LightConfigManager configManager;
 
+    private static final Map<Material, Material> REVERSE_MAPPINGS = createReverseMap();
+
     public LightManager(LightConfigManager configManager) {
         this.configManager = configManager;
     }
@@ -54,5 +56,23 @@ public class LightManager {
                         .findFirst()
                         .orElse(null)
         );
+    }
+
+    private static Map<Material, Material> createReverseMap() {
+        Map<Material, Material> reverse = new HashMap<>();
+        LIGHT_MAPPINGS.forEach((key, value) -> reverse.put(value, key));
+        return Collections.unmodifiableMap(reverse);
+    }
+
+    public static Material getOffMaterial(Material light) {
+        return LIGHT_MAPPINGS.get(light);
+    }
+
+    public static Material getOriginalMaterial(Material off) {
+        return REVERSE_MAPPINGS.get(off);
+    }
+
+    public static boolean isLightBlock(Material material) {
+        return LIGHT_MAPPINGS.containsKey(material);
     }
 }

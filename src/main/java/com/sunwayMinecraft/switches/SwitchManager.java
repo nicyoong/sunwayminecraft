@@ -15,12 +15,16 @@ public class SwitchManager {
     }
 
     public void toggleLights(ButtonSwitch buttonSwitch, Player player) {
-        for (Location loc : buttonSwitch.lightLocations()) {
+        buttonSwitch.lightLocations().forEach(loc -> {
             Block block = loc.getBlock();
-            Material opposite = LightManager.getOppositeMaterial(block.getType());
-            if (opposite != null) {
-                block.setType(opposite);
+            Material current = block.getType();
+            Material target = LightManager.isLightBlock(current) ?
+                    LightManager.getOffMaterial(current) :
+                    LightManager.getOriginalMaterial(current);
+
+            if (target != null) {
+                block.setType(target);
             }
-        }
+        });
     }
 }
