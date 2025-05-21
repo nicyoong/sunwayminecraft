@@ -10,7 +10,10 @@ public class RealTimeManager {
     private DateTimeFormatter timeFormatter;
     private DateTimeFormatter dateFormatter;
 
-    public TimeManager(JavaPlugin plugin) {
-        this.plugin = plugin;
+    public TimeManager() {
+        timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
+        dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     }
+
+    
 }
