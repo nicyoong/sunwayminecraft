@@ -157,6 +157,7 @@ public final class SunwayMinecraft extends JavaPlugin {
 
     private void initializeRealTimeSystem() {
         realTimeManager = new RealTimeManager();
+        realTimeManager.setSingaporeTimeZone();
     }
 
 }
