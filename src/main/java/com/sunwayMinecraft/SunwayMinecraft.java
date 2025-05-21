@@ -94,6 +94,7 @@ public final class SunwayMinecraft extends JavaPlugin {
         // Real Time commands
         RealTimeCommands realTimeCommands = new RealTimeCommands(realTimeManager);
         registerCommand("servertime", realTimeCommands);
+        registerCommand("servertimeutc", realTimeCommands);
     }
 
     // Rest of the existing class remains unchanged

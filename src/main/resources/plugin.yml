@@ -83,6 +83,10 @@ commands:
     description: "Displays the server's real-world time and date"
     usage: "/servertime"
 
+  servertimeutc:
+    description: "Shows server time in UTC"
+    usage: "/servertimeutc"
+
 permissions:
   sunwayminecraft.beacons.pause:
     description: "Allows the user to pause beacon color transitions."

@@ -7,32 +7,30 @@ import java.time.format.DateTimeFormatter;
 public class RealTimeManager {
     private DateTimeFormatter timeFormatter;
     private DateTimeFormatter dateFormatter;
-    private ZoneId timeZone;
+    private ZoneId localZone;
+
+    private static final ZoneId UTC_ZONE = ZoneId.of("UTC");
+    private static final ZoneId SINGAPORE_ZONE = ZoneId.of("Asia/Singapore");
 
     public RealTimeManager() {
-        timeZone = ZoneId.systemDefault();
+        localZone = SINGAPORE_ZONE;
         timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
         dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     }
 
-    // Separate method to set Singapore time (UTC+8)
-    public void setSingaporeTimeZone() {
-        timeZone = ZoneId.of("Asia/Singapore");
+    public String getFormattedTime(ZoneId zone) {
+        return ZonedDateTime.now(zone).format(timeFormatter);
     }
 
-    public String getFormattedTime() {
-        return ZonedDateTime.now(timeZone).format(timeFormatter);
+    public String getFormattedDate(ZoneId zone) {
+        return ZonedDateTime.now(zone).format(dateFormatter);
     }
 
-    public String getFormattedDate() {
-        return ZonedDateTime.now(timeZone).format(dateFormatter);
+    public ZoneId getLocalZone() {
+        return localZone;
     }
 
-//    public String getFormattedTime() {
-//        return LocalDateTime.now().format(timeFormatter);
-//    }
-//
-//    public String getFormattedDate() {
-//        return LocalDateTime.now().format(dateFormatter);
-//    }
+    public ZoneId getUTCZone() {
+        return UTC_ZONE;
+    }
 }
