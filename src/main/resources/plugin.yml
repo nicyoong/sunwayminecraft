@@ -79,6 +79,10 @@ commands:
     usage: "/lightinfo"
     permission: "sunwayminecraft.switches.info"
 
+  servertime:
+    description: "Displays the server's real-world time and date"
+    usage: "/servertime"
+
 permissions:
   sunwayminecraft.beacons.pause:
     description: "Allows the user to pause beacon color transitions."
