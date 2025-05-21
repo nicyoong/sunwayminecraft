@@ -103,6 +103,7 @@ public class PetSearchTask extends BukkitRunnable {
     private void addToResults(Entity pet) {
         Location loc = pet.getLocation();
         String type;
+        String name = "§fUnnamed";
 
         // Count specific types
         if (pet instanceof Wolf) {
@@ -113,6 +114,11 @@ public class PetSearchTask extends BukkitRunnable {
             catCount++;
         } else {
             return; // Should never happen with our filters
+        }
+
+        // Get pet name
+        if (pet.getCustomName() != null) {
+            name = "§b" + pet.getCustomName();
         }
 
         boolean sitting = pet instanceof Sittable && ((Sittable) pet).isSitting();
