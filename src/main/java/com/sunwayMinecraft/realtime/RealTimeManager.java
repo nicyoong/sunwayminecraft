@@ -7,7 +7,7 @@ public class RealTimeManager {
     private DateTimeFormatter timeFormatter;
     private DateTimeFormatter dateFormatter;
 
-    public TimeManager() {
+    public RealTimeManager() {
         timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
         dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     }

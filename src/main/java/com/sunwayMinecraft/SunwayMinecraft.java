@@ -11,6 +11,8 @@ import com.sunwayMinecraft.commands.PetFinderCommands;
 import com.sunwayMinecraft.commands.SwitchesCommands;
 import com.sunwayMinecraft.petfinder.PetFinderManager;
 import com.sunwayMinecraft.switches.*;
+import com.sunwayMinecraft.realtime.RealTimeManager;
+import com.sunwayMinecraft.commands.RealTimeCommands;
 import com.sunwayMinecraft.utils.ConfigLoader;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -31,6 +33,9 @@ public final class SunwayMinecraft extends JavaPlugin {
     private SwitchListener switchListener;
     private MidnightLightScheduler midnightScheduler;
 
+    // Real Time
+    private RealTimeManager realTimeManager;
+
     @Override
     public void onEnable() {
         getLogger().log(Level.INFO, "Enabling SunwayMinecraft plugin...");
@@ -44,6 +49,7 @@ public final class SunwayMinecraft extends JavaPlugin {
         initializeSwitchSystem();
         initializeCatHealingSystem();
         initializePetFinderSystem();
+        initializeRealTimeSystem();
 
         // Register commands
         registerCommands();
@@ -84,6 +90,10 @@ public final class SunwayMinecraft extends JavaPlugin {
         PetFinderCommands petFinderCommands = new PetFinderCommands(petFinderManager);
         registerCommand("findpets", petFinderCommands);
         registerCommand("findpetsinarea", petFinderCommands);
+
+        // Real Time commands
+        RealTimeCommands realTimeCommands = new RealTimeCommands(realTimeManager);
+        registerCommand("servertime", realTimeCommands);
     }
 
     // Rest of the existing class remains unchanged
@@ -144,4 +154,9 @@ public final class SunwayMinecraft extends JavaPlugin {
     private void initializePetFinderSystem() {
         petFinderManager = new PetFinderManager(this);
     }
+
+    private void initializeRealTimeSystem() {
+        realTimeManager = new RealTimeManager();
+    }
+
 }
