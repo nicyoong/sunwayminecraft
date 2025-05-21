@@ -15,5 +15,11 @@ public class RealTimeManager {
         dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     }
 
-    
+    public String getFormattedTime() {
+        return LocalDateTime.now().format(timeFormatter);
+    }
+
+    public String getFormattedDate() {
+        return LocalDateTime.now().format(dateFormatter);
+    }
 }
