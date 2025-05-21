@@ -11,6 +11,8 @@ import org.bukkit.entity.Sittable;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.BoundingBox;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import java.util.*;
@@ -121,9 +123,15 @@ public class PetSearchTask extends BukkitRunnable {
             name = "§b" + pet.getCustomName();
         }
 
+        LivingEntity livingPet = (LivingEntity) pet;
+        double currentHealth = Math.round(livingPet.getHealth() * 10) / 10.0;
+        double maxHealth = Math.round(livingPet.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue() * 10) / 10.0;
+        String health = String.format("Health: §7%.1f/%.1f", currentHealth, maxHealth);
+
         boolean sitting = pet instanceof Sittable && ((Sittable) pet).isSitting();
-        results.add(String.format("§7- §e%s §7at §b%s §7(%s§7)",
-                type, formatLocation(loc), sitting ? "§cSitting" : "§aStanding"));
+
+        results.add(String.format("§7- §e%s §8- %s §7- %s §7at §b%s §7(%s§7)",
+                type, name, health, formatLocation(loc), sitting ? "§cSitting" : "§aStanding"));
     }
 
     private String formatLocation(Location loc) {
