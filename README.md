@@ -48,10 +48,32 @@
 - Discover automated lights that activate at midnight (server time)  
 - Admins can create light zones with special switches  
 
-#### 🐾 Pet Assistance  
-- Use commands to locate lost pets:  
-  - `/findpets` - Search for all your missing pets  
-  - `/findpetsinarea [radius]` - Check a specific area  
+#### 🐾 Pet Finder  
+*Locate your lost dogs and cats across Minecraft worlds*
+
+**Commands**  
+- `/findpets` - Search all loaded chunks for your missing pets  
+- `/findpetsinarea <x1> <y1> <z1> <x2> <y2> <z2> [player]` (Admin) - Scan a specific cubic area for pets  
+
+**Features**  
+- Real-time chunk scanning with server-friendly batches  
+- Filters by owner and custom pet names  
+- Shows detailed information for each found pet:  
+  - Pet type (Dog/Cat) and custom name  
+  - Current/max health values  
+  - Exact world coordinates  
+  - Sitting/standing status  
+
+**For Admins**  
+- Area search requires two opposite cube corners (XYZ coordinates)  
+- Optional player argument to check others' pets  
+- Console shows progress updates during large searches  
+
+**Tips**  
+- Named pets appear with their custom names in results  
+- Sitting pets remain stationary for easier retrieval  
+- Check multiple worlds if pets are missing long-term  
+- Uses vanilla taming system - only works with properly claimed pets  
 
 #### ⏰ Real-World Time  
 - Check server time synced to real life:  
