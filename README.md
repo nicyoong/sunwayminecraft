@@ -57,14 +57,4 @@
 #### Architecture  
 - **Modular Design**: Each system (e.g., `BeaconManager`, `PetFinderManager`) operates independently  
 - **Event-Driven**: Uses Bukkit listeners (e.g., `BenchInteractListener`, `SwitchListener`)  
-- **Schedulers**: Repeating tasks for healing, light checks, and beacon updates  
-
-#### Extending Systems  
-Example: Add custom light behaviors by extending `CelestialLightScheduler`:  
-```java
-public class CustomLightScheduler extends CelestialLightScheduler {
-  @Override
-  public void onMidnightTrigger() {
-    // Your custom light logic
-  }
-}
+- **Schedulers**: Repeating tasks for healing, light checks, and beacon updates
