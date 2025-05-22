@@ -6,12 +6,12 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.scheduler.BukkitRunnable;
 
-public class MidnightLightScheduler extends BukkitRunnable {
+public class CelestialLightScheduler extends BukkitRunnable {
     private final SwitchConfigManager switchConfig;
     private final String worldName;
     private int lastProcessedTime = -1;
 
-    public MidnightLightScheduler(SwitchConfigManager switchConfig, String worldName) {
+    public CelestialLightScheduler(SwitchConfigManager switchConfig, String worldName) {
         this.switchConfig = switchConfig;
         this.worldName = worldName;
     }

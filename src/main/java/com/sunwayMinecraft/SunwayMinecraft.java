@@ -31,7 +31,7 @@ public final class SunwayMinecraft extends JavaPlugin {
     private SwitchConfigManager switchConfigManager;
     private SwitchManager switchManager;
     private SwitchListener switchListener;
-    private MidnightLightScheduler midnightScheduler;
+    private CelestialLightScheduler celestialScheduler;
 
     // Real Time
     private RealTimeManager realTimeManager;
@@ -144,8 +144,8 @@ public final class SunwayMinecraft extends JavaPlugin {
     private void startLightSchedulers() {
         // Check every second (20 ticks) for midnight
         String targetWorld = "world"; // Set your actual world name here
-        midnightScheduler = new MidnightLightScheduler(switchConfigManager, targetWorld);
-        midnightScheduler.runTaskTimer(this, 0L, 20L);
+        celestialScheduler = new CelestialLightScheduler(switchConfigManager, targetWorld);
+        celestialScheduler.runTaskTimer(this, 0L, 20L);
     }
 
     private void initializeCatHealingSystem() {
