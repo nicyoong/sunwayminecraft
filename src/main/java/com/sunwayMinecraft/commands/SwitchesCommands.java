@@ -17,6 +17,41 @@ import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * The SwitchesCommands class handles commands related to light switches in the SunwayMinecraft plugin.
+ * It processes several commands such as scanning lights, exporting light data, listing light regions,
+ * providing light block information, checking the player's current light region, and reloading configurations.
+ *
+ * <p>The class implements the CommandExecutor interface, allowing it to handle various commands
+ * that players or admins can execute in-game. The supported commands include:
+ * <ul>
+ *   <li><code>/scanlights</code>: Scans for light blocks (Sea Lantern, Glowstone, Jack-o-Lantern) in the current region.</li>
+ *   <li><code>/exportlights &lt;filename&gt;</code>: Exports all found light blocks to a CSV file.</li>
+ *   <li><code>/listlightregions</code>: Lists all configured light regions.</li>
+ *   <li><code>/checklightregion</code>: Checks which light region the player is currently in.</li>
+ *   <li><code>/lightinfo</code>: Displays information about the light block the player is looking at, including associated regions and switches.</li>
+ *   <li><code>/reloadsunwayswitches</code>: Reloads light and switch configurations from disk.</li>
+ * </ul>
+ *
+ * <p>Key functionality includes:
+ * <ul>
+ *   <li>Permission checks to ensure the sender has the required permission for reload.</li>
+ *   <li>Scanning regions for light blocks via LightManager.</li>
+ *   <li>Exporting block data to files for external processing.</li>
+ *   <li>Dynamic listing and checking of configured regions.</li>
+ *   <li>Reporting detailed block info and linked button switches.</li>
+ * </ul>
+ *
+ * <p>The main methods provided by this class are:
+ * <ul>
+ *   <li><code>handleScanLights</code>: Scans and reports lights in the current region.</li>
+ *   <li><code>handleExportLights</code>: Exports region lights to a file.</li>
+ *   <li><code>handleListRegions</code>: Lists all configured light regions.</li>
+ *   <li><code>handleCheckRegion</code>: Checks and notifies the player’s light region.</li>
+ *   <li><code>handleLightInfo</code>: Provides detailed info about a targeted light block.</li>
+ *   <li><code>handleReload</code>: Reloads configurations and reinitializes managers.</li>
+ * </ul>
+ */
 public class SwitchesCommands implements CommandExecutor {
     private final JavaPlugin plugin;
     private final LightConfigManager lightConfig;
@@ -24,7 +59,13 @@ public class SwitchesCommands implements CommandExecutor {
     private final LightManager lightManager;
     private SwitchManager switchManager;
 
-    // Changed to match benches pattern
+    /**
+     * Constructs a new SwitchesCommands handler.
+     *
+     * @param plugin       the main plugin instance
+     * @param lightConfig  the manager handling light region configurations
+     * @param switchConfig the manager handling switch configurations
+     */
     public SwitchesCommands(JavaPlugin plugin,
                             LightConfigManager lightConfig,
                             SwitchConfigManager switchConfig) {
@@ -35,6 +76,18 @@ public class SwitchesCommands implements CommandExecutor {
         this.switchManager = new SwitchManager(switchConfig, lightConfig);
     }
 
+    /**
+     * Dispatches incoming commands to their respective handlers based on command name.
+     *
+     * <p>Supported commands are: scanlights, exportlights, listlightregions,
+     * checklightregion, lightinfo, reloadsunwayswitches.
+     *
+     * @param sender the source of the command (player or console)
+     * @param cmd    the command that was executed
+     * @param label  the alias of the command used
+     * @param args   any arguments provided with the command
+     * @return true if the command was handled, false to show usage
+     */
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
         if (!(sender instanceof Player player)) {
@@ -63,6 +116,20 @@ public class SwitchesCommands implements CommandExecutor {
         return true;
     }
 
+    /**
+     * Handles the <code>/reloadsunwayswitches</code> command, reloading configurations for lights and switches.
+     *
+     * <p>Steps performed:
+     * <ol>
+     *   <li>Checks if sender has <code>sunwayminecraft.switches.reload</code> permission.</li>
+     *   <li>Reloads lightConfig and switchConfig from disk.</li>
+     *   <li>Reinitializes the SwitchManager with updated configs.</li>
+     *   <li>Sends summary messages including region and switch counts.</li>
+     * </ol>
+     *
+     * @param sender the command sender (player or console)
+     * @return always true after attempting reload
+     */
     private boolean handleReload(CommandSender sender) {
         if (!sender.hasPermission("sunwayminecraft.switches.reload")) {
             sender.sendMessage("§cNo permission!");
@@ -87,6 +154,18 @@ public class SwitchesCommands implements CommandExecutor {
         }
     }
 
+    /**
+     * Handles the <code>/scanlights</code> command, which scans the current light region for blocks.
+     *
+     * <p>Steps performed:
+     * <ol>
+     *   <li>Retrieves the player's current region via <code>getCurrentRegion</code>.</li>
+     *   <li>Uses <code>lightManager.scanRegion</code> to find all supported light blocks.</li>
+     *   <li>Sends the count and formatted locations of each found block to the player.</li>
+     * </ol>
+     *
+     * @param player the player initiating the scan
+     */
     private void handleScanLights(Player player) {
         LightRegion region = getCurrentRegion(player);
         List<Block> lights = lightManager.scanRegion(region, player);
@@ -95,6 +174,21 @@ public class SwitchesCommands implements CommandExecutor {
         lights.forEach(b -> player.sendMessage(formatBlockLocation(b)));
     }
 
+    /**
+     * Handles the <code>/exportlights &lt;filename&gt;</code> command, exporting region light blocks to a CSV file.
+     *
+     * <p>Steps performed:
+     * <ol>
+     *   <li>Validates presence of filename argument.</li>
+     *   <li>Scans current region for light blocks.</li>
+     *   <li>Writes each block's material and coordinates to the specified file.</li>
+     *   <li>Notifies the player of success or throws on I/O failure.</li>
+     * </ol>
+     *
+     * @param player the player initiating the export
+     * @param args   command arguments, where args[0] is the target filename
+     * @throws IllegalArgumentException if filename is missing or file cannot be written
+     */
     private void handleExportLights(Player player, String[] args) {
         if (args.length < 1) throw new IllegalArgumentException("§cUsage: /exportlights <filename>");
 
@@ -116,6 +210,18 @@ public class SwitchesCommands implements CommandExecutor {
         }
     }
 
+    /**
+     * Handles the <code>/listlightregions</code> command, listing all defined light regions.
+     *
+     * <p>Steps performed:
+     * <ol>
+     *   <li>Retrieves region map from <code>lightConfig</code>.</li>
+     *   <li>If empty, notifies that no regions are defined.</li>
+     *   <li>Otherwise, lists each region name to the player.</li>
+     * </ol>
+     *
+     * @param player the player requesting the list
+     */
     private void handleListRegions(Player player) {
         Map<String, LightRegion> regions = lightConfig.getRegions();
         if (regions.isEmpty()) {
@@ -131,6 +237,18 @@ public class SwitchesCommands implements CommandExecutor {
         });
     }
 
+    /**
+     * Handles the <code>/checklightregion</code> command, checking if the player is in a light region.
+     *
+     * <p>Steps performed:
+     * <ol>
+     *   <li>Gets player location.</li>
+     *   <li>Finds any region containing that location.</li>
+     *   <li>Notifies player of the region name or absence thereof.</li>
+     * </ol>
+     *
+     * @param player the player to check
+     */
     private void handleCheckRegion(Player player) {
         Location loc = player.getLocation();
         Optional<LightRegion> region = lightConfig.getRegions().values().stream()
@@ -144,6 +262,18 @@ public class SwitchesCommands implements CommandExecutor {
         }
     }
 
+    /**
+     * Handles the <code>/checklightregion</code> command, checking if the player is in a light region.
+     *
+     * <p>Steps performed:
+     * <ol>
+     *   <li>Gets player location.</li>
+     *   <li>Finds any region containing that location.</li>
+     *   <li>Notifies player of the region name or absence thereof.</li>
+     * </ol>
+     *
+     * @param player the player to check
+     */
     private void handleLightInfo(Player player) {
         Block target = player.getTargetBlockExact(5);
         if (target == null || !LightManager.isLightBlock(target.getType())) {
@@ -188,6 +318,19 @@ public class SwitchesCommands implements CommandExecutor {
         }
     }
 
+    /**
+     * Retrieves the unique light region containing the player.
+     *
+     * <p>Steps performed:
+     * <ol>
+     *   <li>Filters configured regions by the player's location.</li>
+     *   <li>Throws if none or multiple regions match.</li>
+     * </ol>
+     *
+     * @param player the player whose location is checked
+     * @return the single LightRegion containing the player
+     * @throws IllegalArgumentException if zero or multiple regions are found
+     */
     private LightRegion getCurrentRegion(Player player) {
         Location loc = player.getLocation();
         List<LightRegion> regions = lightConfig.getRegions().values().stream()
@@ -203,6 +346,12 @@ public class SwitchesCommands implements CommandExecutor {
         return regions.get(0);
     }
 
+    /**
+     * Formats a block's type and coordinates into a player-friendly string.
+     *
+     * @param block the block to format
+     * @return formatted string containing material and position
+     */
     private String formatBlockLocation(Block block) {
         return "§b" + String.format("%s @ [%d, %d, %d]",
                 formatMaterial(block.getType()),
@@ -211,6 +360,12 @@ public class SwitchesCommands implements CommandExecutor {
                 block.getZ());
     }
 
+    /**
+     * Formats a Location object into a descriptive string.
+     *
+     * @param loc the location to format
+     * @return string describing the world and coordinates
+     */
     private String formatLocation(Location loc) {
         return String.format("World: %s, X: %d, Y: %d, Z: %d",
                 loc.getWorld().getName(),
@@ -219,6 +374,12 @@ public class SwitchesCommands implements CommandExecutor {
                 loc.getBlockZ());
     }
 
+    /**
+     * Converts a Material enum into a human-readable lowercase string.
+     *
+     * @param material the material to format
+     * @return formatted material name with spaces instead of underscores
+     */
     private String formatMaterial(Material material) {
         return "§e" + material.toString().replace("_", " ").toLowerCase();
     }
