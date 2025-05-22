@@ -7,7 +7,9 @@ import java.util.List;
 import java.util.Map;
 
 interface ConfigurationLoader {
-    int getTicksPerTransition();
-    List<Material> getColorCycle();
-    Map<Location, Integer> loadBeacons();
+  int getTicksPerTransition();
+
+  List<Material> getColorCycle();
+
+  Map<Location, Integer> loadBeacons();
 }
