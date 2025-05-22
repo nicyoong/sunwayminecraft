@@ -7,9 +7,23 @@
 ## 🎮 For Players  
 ### Features You Can Use  
 
-#### 🏮 Beacon Control System  
-- **Temporarily disable/resume beacon effects** if admins allow player control  
-- See visual changes when beacon update speeds are modified  
+#### 🏮 Beacon Light Shows  
+*Color-changing rooftop beacons across the server*
+
+**What Players See**:  
+- Special beacons on building rooftops with **rotating colored beams**  
+- Each beacon has 5 glass blocks above it that cycle through colors  
+- Smooth transitions between colors (e.g., red → blue → green)  
+
+**How It Works**:  
+- Beacons automatically change colors - no player interaction needed  
+- Admins can control:  
+  - Color transition speed (`/setbeaconticks`)  
+  - Pause/resume effects (`/pausebeacons` & `/resumebeacons`)  
+
+**Pro Tip**:  
+- The color patterns cycle over time—be patient and watch how the beacon’s mood shifts!
+- Don't break the glass blocks above beacons - they're part of the light system! 
 
 #### 🪑 Interactive Benches  
 - Right-click configured benches to sit  
