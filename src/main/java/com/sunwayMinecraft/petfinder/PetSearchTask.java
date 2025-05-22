@@ -19,7 +19,26 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import java.util.*;
 
-// this class should be tested
+/**
+ * The {@code PetSearchTask} class performs a batched search for tamed pets (dogs and cats)
+ * within the Minecraft world, optionally filtering by owner and bounding area.
+ *
+ * <p>This task is scheduled via the Bukkit scheduler and processes entities in
+ * configurable batch sizes to avoid blocking the main server thread.
+ *
+ * <p>Key responsibilities include:
+ * <ul>
+ *   <li>Filtering entities to valid, tamed pets owned by a specific player (or all owners if
+ *       {@code targetUUID} is null).</li>
+ *   <li>Restricting results to those within an optional {@link BoundingBox} area.</li>
+ *   <li>Batch-processing a list of entities each run tick to spread workload.</li>
+ *   <li>Tracking and logging chunk progress every ten unique chunks scanned.</li>
+ *   <li>Aggregating and sending detailed search results, including pet counts and
+ *       statuses, to the command sender upon completion.</li>
+ * </ul>
+ *
+ * @see BukkitRunnable
+ */
 public class PetSearchTask extends BukkitRunnable {
     private final JavaPlugin plugin;
     private final CommandSender sender;
@@ -34,6 +53,17 @@ public class PetSearchTask extends BukkitRunnable {
     private int dogCount = 0;
     private int catCount = 0;
 
+    /**
+     * Constructs a new PetSearchTask to locate and report on tamed pets.
+     *
+     * @param plugin      the plugin instance for logging and scheduling tasks
+     * @param sender      the command sender to notify with search results
+     * @param entities    the initial list of entities to scan
+     * @param targetUUID  the UUID of the pet owner to filter by (null for all owners)
+     * @param area        optional bounding box to restrict search area (null for no restriction)
+     * @param manager     the manager responsible for tracking search state
+     * @param totalChunks the total count of chunks being scanned for progress reporting
+     */
     public PetSearchTask(JavaPlugin plugin, CommandSender sender, List<Entity> entities,
                           UUID targetUUID, BoundingBox area, PetFinderManager manager,
                           int totalChunks) {
@@ -46,6 +76,24 @@ public class PetSearchTask extends BukkitRunnable {
         this.totalChunks = totalChunks;
     }
 
+    /**
+     * Executes one batch of entity processing per scheduler tick.
+     *
+     * <p>The method performs the following steps:
+     * <ol>
+     *   <li>Processes up to {@code batchSize} entities from the list.</li>
+     *   <li>Filters out invalid entities, untamed pets, and those outside the search area.</li>
+     *   <li>Invokes {@link #addToResults(Entity)} for each valid pet to record details.</li>
+     *   <li>When the list is exhausted, sends final results via
+     *       {@link #sendFinalResults()} and marks the search complete.</li>
+     *   <li>Tracks the current chunk of the next entity, updating
+     *       {@code processedChunks} and {@code lastChunks}.</li>
+     *   <li>Logs progress every ten unique chunks scanned to the plugin logger.</li>
+     * </ol>
+     *
+     * <p>This method runs on the server scheduler thread and must
+     * complete quickly to avoid tick lag.
+     */
     @Override
     public void run() {
         int batchSize = 50;
@@ -104,6 +152,22 @@ public class PetSearchTask extends BukkitRunnable {
         return area.contains(loc.getX(), loc.getY(), loc.getZ());
     }
 
+    /**
+     * Adds a detailed description of a valid pet to the results list,
+     * including type, custom name (if any), current and max health,
+     * world coordinates, and sitting state. Also increments the appropriate count.
+     *
+     * <p>This method performs:
+     * <ol>
+     *   <li>Determines pet type ({@code Dog} or {@code Cat}) and increments counters.</li>
+     *   <li>Extracts and formats a custom name, defaulting to "Unnamed".</li>
+     *   <li>Retrieves and rounds current and maximum health values.</li>
+     *   <li>Checks if the pet is sitting via {@link Sittable}.</li>
+     *   <li>Formats the combined details into a string and appends to {@code results}.</li>
+     * </ol>
+     *
+     * @param pet the pet entity to describe
+     */
     private void addToResults(Entity pet) {
         Location loc = pet.getLocation();
         String type;
@@ -142,6 +206,19 @@ public class PetSearchTask extends BukkitRunnable {
                 loc.getWorld().getName(), loc.getX(), loc.getY(), loc.getZ());
     }
 
+    /**
+     * Sends the aggregated search results to the command sender.
+     *
+     * <p>The method proceeds as follows:
+     * <ol>
+     *   <li>If no dogs or cats were found, sends a "No matching pets found" message.</li>
+     *   <li>Otherwise, sends a summary count message indicating total pets,
+     *       number of dogs, and number of cats.</li>
+     *   <li>Sends each formatted pet detail line from {@code results}.</li>
+     * </ol>
+     *
+     * <p>This provides users with both overview and detailed information in chat.
+     */
     private void sendFinalResults() {
         if (dogCount == 0 && catCount == 0) {
             sender.sendMessage("§eNo matching pets found.");
