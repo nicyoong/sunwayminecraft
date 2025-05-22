@@ -14,6 +14,38 @@ import org.bukkit.entity.*;
 
 import java.util.*;
 
+/**
+ * Manages the lifecycle of pet searches for tamed wolves and cats in a Minecraft plugin.
+ *
+ * <p>This class is responsible for initiating and managing searches for tamed {@link Wolf}
+ * and {@link Cat} entities across all loaded worlds, optionally within a specified
+ * {@link BoundingBox}. It prevents concurrent searches and schedules a {@link PetSearchTask}
+ * to process the found entities.</p>
+ *
+ * <p>The manager provides functionality to:
+ * <ul>
+ *     <li>Start a new pet search with owner filtering by {@code targetUUID}.</li>
+ *     <li>Optionally restrict the search to a defined region.</li>
+ *     <li>Prevent overlapping searches by tracking the search state.</li>
+ *     <li>Mark searches as complete to allow subsequent searches.</li>
+ * </ul>
+ * </p>
+ *
+ * <p>Field summary:
+ * <ul>
+ *     <li>{@link JavaPlugin} plugin: plugin instance for scheduling tasks and accessing APIs.</li>
+ *     <li>{@code isSearchRunning}: tracks whether a search is in progress.</li>
+ * </ul>
+ * </p>
+ *
+ * <p>Methods:
+ * <ul>
+ *     <li>{@link #startSearch(CommandSender, UUID, BoundingBox)}: Begins a pet search.</li>
+ *     <li>{@link #setSearchComplete()}: Marks the search as finished.</li>
+ *     <li>{@link #addEntitiesByType(World, Class, List, BoundingBox)}: Gathers entities of a specific type.</li>
+ * </ul>
+ * </p>
+ */
 public class PetFinderManager {
     private final JavaPlugin plugin;
     private boolean isSearchRunning = false;
@@ -63,4 +95,4 @@ public class PetFinderManager {
             }
         }
     }
-    }
+}
