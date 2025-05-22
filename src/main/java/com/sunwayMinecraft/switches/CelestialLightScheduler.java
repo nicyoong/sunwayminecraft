@@ -6,6 +6,26 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.scheduler.BukkitRunnable;
 
+/**
+ * The CelestialLightScheduler class extends {@link org.bukkit.scheduler.BukkitRunnable}
+ * to automatically toggle configured light switches at Minecraft “midnight” and “dawn”
+ * based on the in-game world time.
+ *
+ * <p>This scheduler:
+ * <ul>
+ *   <li>Polls the specified world’s time on each run.</li>
+ *   <li>Turns all lights off at midnight (tick 18000 ±20).</li>
+ *   <li>Turns all lights on at dawn (tick 0 ±1, i.e. 23959–23999 rolling over).</li>
+ *   <li>Prevents duplicate toggles by tracking the last processed time.</li>
+ * </ul>
+ *
+ * <p>Usage example:
+ * <pre>{@code
+ * CelestialLightScheduler scheduler =
+ *     new CelestialLightScheduler(switchConfigManager, "world");
+ * scheduler.runTaskTimer(plugin, 0L, 20L); // schedule to run every second
+ * }</pre>
+ */
 public class CelestialLightScheduler extends BukkitRunnable {
     private final SwitchConfigManager switchConfig;
     private final String worldName;
@@ -16,6 +36,25 @@ public class CelestialLightScheduler extends BukkitRunnable {
         this.worldName = worldName;
     }
 
+    /**
+     * Called periodically by the Bukkit scheduler. Checks the configured world’s
+     * current time and toggles all lights off at midnight (around tick 18000)
+     * or on at dawn (around tick 0), ensuring each toggle occurs only once per cycle.
+     *
+     * <p>The method performs the following steps:
+     * <ol>
+     *   <li>Obtains the {@link org.bukkit.World} by {@code worldName}; returns immediately if null.</li>
+     *   <li>Retrieves the current world time in ticks.</li>
+     *   <li>If time is between 17980 and 18020 (midnight) and not yet processed at 18000,
+     *       invokes {@link #toggleAllLights(boolean)} with {@code false} to turn lights off,
+     *       then updates {@code lastProcessedTime} to 18000.</li>
+     *   <li>Else if time is between 23959 and 23999 (dawn) and not yet processed at 0,
+     *       invokes {@link #toggleAllLights(boolean)} with {@code true} to turn lights on,
+     *       then updates {@code lastProcessedTime} to 0.</li>
+     *   <li>Else if the current tick is outside both ranges, resets {@code lastProcessedTime}
+     *       to –1 to allow the next cycle of toggles.</li>
+     * </ol>
+     */
     @Override
     public void run() {
         World world = Bukkit.getWorld("world"); // Use your world name
@@ -44,6 +83,22 @@ public class CelestialLightScheduler extends BukkitRunnable {
                 (min > max && (value >= min || value <= max));
     }
 
+    /**
+     * Toggles all configured light switches on or off.
+     *
+     * <p>The method performs the following steps:
+     * <ol>
+     *   <li>Iterates over each {@link ButtonSwitch} in {@code switchConfig}.</li>
+     *   <li>For each switch, iterates over its light locations.</li>
+     *   <li>Skips any location whose world is null or whose chunk is not loaded.</li>
+     *   <li>Determines the target {@link org.bukkit.Material} via
+     *       {@link #getTargetMaterial(Material, boolean)} based on {@code turnOn}.</li>
+     *   <li>If a valid target material is returned, sets the block at the location
+     *       to that material.</li>
+     * </ol>
+     *
+     * @param turnOn {@code true} to switch lights on (dawn restore), {@code false} to switch lights off (midnight)
+     */
     private void toggleAllLights(boolean turnOn) {
         switchConfig.getSwitches().values().forEach(buttonSwitch -> {
             buttonSwitch.lightLocations().forEach(loc -> {
