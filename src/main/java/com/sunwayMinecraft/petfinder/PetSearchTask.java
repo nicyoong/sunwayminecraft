@@ -13,6 +13,8 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.BoundingBox;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.attribute.Attribute;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import java.util.*;
@@ -118,9 +120,10 @@ public class PetSearchTask extends BukkitRunnable {
             return; // Should never happen with our filters
         }
 
-        // Get pet name
-        if (pet.getCustomName() != null) {
-            name = "§b" + pet.getCustomName();
+        Component nameComponent = pet.customName();
+        if (nameComponent != null) {
+            String customName = PlainTextComponentSerializer.plainText().serialize(nameComponent);
+            name = "§b" + customName;
         }
 
         LivingEntity livingPet = (LivingEntity) pet;
