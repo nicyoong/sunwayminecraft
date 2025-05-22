@@ -25,9 +25,24 @@
 - The color patterns cycle over time—be patient and watch how the beacon’s mood shifts!
 - Don't break the glass blocks above beacons - they're part of the light system! 
 
-#### 🪑 Interactive Benches  
-- Right-click configured benches to sit  
-- View bench ownership/region info with commands  
+#### 🪑 Healing Benches  
+*Rest while sitting to recover health*
+
+**How It Works**:  
+1. **Find a Bench**: Look for stair blocks marked as benches (usually in public areas)  
+2. **Sit Down**: Right-click the **top face** of the stair while holding nothing  
+3. **Get Buffs**:  
+   - Instantly gain 4-second **Regeneration** ❤️  
+
+**Rules**:  
+- Works with the sitting plugin - just sit normally!  
+- 4-second cooldown between uses (you'll see a warning message)  
+- Only works on specific "bottom half" stairs configured as benches  
+
+**Pro Tips**:  
+- Great for recovering after battles  
+- Combine with food for faster healing  
+- Don't break bench blocks in the zone - they're special rest zones!  
 
 #### 🔦 Smart Light Systems  
 - Discover automated lights that activate at midnight (server time)  
