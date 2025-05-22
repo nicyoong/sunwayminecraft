@@ -18,7 +18,7 @@ import java.util.*;
 /**
  * This class listens for player interactions with benches in the Minecraft world. It handles the
  * interaction event when a player right-clicks on a bench block (stairs) and applies effects such
- * as regeneration and speed, provided that the player is not on cooldown.
+ * as regeneration, provided that the player is not on cooldown.
  *
  * <p>The BenchInteractListener listens for the `PlayerInteractEvent` when the player right-clicks a
  * block. If the block is a valid stair and the player is not holding an item in their main hand,
@@ -26,9 +26,9 @@ import java.util.*;
  * from repeatedly triggering the effects too quickly.
  *
  * <p>Key functionality includes: - Checking if the player is interacting with a valid bench
- * (stairs) in the world. - Applying the regeneration effect to the player, and speed if their
- * health is full. - Enforcing a cooldown to prevent multiple uses in quick succession. - Ensuring
- * that only players with an empty hand can interact with the bench.
+ * (stairs) in the world. - Applying the regeneration effect to the player. - Enforcing a cooldown
+ * to prevent multiple uses in quick succession. - Ensuring that only players with an empty hand can
+ * interact with the bench.
  *
  * <p>The listener also manages a cooldown system using a `Map` of player UUIDs and cooldown end
  * times. The cooldown is set in ticks (80 ticks) and is tracked in milliseconds.
@@ -73,9 +73,8 @@ public class BenchInteractListener implements Listener {
 
   /**
    * This method handles the `PlayerInteractEvent` when a player right-clicks a block. It checks
-   * whether the clicked block is a valid stair (bench) and applies effects to the player if they
-   * are not on cooldown. The effects include regeneration and speed (if the player's health is
-   * full).
+   * whether the clicked block is a valid stair (bench) and applies regeneration effects to the
+   * player if they are not on cooldown.
    *
    * <p>The method follows these steps: 1. Verifies that the action is a right-click on a block.
    *
@@ -91,7 +90,7 @@ public class BenchInteractListener implements Listener {
    * is not applied.
    *
    * <p>6. If the cooldown has expired or is not present, the regeneration effect is applied to the
-   * player. If the player's health is at maximum, the speed effect is applied as well.
+   * player.
    *
    * <p>7. A cooldown is applied by storing the player's UUID and the cooldown end time in the
    * `cooldownEndTimes` map.
