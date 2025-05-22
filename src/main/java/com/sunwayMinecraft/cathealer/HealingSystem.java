@@ -9,6 +9,34 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.attribute.Attribute;
 import java.util.Collection;
 
+/**
+ * This class schedules and manages automatic healing for players based on the number
+ * of nearby tamed cats they own in a Minecraft world.
+ * It retrieves all online players every 2.5 seconds (50 ticks) and applies healing
+ * of 1 health point per valid cat within a 10-block radius, up to the player's maximum health.
+ *
+ * <p>Key behaviors include:
+ * <ul>
+ *   <li><b>Timed Healing Task:</b> A repeating BukkitRunnable that triggers healing checks.</li>
+ *   <li><b>Player Scanning:</b> Collects all online players each interval for processing.</li>
+ *   <li><b>Cat Validation:</b> Identifies tamed, owned, non-sitting cats within proximity.</li>
+ *   <li><b>Health Application:</b> Increases player health based on the count of valid cats.</li>
+ * </ul>
+ *
+ * <p>Methods provided:
+ * <ul>
+ *   <li><b>HealingSystem(JavaPlugin plugin):</b> Constructor that stores the plugin reference for task scheduling.</li>
+ *   <li><b>start():</b> Begins the repeating healing task with an initial delay of 0 ticks and a period of 50 ticks.</li>
+ *   <li><b>processAllPlayers():</b> Iterates over and processes each online player.</li>
+ *   <li><b>processPlayer(Player):</b> Counts active healing cats and applies healing if applicable.</li>
+ *   <li><b>countActiveCats(Player):</b> Returns the number of valid healing cats near the player.</li>
+ *   <li><b>isValidHealingCat(Cat, Player):</b> Checks taming, ownership, posture, and distance criteria.</li>
+ *   <li><b>isWithinRadius(Location, Location, double):</b> Performs a squared-distance check for performance.</li>
+ *   <li><b>applyCatHealing(Player, int):</b> Calculates and sets the new health value without exceeding max health.</li>
+ * </ul>
+ *
+ * @param plugin the JavaPlugin instance used to schedule and manage the healing task
+ */
 public class HealingSystem {
     private final JavaPlugin plugin;
 
