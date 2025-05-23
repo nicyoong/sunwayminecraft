@@ -76,7 +76,7 @@
 *Automated and switch-controlled lighting for immersive day/night cycles*  
 
 **What Players See**:  
-- Special switches (buttons/levers) that control entire light zones  
+- Special switches (buttons/levers) that control one or more lights within special regions  
 - Lights toggle between **glowing** (e.g., Glowstone) and **non-glowing** (e.g., Cobblestone) states  
 - Automatic behavior:  
   - All lights turn **off** at midnight (server time)  
