@@ -79,6 +79,11 @@ commands:
     usage: "/lightinfo"
     permission: "sunwayminecraft.switches.info"
 
+  reloadsunwayswitches:
+    description: "Reload switch configurations"
+    usage: "/reloadsunwayswitches"
+    permission: "sunwayminecraft.switches.reload"
+
   servertime:
     description: "Displays the server's real-world time and date"
     usage: "/servertime"
@@ -146,6 +151,10 @@ permissions:
 
   sunwayminecraft.switches.info:
     description: "Allows viewing light block information"
+    default: op
+  
+  sunwayminecraft.switches.reload:
+    description: "Allows reloading switch configurations"
     default: op
 
   sunwayminecraft.switches.admin:
