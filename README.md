@@ -73,8 +73,39 @@
 - Keep beds nearby to prevent cats from wandering off
 
 #### 🔦 Smart Light Systems  
-- Discover automated lights that activate at midnight (server time)  
-- Admins can create light zones with special switches  
+*Automated and switch-controlled lighting for immersive day/night cycles*  
+
+**What Players See**:  
+- Special switches (buttons/levers) that control entire light zones  
+- Lights toggle between **glowing** (e.g., Glowstone) and **non-glowing** (e.g., Cobblestone) states  
+- Automatic behavior:  
+  - All lights turn **off** at midnight (server time)  
+  - All lights turn **on** at dawn (server time)  
+- Multi-block lighting effects - entire rooms or areas change simultaneously  
+
+**How It Works**:  
+1. **Find a Switch**: Look for configured buttons/levers in buildings or areas  
+2. **Activate**: Interact to toggle linked lights manually  
+3. **Auto-Scheduling**:  
+   - Midnight (tick 18000): Lights switch off (Glowstone → Cobblestone, Sea Lantern → Concrete)  
+   - Dawn (tick 0): Lights restore to glowing versions  
+4. **Safety Checks**:  
+   - Prevents duplicate toggles (e.g., won’t turn off twice at midnight)  
+   - Skips unloaded chunks to avoid lag  
+
+**Admin Setup**:  
+- Link switches to light blocks  
+- **Commands**:  
+  - Scan regions: `/scanlights`  
+  - Export light data: `/exportlights`  
+  - Debug: `/checklightregion`, `/lightinfo`  
+  - Reload configs: `/reloadsunwayswitches`  
+- Configure max region size (1M blocks) to prevent lag  
+
+**Pro Tips**:  
+- Use auto-scheduling for streetlights or dungeon day/night mechanics  
+- Combine manual switches + timers for puzzle maps  
+- Preset mappings ensure perfect transitions - don’t alter blocks manually!  
 
 #### 🐾 Pet Finder  
 *Locate your lost dogs and cats across Minecraft worlds*
