@@ -42,7 +42,35 @@
 **Pro Tips**:  
 - Great for recovering after battles  
 - Combine with food for faster healing  
-- Don't break bench blocks in the zone - they're special rest zones!  
+- Don't break bench blocks in the zone - they're special rest zones!
+
+#### 🐾 Cat Companion Healing  
+*Tamed cats now passively heal their owners*  
+
+**How It Works**:  
+1. **Tame Cats**: Befriend cats with fish to create healing helpers  
+2. **Keep Nearby**: Cats must be within 10 blocks of you and **not sitting**  
+3. **Auto-Heal**: Gain 1❤️ per active cat every 2.5 seconds automatically  
+
+**Healing Details**:  
+- Works while moving/exploring - no special actions needed  
+- Multiple cats stack heals (3 cats = 3❤️ per heal cycle)  
+- Never exceeds your max health level  
+- Only works with cats you personally own  
+
+**Rules**:  
+🔸 Cats must be:  
+   - Tamed and owned by you  
+   - On their feet (not sitting command used)  
+   - Within 10-block spherical radius  
+🔸 Works in all game modes including PvP  
+🔸 Silent operation - no messages or particles  
+
+**Pro Tips**:  
+- Create cat squads for rapid healing during exploration  
+- Use name tags to keep track of your cats
+- Combine with food for emergency health boosts  
+- Keep beds nearby to prevent cats from wandering off
 
 #### 🔦 Smart Light Systems  
 - Discover automated lights that activate at midnight (server time)  
