@@ -151,6 +151,7 @@
 | **Light Automation** | Celestial/switch-controlled lighting         | `CelestialLightScheduler`, `SwitchListener` |  
 | **Pet Finder**       | Pet tracking via entity scanning             | `PetFinderManager`         |  
 | **Real-Time Sync**   | UTC/timezone calculations                    | `RealTimeManager`          |  
+| **Cat Healing**      | Passive healing via nearby tamed cats        | `HealingSystem`            |
 
 ### Configuration  
 *Handled via YAML files in `/plugins/SunwayMinecraft/`*:  
