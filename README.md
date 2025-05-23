@@ -136,7 +136,7 @@
 
 #### ⏰ Real-World Time  
 - Check server time synced to real life:  
-  - `/servertime` - Local time  
+  - `/servertime` - Local time (SG/MY time)
   - `/servertimeutc` - UTC time  
 
 ---
