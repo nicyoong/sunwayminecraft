@@ -74,3 +74,14 @@ public class ItemCoinFlipSystem {
             }
         }
     }
+
+    private void giveWinnings(Player player, ItemStack template, int amount) {
+        ItemStack reward = template.clone();
+
+        while (amount > 0) {
+            int stackSize = Math.min(amount, template.getMaxStackSize());
+            reward.setAmount(stackSize);
+            player.getInventory().addItem(reward);
+            amount -= stackSize;
+        }
+    }
