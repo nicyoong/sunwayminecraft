@@ -34,7 +34,13 @@ public class ItemCoinFlipSystem {
       return;
     }
 
-    player.sendMessage("§aYou bet " + (guessHeads ? "heads" : "tails") + " with " + amount + " " + template.getType().toString().toLowerCase());
+    player.sendMessage(
+        "§aYou bet "
+            + (guessHeads ? "heads" : "tails")
+            + " with "
+            + amount
+            + " "
+            + template.getType().toString().toLowerCase());
 
     // Count items in entire inventory
     int available = countAvailableItems(player, template);
@@ -97,36 +103,36 @@ public class ItemCoinFlipSystem {
   }
 
   private boolean isTool(Material type) {
-    return type.name().endsWith("_AXE") ||
-            type.name().endsWith("_PICKAXE") ||
-            type.name().endsWith("_SHOVEL") ||
-            type.name().endsWith("_HOE") ||
-            type == Material.FISHING_ROD ||
-            type == Material.SHEARS ||
-            type == Material.FLINT_AND_STEEL;
+    return type.name().endsWith("_AXE")
+        || type.name().endsWith("_PICKAXE")
+        || type.name().endsWith("_SHOVEL")
+        || type.name().endsWith("_HOE")
+        || type == Material.FISHING_ROD
+        || type == Material.SHEARS
+        || type == Material.FLINT_AND_STEEL;
   }
 
   private boolean isWeapon(Material type) {
-    return type.name().endsWith("_SWORD") ||
-            type == Material.BOW ||
-            type == Material.CROSSBOW ||
-            type == Material.TRIDENT;
+    return type.name().endsWith("_SWORD")
+        || type == Material.BOW
+        || type == Material.CROSSBOW
+        || type == Material.TRIDENT;
   }
 
   private boolean isArmor(Material type) {
-    return type.name().endsWith("_HELMET") ||
-            type.name().endsWith("_CHESTPLATE") ||
-            type.name().endsWith("_LEGGINGS") ||
-            type.name().endsWith("_BOOTS");
+    return type.name().endsWith("_HELMET")
+        || type.name().endsWith("_CHESTPLATE")
+        || type.name().endsWith("_LEGGINGS")
+        || type.name().endsWith("_BOOTS");
   }
 
   private boolean isSpecialItem(Material type) {
-    return type == Material.ELYTRA ||
-            type == Material.SHIELD ||
-            type == Material.TOTEM_OF_UNDYING ||
-            type == Material.COMPASS ||
-            type == Material.CLOCK ||
-            type == Material.BUNDLE;
+    return type == Material.ELYTRA
+        || type == Material.SHIELD
+        || type == Material.TOTEM_OF_UNDYING
+        || type == Material.COMPASS
+        || type == Material.CLOCK
+        || type == Material.BUNDLE;
   }
 
   private ItemStack createTemplate(ItemStack item) {
@@ -188,9 +194,10 @@ public class ItemCoinFlipSystem {
     if (coinFlipSystem.isMuted(player)) return;
 
     String itemName = item.getType().toString().toLowerCase().replace("_", " ");
-    String result = won ?
-            "§aYou won §ex" + (amount * 2) + " " + itemName :
-            "§cYou lost §ex" + amount + " " + itemName;
+    String result =
+        won
+            ? "§aYou won §ex" + (amount * 2) + " " + itemName
+            : "§cYou lost §ex" + amount + " " + itemName;
 
     player.sendMessage(result);
   }
