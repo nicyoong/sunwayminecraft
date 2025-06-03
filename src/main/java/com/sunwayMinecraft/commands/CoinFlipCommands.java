@@ -43,3 +43,9 @@ public class CoinFlipCommands implements CommandExecutor, TabCompleter {
                 sendHelp(player);
                 return true;
         }
+
+        // Coin flip logic
+        if (args.length < 2) {
+            player.sendMessage(ChatColor.RED + "Usage: /cf <amount> <heads|tails|h|t>");
+            return true;
+        }
