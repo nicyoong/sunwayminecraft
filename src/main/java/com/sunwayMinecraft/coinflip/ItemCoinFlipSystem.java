@@ -13,3 +13,38 @@ public class ItemCoinFlipSystem {
     public ItemCoinFlipSystem(CoinFlipSystem coinFlipSystem) {
         this.coinFlipSystem = coinFlipSystem;
     }
+
+    public void processItemFlip(Player player, int amount, boolean guessHeads) {
+        ItemStack handItem = player.getInventory().getItemInMainHand();
+
+        if (handItem == null || handItem.getType().isAir()) {
+            player.sendMessage("§cYou must hold an item in your hand!");
+            return;
+        }
+
+        int available = countAvailableItems(player, handItem);
+        if (available == 0) {
+            player.sendMessage("§cYou don't have any of this item!");
+            return;
+        }
+
+        int betAmount = Math.min(amount, Math.min(available, handItem.getMaxStackSize()));
+        if (betAmount < 1) {
+            player.sendMessage("§cInvalid bet amount!");
+            return;
+        }
+
+        // Remove items
+        removeItems(player, handItem, betAmount);
+
+        // Process flip
+        boolean won = coinFlipSystem.processFlipLogic(guessHeads);
+
+        // Handle winnings
+        if (won) {
+            giveWinnings(player, handItem, betAmount * 2);
+        }
+
+        // Send result
+        sendResult(player, won, betAmount, handItem);
+    }
