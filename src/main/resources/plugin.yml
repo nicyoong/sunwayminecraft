@@ -95,7 +95,7 @@ commands:
 
   cf:
     description: "Coin flip game command"
-    usage: "/cf <amount> <heads|tails> OR /cf [mute|unmute|help]"
+    usage: "/cf <amount> <heads|tails> OR /cf item <amount> <heads|tails> OR /cf [mute|unmute|help]"
 
 permissions:
   sunwayminecraft.beacons.pause:
