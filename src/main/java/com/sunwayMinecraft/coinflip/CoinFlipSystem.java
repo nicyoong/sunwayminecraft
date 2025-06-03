@@ -24,23 +24,27 @@ public class CoinFlipSystem {
       return;
     }
 
-    // Deduct bet amount
     econ.withdrawPlayer(player, amount);
+    boolean won = processFlipLogic(playerGuessHeads);
 
-    // Flip coin (true = heads, false = tails)
-    boolean isHeads = random.nextBoolean();
-    boolean won = (playerGuessHeads == isHeads);
-
-    // Handle winnings
     if (won) econ.depositPlayer(player, amount * 2);
+    sendMoneyResult(player, won, amount);
+  }
 
-    // Send result if not muted
-    if (!mutedPlayers.contains(player.getUniqueId())) {
-      String result = isHeads ? "Heads" : "Tails";
-      String color = won ? "§a" : "§c"; // §a = green, §c = red
-      String outcome = won ? "won " + econ.format(amount) : "lost " + econ.format(amount);
-      player.sendMessage(color + "Coin landed on " + result + "! You " + outcome + ".");
-    }
+  // Reusable flip logic
+  public boolean processFlipLogic(boolean playerGuessHeads) {
+    boolean isHeads = random.nextBoolean();
+    return playerGuessHeads == isHeads;
+  }
+
+  private void sendMoneyResult(Player player, boolean won, double amount) {
+    if (isMuted(player)) return;
+
+    String result = won ?
+            "§aYou won §e" + econ.format(amount) :
+            "§cYou lost §e" + econ.format(amount);
+
+    player.sendMessage(result);
   }
 
   public void handleMute(Player player, boolean mute) {

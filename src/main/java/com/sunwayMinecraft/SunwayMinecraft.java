@@ -40,6 +40,7 @@ public final class SunwayMinecraft extends JavaPlugin {
   private RealTimeManager realTimeManager;
 
   private CoinFlipSystem coinFlipSystem;
+  private ItemCoinFlipSystem itemCoinFlipSystem;
 
   @Override
   public void onEnable() {
@@ -164,14 +165,18 @@ public final class SunwayMinecraft extends JavaPlugin {
   }
 
   private void initializeCoinFlipSystem() {
-    Economy econ = getEconomy(); // Implement this method if not already existing
+    Economy econ = getEconomy();
     if (econ == null) {
       getLogger().severe("Coin flip disabled - Vault economy not found!");
       return;
     }
 
+    // Create both systems
     coinFlipSystem = new CoinFlipSystem(econ);
-    getCommand("cf").setExecutor(new CoinFlipCommands(coinFlipSystem));
+    itemCoinFlipSystem = new ItemCoinFlipSystem(coinFlipSystem);
+
+    // Pass both systems to commands
+    getCommand("cf").setExecutor(new CoinFlipCommands(coinFlipSystem, itemCoinFlipSystem));
   }
 
   // Add this if you don't have an economy getter
