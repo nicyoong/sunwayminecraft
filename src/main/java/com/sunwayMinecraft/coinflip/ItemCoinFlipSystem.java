@@ -60,3 +60,17 @@ public class ItemCoinFlipSystem {
         }
         return count;
     }
+
+    private void removeItems(Player player, ItemStack template, int amount) {
+        PlayerInventory inv = player.getInventory();
+        int toRemove = amount;
+
+        for (int i = 0; i < inv.getSize() && toRemove > 0; i++) {
+            ItemStack item = inv.getItem(i);
+            if (item != null && item.isSimilar(template)) {
+                int remove = Math.min(item.getAmount(), toRemove);
+                item.setAmount(item.getAmount() - remove);
+                toRemove -= remove;
+            }
+        }
+    }
