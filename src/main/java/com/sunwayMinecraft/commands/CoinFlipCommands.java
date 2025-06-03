@@ -68,3 +68,12 @@ public class CoinFlipCommands implements CommandExecutor, TabCompleter {
             player.sendMessage(ChatColor.RED + "Invalid amount! Must be a positive number.");
         }
         return true;
+    }
+
+    private void sendHelp(Player player) {
+        player.sendMessage(ChatColor.GOLD + "--- Coin Flip Help ---");
+        player.sendMessage(ChatColor.YELLOW + "/cf <amount> <heads|h|tails|t>" + ChatColor.WHITE + " - Place a bet");
+        player.sendMessage(ChatColor.YELLOW + "/cf mute" + ChatColor.WHITE + " - Silence coin flip messages");
+        player.sendMessage(ChatColor.YELLOW + "/cf unmute" + ChatColor.WHITE + " - Enable coin flip messages");
+        player.sendMessage(ChatColor.YELLOW + "/cf help" + ChatColor.WHITE + " - Show this help");
+    }
