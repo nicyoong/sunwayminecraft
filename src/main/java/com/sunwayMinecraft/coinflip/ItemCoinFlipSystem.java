@@ -48,3 +48,15 @@ public class ItemCoinFlipSystem {
         // Send result
         sendResult(player, won, betAmount, handItem);
     }
+
+    private int countAvailableItems(Player player, ItemStack template) {
+        PlayerInventory inv = player.getInventory();
+        int count = 0;
+
+        for (ItemStack item : inv.getStorageContents()) {
+            if (item != null && item.isSimilar(template)) {
+                count += item.getAmount();
+            }
+        }
+        return count;
+    }
