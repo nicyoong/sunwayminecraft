@@ -6,3 +6,10 @@ import org.bukkit.inventory.PlayerInventory;
 
 import java.util.HashMap;
 import java.util.Map;
+
+public class ItemCoinFlipSystem {
+    private final CoinFlipSystem coinFlipSystem;
+
+    public ItemCoinFlipSystem(CoinFlipSystem coinFlipSystem) {
+        this.coinFlipSystem = coinFlipSystem;
+    }
