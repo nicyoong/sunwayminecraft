@@ -17,36 +17,50 @@ public class ItemCoinFlipSystem {
   public void processItemFlip(Player player, int amount, boolean guessHeads) {
     ItemStack handItem = player.getInventory().getItemInMainHand();
 
+    // Check if player is holding a valid item
     if (handItem == null || handItem.getType().isAir()) {
       player.sendMessage("§cYou must hold an item in your hand!");
       return;
     }
 
+    // Count items in entire inventory
     int available = countAvailableItems(player, handItem);
-    if (available == 0) {
+    if (available < 1) {
       player.sendMessage("§cYou don't have any of this item!");
       return;
     }
 
-    int betAmount = Math.min(amount, Math.min(available, handItem.getMaxStackSize()));
-    if (betAmount < 1) {
-      player.sendMessage("§cInvalid bet amount!");
+    // Validate bet amount
+    if (amount < 1) {
+      player.sendMessage("§cInvalid bet amount! Must be at least 1.");
+      return;
+    }
+
+    // Calculate actual bet amount
+    int maxBet = Math.min(available, handItem.getMaxStackSize());
+    if (amount > available) {
+      player.sendMessage("§cYou only have " + available + " of that item!");
+      return;
+    }
+
+    if (amount > maxBet) {
+      player.sendMessage("§cMaximum bet is " + maxBet + " (1 stack)!");
       return;
     }
 
     // Remove items
-    removeItems(player, handItem, betAmount);
+    removeItems(player, handItem, amount);
 
     // Process flip
     boolean won = coinFlipSystem.processFlipLogic(guessHeads);
 
     // Handle winnings
     if (won) {
-      giveWinnings(player, handItem, betAmount * 2);
+      giveWinnings(player, handItem, amount * 2);
     }
 
     // Send result
-    sendResult(player, won, betAmount, handItem);
+    sendResult(player, won, amount, handItem);
   }
 
   private int countAvailableItems(Player player, ItemStack template) {
@@ -71,28 +85,41 @@ public class ItemCoinFlipSystem {
         int remove = Math.min(item.getAmount(), toRemove);
         item.setAmount(item.getAmount() - remove);
         toRemove -= remove;
+
+        // Clear slot if amount reaches zero
+        if (item.getAmount() == 0) {
+          inv.setItem(i, null);
+        }
       }
     }
   }
 
   private void giveWinnings(Player player, ItemStack template, int amount) {
     ItemStack reward = template.clone();
+    reward.setAmount(Math.min(amount, template.getMaxStackSize()));
 
+    // Distribute winnings in stacks
     while (amount > 0) {
       int stackSize = Math.min(amount, template.getMaxStackSize());
-      reward.setAmount(stackSize);
-      player.getInventory().addItem(reward);
-      amount -= stackSize;
+      ItemStack stack = reward.clone();
+      stack.setAmount(stackSize);
+
+      // Add to inventory or drop if full
+      if (player.getInventory().addItem(stack).isEmpty()) {
+        amount -= stackSize;
+      } else {
+        player.getWorld().dropItem(player.getLocation(), stack);
+        amount -= stackSize;
+      }
     }
   }
 
   private void sendResult(Player player, boolean won, int amount, ItemStack item) {
     if (coinFlipSystem.isMuted(player)) return;
 
-    String result =
-        won
-            ? "§aYou won §ex" + (amount * 2) + " " + item.getType().toString().toLowerCase()
-            : "§cYou lost §ex" + amount + " " + item.getType().toString().toLowerCase();
+    String result = won ?
+            "§aYou won §ex" + (amount * 2) + " " + item.getType().toString().toLowerCase() :
+            "§cYou lost §ex" + amount + " " + item.getType().toString().toLowerCase();
 
     player.sendMessage(result);
   }
