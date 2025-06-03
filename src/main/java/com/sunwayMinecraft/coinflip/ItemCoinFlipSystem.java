@@ -85,3 +85,13 @@ public class ItemCoinFlipSystem {
             amount -= stackSize;
         }
     }
+
+    private void sendResult(Player player, boolean won, int amount, ItemStack item) {
+        if (coinFlipSystem.isMuted(player)) return;
+
+        String result = won ?
+                "§aYou won §ex" + (amount * 2) + " " + item.getType().toString().toLowerCase() :
+                "§cYou lost §ex" + amount + " " + item.getType().toString().toLowerCase();
+
+        player.sendMessage(result);
+    }
