@@ -49,3 +49,22 @@ public class CoinFlipCommands implements CommandExecutor, TabCompleter {
             player.sendMessage(ChatColor.RED + "Usage: /cf <amount> <heads|tails|h|t>");
             return true;
         }
+
+        try {
+            double amount = Double.parseDouble(args[0]);
+            if (amount <= 0) throw new NumberFormatException();
+
+            String sideInput = args[1].toLowerCase();
+            boolean isHeads = sideInput.startsWith("h");
+            boolean isTails = sideInput.startsWith("t");
+
+            if (!isHeads && !isTails) {
+                player.sendMessage(ChatColor.RED + "Invalid side! Use heads/h or tails/t");
+                return true;
+            }
+
+            coinFlipSystem.processCoinFlip(player, amount, isHeads);
+        } catch (NumberFormatException e) {
+            player.sendMessage(ChatColor.RED + "Invalid amount! Must be a positive number.");
+        }
+        return true;
