@@ -24,6 +24,8 @@ public class CoinFlipSystem {
       return;
     }
 
+    player.sendMessage("§aYou bet " + (playerGuessHeads ? "heads" : "tails") + " with " + econ.format(amount));
+
     econ.withdrawPlayer(player, amount);
     boolean won = processFlipLogic(playerGuessHeads);
 

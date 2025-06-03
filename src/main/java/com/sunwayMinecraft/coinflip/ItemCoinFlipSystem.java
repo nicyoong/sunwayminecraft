@@ -34,6 +34,8 @@ public class ItemCoinFlipSystem {
       return;
     }
 
+    player.sendMessage("§aYou bet " + (guessHeads ? "heads" : "tails") + " with " + amount + " " + template.getType().toString().toLowerCase());
+
     // Count items in entire inventory
     int available = countAvailableItems(player, template);
     if (available < 1) {
