@@ -10,45 +10,50 @@ import java.util.Set;
 import java.util.UUID;
 
 public class CoinFlipSystem {
-    private final Economy econ;
-    private final Set<UUID> mutedPlayers = new HashSet<>();
-    private final Random random = new Random();
+  private final Economy econ;
+  private final Set<UUID> mutedPlayers = new HashSet<>();
+  private final Random random = new Random();
 
-    public CoinFlipSystem(Economy econ) {
-        this.econ = econ;
+  public CoinFlipSystem(Economy econ) {
+    this.econ = econ;
+  }
+
+  public void processCoinFlip(Player player, double amount, boolean playerGuessHeads) {
+    if (econ.getBalance(player) < amount) {
+      player.sendMessage(ChatColor.RED + "Insufficient funds!");
+      return;
     }
 
-    public void processCoinFlip(Player player, double amount, boolean playerGuessHeads) {
-        if (econ.getBalance(player) < amount) {
-            player.sendMessage(ChatColor.RED + "Insufficient funds!");
-            return;
-        }
+    // Deduct bet amount
+    econ.withdrawPlayer(player, amount);
 
-        // Deduct bet amount
-        econ.withdrawPlayer(player, amount);
+    // Flip coin (true = heads, false = tails)
+    boolean isHeads = random.nextBoolean();
+    boolean won = (playerGuessHeads == isHeads);
 
-        // Flip coin (true = heads, false = tails)
-        boolean isHeads = random.nextBoolean();
-        boolean won = (playerGuessHeads == isHeads);
+    // Handle winnings
+    if (won) econ.depositPlayer(player, amount * 2);
 
-        // Handle winnings
-        if (won) econ.depositPlayer(player, amount * 2);
-
-        // Send result if not muted
-        if (!mutedPlayers.contains(player.getUniqueId())) {
-            String result = isHeads ? "Heads" : "Tails";
-            ChatColor color = won ? ChatColor.GREEN : ChatColor.RED;
-            String outcome = won ? "won " + econ.format(amount) : "lost " + econ.format(amount);
-            player.sendMessage(color + "Coin landed on " + result + "! You " + outcome + ".");
-        }
+    // Send result if not muted
+    if (!mutedPlayers.contains(player.getUniqueId())) {
+      String result = isHeads ? "Heads" : "Tails";
+      ChatColor color = won ? ChatColor.GREEN : ChatColor.RED;
+      String outcome = won ? "won " + econ.format(amount) : "lost " + econ.format(amount);
+      player.sendMessage(color + "Coin landed on " + result + "! You " + outcome + ".");
     }
+  }
 
-    public void handleMute(Player player, boolean mute) {
-        if (mute) {
-            mutedPlayers.add(player.getUniqueId());
-            player.sendMessage(ChatColor.GOLD + "Coin flip messages muted.");
-        } else {
-            mutedPlayers.remove(player.getUniqueId());
-            player.sendMessage(ChatColor.GOLD + "Coin flip messages unmuted.");
-        }
+  public void handleMute(Player player, boolean mute) {
+    if (mute) {
+      mutedPlayers.add(player.getUniqueId());
+      player.sendMessage(ChatColor.GOLD + "Coin flip messages muted.");
+    } else {
+      mutedPlayers.remove(player.getUniqueId());
+      player.sendMessage(ChatColor.GOLD + "Coin flip messages unmuted.");
     }
+  }
+
+  public boolean isMuted(Player player) {
+    return mutedPlayers.contains(player.getUniqueId());
+  }
+}
