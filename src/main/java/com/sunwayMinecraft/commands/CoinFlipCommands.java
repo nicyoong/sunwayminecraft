@@ -31,3 +31,15 @@ public class CoinFlipCommands implements CommandExecutor, TabCompleter {
             sendHelp(player);
             return true;
         }
+
+        switch (args[0].toLowerCase()) {
+            case "mute":
+                coinFlipSystem.handleMute(player, true);
+                return true;
+            case "unmute":
+                coinFlipSystem.handleMute(player, false);
+                return true;
+            case "help":
+                sendHelp(player);
+                return true;
+        }
