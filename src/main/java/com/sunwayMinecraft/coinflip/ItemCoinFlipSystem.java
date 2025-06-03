@@ -4,9 +4,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 
-import java.util.HashMap;
-import java.util.Map;
-
 public class ItemCoinFlipSystem {
   private final CoinFlipSystem coinFlipSystem;
 
@@ -23,8 +20,11 @@ public class ItemCoinFlipSystem {
       return;
     }
 
+    // Create template BEFORE removing items
+    ItemStack template = createTemplate(handItem);
+
     // Count items in entire inventory
-    int available = countAvailableItems(player, handItem);
+    int available = countAvailableItems(player, template);
     if (available < 1) {
       player.sendMessage("§cYou don't have any of this item!");
       return;
@@ -37,7 +37,7 @@ public class ItemCoinFlipSystem {
     }
 
     // Calculate actual bet amount
-    int maxBet = Math.min(available, handItem.getMaxStackSize());
+    int maxBet = Math.min(available, template.getMaxStackSize());
     if (amount > available) {
       player.sendMessage("§cYou only have " + available + " of that item!");
       return;
@@ -49,18 +49,25 @@ public class ItemCoinFlipSystem {
     }
 
     // Remove items
-    removeItems(player, handItem, amount);
+    removeItems(player, template, amount);
 
     // Process flip
     boolean won = coinFlipSystem.processFlipLogic(guessHeads);
 
     // Handle winnings
     if (won) {
-      giveWinnings(player, handItem, amount * 2);
+      giveWinnings(player, template, amount * 2);
     }
 
     // Send result
-    sendResult(player, won, amount, handItem);
+    sendResult(player, won, amount, template);
+  }
+
+  private ItemStack createTemplate(ItemStack item) {
+    // Create a clean template with amount 1
+    ItemStack template = item.clone();
+    template.setAmount(1);
+    return template;
   }
 
   private int countAvailableItems(Player player, ItemStack template) {
@@ -95,13 +102,10 @@ public class ItemCoinFlipSystem {
   }
 
   private void giveWinnings(Player player, ItemStack template, int amount) {
-    ItemStack reward = template.clone();
-    reward.setAmount(Math.min(amount, template.getMaxStackSize()));
-
     // Distribute winnings in stacks
     while (amount > 0) {
       int stackSize = Math.min(amount, template.getMaxStackSize());
-      ItemStack stack = reward.clone();
+      ItemStack stack = template.clone();
       stack.setAmount(stackSize);
 
       // Add to inventory or drop if full
@@ -117,9 +121,10 @@ public class ItemCoinFlipSystem {
   private void sendResult(Player player, boolean won, int amount, ItemStack item) {
     if (coinFlipSystem.isMuted(player)) return;
 
+    String itemName = item.getType().toString().toLowerCase();
     String result = won ?
-            "§aYou won §ex" + (amount * 2) + " " + item.getType().toString().toLowerCase() :
-            "§cYou lost §ex" + amount + " " + item.getType().toString().toLowerCase();
+            "§aYou won §ex" + (amount * 2) + " " + itemName :
+            "§cYou lost §ex" + amount + " " + itemName;
 
     player.sendMessage(result);
   }
