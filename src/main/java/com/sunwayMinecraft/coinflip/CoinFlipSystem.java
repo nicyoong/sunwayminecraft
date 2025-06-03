@@ -33,6 +33,7 @@ public class CoinFlipSystem {
 
   // Reusable flip logic
   public boolean processFlipLogic(boolean playerGuessHeads) {
+    player.sendMessage("§aYou bet " + (playerGuessHeads ? "heads" : "tails"));
     boolean isHeads = random.nextBoolean();
     return playerGuessHeads == isHeads;
   }
