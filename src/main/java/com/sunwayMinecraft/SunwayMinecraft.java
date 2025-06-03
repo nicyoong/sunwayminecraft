@@ -13,6 +13,9 @@ import com.sunwayMinecraft.petfinder.PetFinderManager;
 import com.sunwayMinecraft.switches.*;
 import com.sunwayMinecraft.realtime.RealTimeManager;
 import com.sunwayMinecraft.commands.RealTimeCommands;
+import com.sunwayMinecraft.coinflip.CoinFlipSystem;
+import com.sunwayMinecraft.commands.CoinFlipCommands;
+import net.milkbowl.vault.economy.Economy;
 import com.sunwayMinecraft.utils.ConfigLoader;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -36,6 +39,8 @@ public final class SunwayMinecraft extends JavaPlugin {
   // Real Time
   private RealTimeManager realTimeManager;
 
+  private CoinFlipSystem coinFlipSystem;
+
   @Override
   public void onEnable() {
     getLogger().log(Level.INFO, "Enabling SunwayMinecraft plugin...");
@@ -50,6 +55,7 @@ public final class SunwayMinecraft extends JavaPlugin {
     initializeCatHealingSystem();
     initializePetFinderSystem();
     initializeRealTimeSystem();
+    initializeCoinFlipSystem();
 
     // Register commands
     registerCommands();
@@ -155,5 +161,22 @@ public final class SunwayMinecraft extends JavaPlugin {
 
   private void initializeRealTimeSystem() {
     realTimeManager = new RealTimeManager();
+  }
+
+  private void initializeCoinFlipSystem() {
+    Economy econ = getEconomy(); // Implement this method if not already existing
+    if (econ == null) {
+      getLogger().severe("Coin flip disabled - Vault economy not found!");
+      return;
+    }
+
+    coinFlipSystem = new CoinFlipSystem(econ);
+    getCommand("cf").setExecutor(new CoinFlipCommands(coinFlipSystem));
+  }
+
+  // Add this if you don't have an economy getter
+  private Economy getEconomy() {
+    if (getServer().getPluginManager().getPlugin("Vault") == null) return null;
+    return getServer().getServicesManager().getRegistration(Economy.class).getProvider();
   }
 }
