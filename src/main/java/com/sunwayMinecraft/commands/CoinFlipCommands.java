@@ -10,3 +10,10 @@ import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
 import java.util.List;
+
+public class CoinFlipCommands implements CommandExecutor, TabCompleter {
+    private final CoinFlipSystem coinFlipSystem;
+
+    public CoinFlipCommands(CoinFlipSystem coinFlipSystem) {
+        this.coinFlipSystem = coinFlipSystem;
+    }
