@@ -24,7 +24,8 @@ public class CoinFlipSystem {
       return;
     }
 
-    player.sendMessage("§aYou bet " + (playerGuessHeads ? "heads" : "tails") + " with " + econ.format(amount));
+    player.sendMessage(
+        "§aYou bet " + (playerGuessHeads ? "heads" : "tails") + " with " + econ.format(amount));
 
     econ.withdrawPlayer(player, amount);
     boolean won = processFlipLogic(playerGuessHeads);
@@ -35,7 +36,6 @@ public class CoinFlipSystem {
 
   // Reusable flip logic
   public boolean processFlipLogic(boolean playerGuessHeads) {
-    player.sendMessage("§aYou bet " + (playerGuessHeads ? "heads" : "tails"));
     boolean isHeads = random.nextBoolean();
     return playerGuessHeads == isHeads;
   }
@@ -43,9 +43,8 @@ public class CoinFlipSystem {
   private void sendMoneyResult(Player player, boolean won, double amount) {
     if (isMuted(player)) return;
 
-    String result = won ?
-            "§aYou won §e" + econ.format(amount) :
-            "§cYou lost §e" + econ.format(amount);
+    String result =
+        won ? "§aYou won §e" + econ.format(amount) : "§cYou lost §e" + econ.format(amount);
 
     player.sendMessage(result);
   }
