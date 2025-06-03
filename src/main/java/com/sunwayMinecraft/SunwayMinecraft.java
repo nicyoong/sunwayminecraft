@@ -14,6 +14,7 @@ import com.sunwayMinecraft.switches.*;
 import com.sunwayMinecraft.realtime.RealTimeManager;
 import com.sunwayMinecraft.commands.RealTimeCommands;
 import com.sunwayMinecraft.coinflip.CoinFlipSystem;
+import com.sunwayMinecraft.coinflip.ItemCoinFlipSystem;
 import com.sunwayMinecraft.commands.CoinFlipCommands;
 import net.milkbowl.vault.economy.Economy;
 import com.sunwayMinecraft.utils.ConfigLoader;
