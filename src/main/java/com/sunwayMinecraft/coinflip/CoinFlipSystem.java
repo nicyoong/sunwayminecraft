@@ -42,4 +42,13 @@ public class CoinFlipSystem {
             player.sendMessage(color + "Coin landed on " + result + "! You " + outcome + ".");
         }
     }
-    
+
+    public void handleMute(Player player, boolean mute) {
+        if (mute) {
+            mutedPlayers.add(player.getUniqueId());
+            player.sendMessage(ChatColor.GOLD + "Coin flip messages muted.");
+        } else {
+            mutedPlayers.remove(player.getUniqueId());
+            player.sendMessage(ChatColor.GOLD + "Coin flip messages unmuted.");
+        }
+    }
