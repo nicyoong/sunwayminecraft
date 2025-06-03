@@ -8,3 +8,12 @@ import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
+
+public class CoinFlipSystem {
+    private final Economy econ;
+    private final Set<UUID> mutedPlayers = new HashSet<>();
+    private final Random random = new Random();
+
+    public CoinFlipSystem(Economy econ) {
+        this.econ = econ;
+    }
