@@ -20,7 +20,7 @@ public class CoinFlipSystem {
 
   public void processCoinFlip(Player player, double amount, boolean playerGuessHeads) {
     if (econ.getBalance(player) < amount) {
-      player.sendMessage(ChatColor.RED + "Insufficient funds!");
+      player.sendMessage("§cInsufficient funds!");
       return;
     }
 
@@ -37,7 +37,7 @@ public class CoinFlipSystem {
     // Send result if not muted
     if (!mutedPlayers.contains(player.getUniqueId())) {
       String result = isHeads ? "Heads" : "Tails";
-      ChatColor color = won ? ChatColor.GREEN : ChatColor.RED;
+      String color = won ? "§a" : "§c"; // §a = green, §c = red
       String outcome = won ? "won " + econ.format(amount) : "lost " + econ.format(amount);
       player.sendMessage(color + "Coin landed on " + result + "! You " + outcome + ".");
     }
@@ -46,10 +46,10 @@ public class CoinFlipSystem {
   public void handleMute(Player player, boolean mute) {
     if (mute) {
       mutedPlayers.add(player.getUniqueId());
-      player.sendMessage(ChatColor.GOLD + "Coin flip messages muted.");
+      player.sendMessage("§6Coin flip messages muted."); // §6 = gold
     } else {
       mutedPlayers.remove(player.getUniqueId());
-      player.sendMessage(ChatColor.GOLD + "Coin flip messages unmuted.");
+      player.sendMessage("§6Coin flip messages unmuted.");
     }
   }
 

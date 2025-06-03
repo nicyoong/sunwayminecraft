@@ -21,7 +21,7 @@ public class CoinFlipCommands implements CommandExecutor, TabCompleter {
   @Override
   public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
     if (!(sender instanceof Player)) {
-      sender.sendMessage(ChatColor.RED + "Only players can use this command!");
+      sender.sendMessage("§cOnly players can use this command!");
       return true;
     }
 
@@ -46,7 +46,7 @@ public class CoinFlipCommands implements CommandExecutor, TabCompleter {
 
     // Coin flip logic
     if (args.length < 2) {
-      player.sendMessage(ChatColor.RED + "Usage: /cf <amount> <heads|tails|h|t>");
+      player.sendMessage("§cUsage: /cf <amount> <heads|tails|h|t>");
       return true;
     }
 
@@ -59,26 +59,23 @@ public class CoinFlipCommands implements CommandExecutor, TabCompleter {
       boolean isTails = sideInput.startsWith("t");
 
       if (!isHeads && !isTails) {
-        player.sendMessage(ChatColor.RED + "Invalid side! Use heads/h or tails/t");
+        player.sendMessage("§cInvalid side! Use heads/h or tails/t");
         return true;
       }
 
       coinFlipSystem.processCoinFlip(player, amount, isHeads);
     } catch (NumberFormatException e) {
-      player.sendMessage(ChatColor.RED + "Invalid amount! Must be a positive number.");
+      player.sendMessage("§cInvalid amount! Must be a positive number.");
     }
     return true;
   }
 
   private void sendHelp(Player player) {
-    player.sendMessage(ChatColor.GOLD + "--- Coin Flip Help ---");
-    player.sendMessage(
-        ChatColor.YELLOW + "/cf <amount> <heads|h|tails|t>" + ChatColor.WHITE + " - Place a bet");
-    player.sendMessage(
-        ChatColor.YELLOW + "/cf mute" + ChatColor.WHITE + " - Silence coin flip messages");
-    player.sendMessage(
-        ChatColor.YELLOW + "/cf unmute" + ChatColor.WHITE + " - Enable coin flip messages");
-    player.sendMessage(ChatColor.YELLOW + "/cf help" + ChatColor.WHITE + " - Show this help");
+    player.sendMessage("§6--- Coin Flip Help ---");
+    player.sendMessage("§e/cf <amount> <heads|h|tails|t>§f - Place a bet");
+    player.sendMessage("§e/cf mute§f - Silence coin flip messages");
+    player.sendMessage("§e/cf unmute§f - Enable coin flip messages");
+    player.sendMessage("§e/cf help§f - Show this help");
   }
 
   @Override
