@@ -65,16 +65,15 @@ public class CoinFlipCommands implements CommandExecutor, TabCompleter {
       double amount = Double.parseDouble(args[0]);
       if (amount <= 0) throw new NumberFormatException();
 
+      // Validate side argument
       String sideInput = args[1].toLowerCase();
-      boolean isHeads = sideInput.startsWith("h");
-      boolean isTails = sideInput.startsWith("t");
-
-      if (!isHeads && !isTails) {
+      Boolean side = parseSide(sideInput);
+      if (side == null) {
         player.sendMessage("§cInvalid side! Use heads/h or tails/t");
         return;
       }
 
-      coinFlipSystem.processCoinFlip(player, amount, isHeads);
+      coinFlipSystem.processCoinFlip(player, amount, side);
     } catch (NumberFormatException e) {
       player.sendMessage("§cInvalid amount! Must be a positive number.");
     }
@@ -90,19 +89,26 @@ public class CoinFlipCommands implements CommandExecutor, TabCompleter {
       int amount = Integer.parseInt(args[1]);
       if (amount <= 0) throw new NumberFormatException();
 
+      // Validate side argument
       String sideInput = args[2].toLowerCase();
-      boolean isHeads = sideInput.startsWith("h");
-      boolean isTails = sideInput.startsWith("t");
-
-      if (!isHeads && !isTails) {
+      Boolean side = parseSide(sideInput);
+      if (side == null) {
         player.sendMessage("§cInvalid side! Use heads/h or tails/t");
         return;
       }
 
-      itemCoinFlipSystem.processItemFlip(player, amount, isHeads);
+      itemCoinFlipSystem.processItemFlip(player, amount, side);
     } catch (NumberFormatException e) {
       player.sendMessage("§cInvalid amount! Must be a positive integer.");
     }
+  }
+
+  private Boolean parseSide(String input) {
+    return switch (input) {
+      case "heads", "h" -> true;
+      case "tails", "t" -> false;
+      default -> null;
+    };
   }
 
   private void sendHelp(Player player) {
