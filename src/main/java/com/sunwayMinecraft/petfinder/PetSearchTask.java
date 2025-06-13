@@ -202,7 +202,7 @@ public class PetSearchTask extends BukkitRunnable {
     LivingEntity livingPet = (LivingEntity) pet;
     double currentHealth = Math.round(livingPet.getHealth() * 10) / 10.0;
     double maxHealth =
-        Math.round(livingPet.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue() * 10) / 10.0;
+        Math.round(livingPet.getAttribute(Attribute.MAX_HEALTH).getValue() * 10) / 10.0;
     String health = String.format("Health: §7%.1f/%.1f", currentHealth, maxHealth);
 
     boolean sitting = pet instanceof Sittable && ((Sittable) pet).isSitting();

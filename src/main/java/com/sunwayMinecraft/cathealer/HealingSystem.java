@@ -95,7 +95,7 @@ public class HealingSystem {
 
   private void applyCatHealing(Player player, int catCount) {
     double maxHealth =
-        player.getAttribute(org.bukkit.attribute.Attribute.GENERIC_MAX_HEALTH).getValue();
+        player.getAttribute(org.bukkit.attribute.Attribute.MAX_HEALTH).getValue();
     double newHealth = Math.min(player.getHealth() + catCount, maxHealth);
     player.setHealth(newHealth);
   }
