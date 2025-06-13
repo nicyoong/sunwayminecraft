@@ -13,8 +13,7 @@ import com.sunwayMinecraft.petfinder.PetFinderManager;
 import com.sunwayMinecraft.switches.*;
 import com.sunwayMinecraft.realtime.RealTimeManager;
 import com.sunwayMinecraft.commands.RealTimeCommands;
-import com.sunwayMinecraft.coinflip.CoinFlipSystem;
-import com.sunwayMinecraft.coinflip.ItemCoinFlipSystem;
+import com.sunwayMinecraft.coinflip.*;
 import com.sunwayMinecraft.commands.CoinFlipCommands;
 import net.milkbowl.vault.economy.Economy;
 import com.sunwayMinecraft.utils.ConfigLoader;
@@ -40,8 +39,10 @@ public final class SunwayMinecraft extends JavaPlugin {
   // Real Time
   private RealTimeManager realTimeManager;
 
+  // Coin Flip
   private CoinFlipSystem coinFlipSystem;
   private ItemCoinFlipSystem itemCoinFlipSystem;
+  private CoinFlipDatabase coinFlipDatabase;
 
   @Override
   public void onEnable() {
@@ -102,13 +103,17 @@ public final class SunwayMinecraft extends JavaPlugin {
     registerCommand("servertimeutc", realTimeCommands);
 
     // Coin Flip commands
-    CoinFlipCommands coinFlipCommands = new CoinFlipCommands(coinFlipSystem, itemCoinFlipSystem);
+    CoinFlipCommands coinFlipCommands =
+        new CoinFlipCommands(coinFlipSystem, itemCoinFlipSystem, coinFlipDatabase);
     registerCommand("cf", coinFlipCommands);
   }
 
   // Rest of the existing class remains unchanged
   @Override
   public void onDisable() {
+    if (coinFlipDatabase != null) {
+      coinFlipDatabase.close();
+    }
     getLogger().log(Level.INFO, "Disabling SunwayMinecraft plugin...");
   }
 
@@ -170,6 +175,7 @@ public final class SunwayMinecraft extends JavaPlugin {
   }
 
   private void initializeCoinFlipSystem() {
+    coinFlipDatabase = new CoinFlipDatabase(this);
     Economy econ = getEconomy();
     if (econ == null) {
       getLogger().severe("Coin flip disabled - Vault economy not found!");
@@ -177,8 +183,8 @@ public final class SunwayMinecraft extends JavaPlugin {
     }
 
     // Create both systems
-    coinFlipSystem = new CoinFlipSystem(econ);
-    itemCoinFlipSystem = new ItemCoinFlipSystem(coinFlipSystem);
+    coinFlipSystem = new CoinFlipSystem(econ, coinFlipDatabase);
+    itemCoinFlipSystem = new ItemCoinFlipSystem(coinFlipSystem, coinFlipDatabase);
   }
 
   // Add this if you don't have an economy getter

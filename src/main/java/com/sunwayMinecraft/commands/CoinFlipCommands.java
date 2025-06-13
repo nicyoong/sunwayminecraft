@@ -1,7 +1,7 @@
 package com.sunwayMinecraft.commands;
 
-import com.sunwayMinecraft.coinflip.CoinFlipSystem;
-import com.sunwayMinecraft.coinflip.ItemCoinFlipSystem;
+import com.sunwayMinecraft.coinflip.*;
+import net.milkbowl.vault.economy.Economy;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -14,10 +14,17 @@ import java.util.List;
 public class CoinFlipCommands implements CommandExecutor, TabCompleter {
   private final CoinFlipSystem coinFlipSystem;
   private final ItemCoinFlipSystem itemCoinFlipSystem;
+  private final CoinFlipDatabase database;
+  private final Economy econ;
 
-  public CoinFlipCommands(CoinFlipSystem coinFlipSystem, ItemCoinFlipSystem itemCoinFlipSystem) {
+  public CoinFlipCommands(
+      CoinFlipSystem coinFlipSystem,
+      ItemCoinFlipSystem itemCoinFlipSystem,
+      CoinFlipDatabase database) {
     this.coinFlipSystem = coinFlipSystem;
     this.itemCoinFlipSystem = itemCoinFlipSystem;
+    this.database = database;
+    this.econ = coinFlipSystem.getEconomy();
   }
 
   @Override
@@ -47,6 +54,9 @@ public class CoinFlipCommands implements CommandExecutor, TabCompleter {
         return true;
       case "item":
         handleItemFlip(player, args);
+        return true;
+      case "stats":
+        showStats(player);
         return true;
     }
 
@@ -121,7 +131,8 @@ public class CoinFlipCommands implements CommandExecutor, TabCompleter {
   }
 
   @Override
-  public List<String> onTabComplete(CommandSender sender, Command cmd, String alias, String[] args) {
+  public List<String> onTabComplete(
+      CommandSender sender, Command cmd, String alias, String[] args) {
     List<String> completions = new ArrayList<>();
 
     if (args.length == 1) {
@@ -157,5 +168,33 @@ public class CoinFlipCommands implements CommandExecutor, TabCompleter {
       }
     }
     return completions;
+  }
+
+  private void showStats(Player player) {
+    PlayerStats stats = database.getPlayerStats(player.getUniqueId());
+
+    player.sendMessage("§6=== Coin Flip Stats ===");
+    player.sendMessage("§eTotal Games: §f" + stats.getTotalGames());
+    player.sendMessage("§eWin Rate: §f" + String.format("%.2f", stats.getWinPercentage()) + "%");
+    player.sendMessage("");
+    player.sendMessage("§6Money Flips:");
+    player.sendMessage("§7- Wins: §a" + stats.getMoneyWins());
+    player.sendMessage("§7- Losses: §c" + stats.getMoneyLosses());
+    player.sendMessage("§7- Wagered: §e" + econ.format(stats.getMoneyWagered()));
+    player.sendMessage("§7- Won: §a" + econ.format(stats.getMoneyWon()));
+    player.sendMessage(
+        "§7- Profit: §"
+            + (stats.getMoneyProfit() >= 0 ? "a" : "c")
+            + econ.format(stats.getMoneyProfit()));
+    player.sendMessage("");
+    player.sendMessage("§6Item Flips:");
+    player.sendMessage("§7- Wins: §a" + stats.getItemWins());
+    player.sendMessage("§7- Losses: §c" + stats.getItemLosses());
+    player.sendMessage("§7- Items Wagered: §e" + stats.getItemsWagered());
+    player.sendMessage("§7- Items Won: §a" + stats.getItemsWon());
+    player.sendMessage(
+        "§7- Net Items: §"
+            + (stats.getItemsWon() - stats.getItemsWagered() >= 0 ? "a" : "c")
+            + (stats.getItemsWon() - stats.getItemsWagered()));
   }
 }
