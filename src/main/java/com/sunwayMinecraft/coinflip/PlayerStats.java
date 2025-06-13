@@ -53,4 +53,42 @@ public class PlayerStats {
   public int getItemsWon() {
     return itemsWon;
   }
+
+  // Setters
+  public void addMoneyWin(double amount) {
+    moneyWins++;
+    moneyWon += amount * 2;
+    moneyWagered += amount;
+  }
+
+  public void addMoneyLoss(double amount) {
+    moneyLosses++;
+    moneyWagered += amount;
+  }
+
+  public void addItemWin(int amount) {
+    itemWins++;
+    itemsWon += amount * 2;
+    itemsWagered += amount;
+  }
+
+  public void addItemLoss(int amount) {
+    itemLosses++;
+    itemsWagered += amount;
+  }
+
+  // Calculated properties
+  public int getTotalGames() {
+    return moneyWins + moneyLosses + itemWins + itemLosses;
+  }
+
+  public double getWinPercentage() {
+    int wins = moneyWins + itemWins;
+    int total = getTotalGames();
+    return total > 0 ? (double) wins / total * 100 : 0;
+  }
+
+  public double getMoneyProfit() {
+    return moneyWon - moneyWagered;
+  }
 }
