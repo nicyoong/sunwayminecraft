@@ -4,6 +4,8 @@ import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
+import org.bukkit.block.data.BlockData;
+import org.bukkit.block.data.Lightable;
 import org.bukkit.scheduler.BukkitRunnable;
 
 /**
@@ -120,6 +122,25 @@ public class CelestialLightScheduler extends BukkitRunnable {
                         }
 
                         Block block = loc.getBlock();
+                        Material current = block.getType();
+                        if (LightManager.isCopperBulb(current)) {
+                          if (turnOn) {
+                            // Ensure bulb is lit
+                            BlockData data = block.getBlockData();
+                            if (data instanceof Lightable lightable && !lightable.isLit()) {
+                              lightable.setLit(true);
+                              block.setBlockData(lightable);
+                            }
+                          } else {
+                            // Ensure bulb is unlit
+                            BlockData data = block.getBlockData();
+                            if (data instanceof Lightable lightable && lightable.isLit()) {
+                              lightable.setLit(false);
+                              block.setBlockData(lightable);
+                            }
+                          }
+                          return;
+                        }
                         Material targetMaterial = getTargetMaterial(block.getType(), turnOn);
 
                         if (targetMaterial != null) {

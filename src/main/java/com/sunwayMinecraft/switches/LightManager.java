@@ -3,6 +3,8 @@ package com.sunwayMinecraft.switches;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
+import org.bukkit.block.data.BlockData;
+import org.bukkit.block.data.Lightable;
 import java.util.*;
 
 /**
@@ -41,6 +43,7 @@ public class LightManager {
           Material.JACK_O_LANTERN, Material.CARVED_PUMPKIN,
           Material.SHROOMLIGHT, Material.ORANGE_CONCRETE);
   private static final Map<Material, Material> REVERSE_MAPPINGS = createReverseMap();
+  private static final boolean COPPER_BULB_MODULE = true; // Toggle this flag
   private final LightConfigManager configManager;
 
   public LightManager(LightConfigManager configManager) {
@@ -75,6 +78,20 @@ public class LightManager {
     return REVERSE_MAPPINGS.get(off);
   }
 
+  public static boolean isCopperBulb(Material material) {
+    return COPPER_BULB_MODULE &&
+            material.name().endsWith("_COPPER_BULB");
+  }
+
+  public static void toggleCopperBulb(Block block) {
+    if (!COPPER_BULB_MODULE) return;
+
+    BlockData data = block.getBlockData();
+    if (data instanceof Lightable lightable) {
+      lightable.setLit(!lightable.isLit());
+      block.setBlockData(lightable);
+    }
+  }
   /**
    * Scans the specified {@link LightRegion} for all blocks whose material matches one of the
    * configured light mappings.

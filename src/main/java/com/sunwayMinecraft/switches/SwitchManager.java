@@ -42,6 +42,10 @@ public class SwitchManager {
             loc -> {
               Block block = loc.getBlock();
               Material current = block.getType();
+              if (LightManager.isCopperBulb(current)) {
+                LightManager.toggleCopperBulb(block);
+                return;
+              }
               Material target =
                   LightManager.isLightBlock(current)
                       ? LightManager.getOffMaterial(current)
