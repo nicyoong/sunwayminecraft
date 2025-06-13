@@ -13,4 +13,15 @@ public class CoinFlipDatabase {
     this.plugin = plugin;
     initializeDatabase();
   }
+
+  private void initializeDatabase() {
+    try {
+      Class.forName("org.sqlite.JDBC");
+      connection =
+          DriverManager.getConnection("jdbc:sqlite:" + plugin.getDataFolder() + "/coinflip.db");
+      createTables();
+    } catch (ClassNotFoundException | SQLException e) {
+      plugin.getLogger().severe("Failed to initialize database: " + e.getMessage());
+    }
+  }
 }
