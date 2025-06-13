@@ -65,4 +65,26 @@ public class CoinFlipDatabase {
     }
     return stats;
   }
+
+  public void updateStats(PlayerStats stats) {
+    String sql = "INSERT OR REPLACE INTO player_stats ("
+            + "uuid, money_wins, money_losses, money_wagered, money_won, "
+            + "item_wins, item_losses, items_wagered, items_won) "
+            + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+    try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+      pstmt.setString(1, stats.getUuid().toString());
+      pstmt.setInt(2, stats.getMoneyWins());
+      pstmt.setInt(3, stats.getMoneyLosses());
+      pstmt.setDouble(4, stats.getMoneyWagered());
+      pstmt.setDouble(5, stats.getMoneyWon());
+      pstmt.setInt(6, stats.getItemWins());
+      pstmt.setInt(7, stats.getItemLosses());
+      pstmt.setInt(8, stats.getItemsWagered());
+      pstmt.setInt(9, stats.getItemsWon());
+      pstmt.executeUpdate();
+    } catch (SQLException e) {
+      plugin.getLogger().severe("Error updating player stats: " + e.getMessage());
+    }
+  }
 }
