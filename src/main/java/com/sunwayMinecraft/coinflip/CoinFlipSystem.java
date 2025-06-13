@@ -30,6 +30,15 @@ public class CoinFlipSystem {
     econ.withdrawPlayer(player, amount);
     boolean won = processFlipLogic(playerGuessHeads);
 
+    PlayerStats stats = database.getPlayerStats(player.getUniqueId());
+    if (won) {
+      econ.depositPlayer(player, amount * 2);
+      stats.addMoneyWin(amount);
+    } else {
+      stats.addMoneyLoss(amount);
+    }
+    database.updateStats(stats);
+
     if (won) econ.depositPlayer(player, amount * 2);
     sendMoneyResult(player, won, amount);
   }
