@@ -100,6 +100,10 @@ public final class SunwayMinecraft extends JavaPlugin {
     RealTimeCommands realTimeCommands = new RealTimeCommands(realTimeManager);
     registerCommand("servertime", realTimeCommands);
     registerCommand("servertimeutc", realTimeCommands);
+
+    // Coin Flip commands
+    CoinFlipCommands coinFlipCommands = new CoinFlipCommands(coinFlipSystem, itemCoinFlipSystem);
+    registerCommand("cf", coinFlipCommands);
   }
 
   // Rest of the existing class remains unchanged
@@ -175,9 +179,6 @@ public final class SunwayMinecraft extends JavaPlugin {
     // Create both systems
     coinFlipSystem = new CoinFlipSystem(econ);
     itemCoinFlipSystem = new ItemCoinFlipSystem(coinFlipSystem);
-
-    // Pass both systems to commands
-    getCommand("cf").setExecutor(new CoinFlipCommands(coinFlipSystem, itemCoinFlipSystem));
   }
 
   // Add this if you don't have an economy getter
