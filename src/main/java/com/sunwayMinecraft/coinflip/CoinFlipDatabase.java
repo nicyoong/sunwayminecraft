@@ -27,7 +27,8 @@ public class CoinFlipDatabase {
 
   private void createTables() throws SQLException {
     try (Statement stmt = connection.createStatement()) {
-      String sql = "CREATE TABLE IF NOT EXISTS player_stats ("
+      String sql =
+          "CREATE TABLE IF NOT EXISTS player_stats ("
               + "uuid TEXT PRIMARY KEY,"
               + "money_wins INTEGER DEFAULT 0,"
               + "money_losses INTEGER DEFAULT 0,"
@@ -67,7 +68,8 @@ public class CoinFlipDatabase {
   }
 
   public void updateStats(PlayerStats stats) {
-    String sql = "INSERT OR REPLACE INTO player_stats ("
+    String sql =
+        "INSERT OR REPLACE INTO player_stats ("
             + "uuid, money_wins, money_losses, money_wagered, money_won, "
             + "item_wins, item_losses, items_wagered, items_won) "
             + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
@@ -85,6 +87,16 @@ public class CoinFlipDatabase {
       pstmt.executeUpdate();
     } catch (SQLException e) {
       plugin.getLogger().severe("Error updating player stats: " + e.getMessage());
+    }
+  }
+
+  public void close() {
+    try {
+      if (connection != null) {
+        connection.close();
+      }
+    } catch (SQLException e) {
+      plugin.getLogger().severe("Error closing database: " + e.getMessage());
     }
   }
 }
