@@ -38,7 +38,8 @@ public class LightManager {
       Map.of(
           Material.SEA_LANTERN, Material.WHITE_CONCRETE,
           Material.GLOWSTONE, Material.COBBLESTONE,
-          Material.JACK_O_LANTERN, Material.CARVED_PUMPKIN);
+          Material.JACK_O_LANTERN, Material.CARVED_PUMPKIN,
+          Material.SHROOMLIGHT, Material.ORANGE_CONCRETE);
   private static final Map<Material, Material> REVERSE_MAPPINGS = createReverseMap();
   private final LightConfigManager configManager;
 
