@@ -24,4 +24,20 @@ public class CoinFlipDatabase {
       plugin.getLogger().severe("Failed to initialize database: " + e.getMessage());
     }
   }
+
+  private void createTables() throws SQLException {
+    try (Statement stmt = connection.createStatement()) {
+      String sql = "CREATE TABLE IF NOT EXISTS player_stats ("
+              + "uuid TEXT PRIMARY KEY,"
+              + "money_wins INTEGER DEFAULT 0,"
+              + "money_losses INTEGER DEFAULT 0,"
+              + "money_wagered REAL DEFAULT 0,"
+              + "money_won REAL DEFAULT 0,"
+              + "item_wins INTEGER DEFAULT 0,"
+              + "item_losses INTEGER DEFAULT 0,"
+              + "items_wagered INTEGER DEFAULT 0,"
+              + "items_won INTEGER DEFAULT 0)";
+      stmt.execute(sql);
+    }
+  }
 }
