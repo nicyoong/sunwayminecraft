@@ -3,15 +3,15 @@ package com.sunwayMinecraft.coinflip;
 import java.util.UUID;
 
 public class PlayerStats {
-  private final UUID uuid;
-  private int moneyWins;
-  private int moneyLosses;
-  private double moneyWagered;
-  private double moneyWon;
-  private int itemWins;
-  private int itemLosses;
-  private int itemsWagered;
-  private int itemsWon;
+  public final UUID uuid;
+  public int moneyWins;
+  public int moneyLosses;
+  public double moneyWagered;
+  public double moneyWon;
+  public int itemWins;
+  public int itemLosses;
+  public int itemsWagered;
+  public int itemsWon;
 
   public PlayerStats(UUID uuid) {
     this.uuid = uuid;
