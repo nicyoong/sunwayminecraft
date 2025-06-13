@@ -1,7 +1,7 @@
 package com.sunwayMinecraft.commands;
 
-import com.sunwayMinecraft.coinflip.CoinFlipSystem;
-import com.sunwayMinecraft.coinflip.ItemCoinFlipSystem;
+import com.sunwayMinecraft.coinflip.*;
+import net.milkbowl.vault.economy.Economy;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -14,6 +14,8 @@ import java.util.List;
 public class CoinFlipCommands implements CommandExecutor, TabCompleter {
   private final CoinFlipSystem coinFlipSystem;
   private final ItemCoinFlipSystem itemCoinFlipSystem;
+  private final CoinFlipDatabase database;
+  private final Economy econ;
 
   public CoinFlipCommands(
       CoinFlipSystem coinFlipSystem,
@@ -22,6 +24,7 @@ public class CoinFlipCommands implements CommandExecutor, TabCompleter {
     this.coinFlipSystem = coinFlipSystem;
     this.itemCoinFlipSystem = itemCoinFlipSystem;
     this.database = database;
+    this.econ = coinFlipSystem.getEconomy();
   }
 
   @Override

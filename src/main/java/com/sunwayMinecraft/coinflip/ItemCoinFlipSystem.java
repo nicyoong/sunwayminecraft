@@ -11,9 +11,11 @@ import java.util.List;
 
 public class ItemCoinFlipSystem {
   private final CoinFlipSystem coinFlipSystem;
+  private final CoinFlipDatabase database;
 
-  public ItemCoinFlipSystem(CoinFlipSystem coinFlipSystem) {
+  public ItemCoinFlipSystem(CoinFlipSystem coinFlipSystem, CoinFlipDatabase database) {
     this.coinFlipSystem = coinFlipSystem;
+    this.database = database;
   }
 
   public void processItemFlip(Player player, int amount, boolean guessHeads) {
@@ -72,6 +74,14 @@ public class ItemCoinFlipSystem {
 
     // Process flip
     boolean won = coinFlipSystem.processFlipLogic(guessHeads);
+
+    PlayerStats stats = database.getPlayerStats(player.getUniqueId());
+    if (won) {
+      stats.addItemWin(amount);
+    } else {
+      stats.addItemLoss(amount);
+    }
+    database.updateStats(stats);
 
     // Handle winnings
     if (won) {

@@ -13,9 +13,11 @@ public class CoinFlipSystem {
   private final Economy econ;
   private final Set<UUID> mutedPlayers = new HashSet<>();
   private final Random random = new Random();
+  private final CoinFlipDatabase database;
 
-  public CoinFlipSystem(Economy econ) {
+  public CoinFlipSystem(Economy econ, CoinFlipDatabase database) {
     this.econ = econ;
+    this.database = database;
   }
 
   public void processCoinFlip(Player player, double amount, boolean playerGuessHeads) {
@@ -47,6 +49,10 @@ public class CoinFlipSystem {
   public boolean processFlipLogic(boolean playerGuessHeads) {
     boolean isHeads = random.nextBoolean();
     return playerGuessHeads == isHeads;
+  }
+
+  public Economy getEconomy() {
+    return econ;
   }
 
   private void sendMoneyResult(Player player, boolean won, double amount) {
