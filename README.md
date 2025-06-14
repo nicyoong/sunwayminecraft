@@ -139,6 +139,26 @@
   - `/servertime` - Local time (SG/MY time)
   - `/servertimeutc` - UTC time  
 
+#### 🪙 Coin Flip  
+*Wager items or currency on chance outcomes*
+
+**How It Works**:  
+1. **Place Bet**: Use `/cf <amount> <heads|tails>` for money or `/cf item <amount> <heads|tails>` for items  
+2. **Flip Coin**: System generates instant 50/50 outcome  
+3. **Get Results**: Win = 2x return, Lose = forfeit wager  
+
+**Rules**:  
+- Money bets require sufficient balance  
+- Item bets use held stackable items only (no tools/armor)  
+- Maximum item bet: 1 stack (64 items)  
+- Mute messages with `/cf mute`  
+
+**Pro Tips**:  
+- Check stats with `/cf stats` to track performance  
+- Start with small wagers to learn probabilities  
+- Combine with trading for resource exchanges  
+- Use mute feature during frequent plays  
+
 ---
 
 ## 🛠 For Server Admins & Developers  
@@ -152,6 +172,7 @@
 | **Pet Finder**       | Pet tracking via entity scanning             | `PetFinderManager`         |  
 | **Real-Time Sync**   | UTC/timezone calculations                    | `RealTimeManager`          |  
 | **Cat Healing**      | Passive healing via nearby tamed cats        | `HealingSystem`            |
+| **Coin Flip**        | Player item/money wager system               | `CoinFlipSystem`, `CoinFlipCommands` |
 
 ### Configuration  
 *Handled via YAML files in `/plugins/SunwayMinecraft/`*:  
