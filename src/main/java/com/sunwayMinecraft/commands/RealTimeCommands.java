@@ -70,15 +70,16 @@ public class RealTimeCommands implements CommandExecutor {
    */
   @Override
   public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
-    switch (cmd.getName().toLowerCase()) {
-      case "servertime":
-        sendTimeMessage(sender, realTimeManager.getLocalZone(), "Singapore Time (UTC+8)");
-        return true;
+    String name = cmd.getName().toLowerCase();
 
-      case "servertimeutc":
-        sendTimeMessage(sender, realTimeManager.getUTCZone(), "UTC Time");
-        return true;
+    if (name.equals("servertime")) {
+      sendTimeMessage(sender, realTimeManager.getLocalZone(), "Singapore Time (UTC+8)");
+      return true;
+    } else if (name.equals("servertimeutc")) {
+      sendTimeMessage(sender, realTimeManager.getUTCZone(), "UTC Time");
+      return true;
     }
+
     return false;
   }
 
