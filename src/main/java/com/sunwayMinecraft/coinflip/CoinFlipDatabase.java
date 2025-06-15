@@ -56,15 +56,14 @@ public class CoinFlipDatabase {
       ResultSet rs = pstmt.executeQuery();
 
       if (rs.next()) {
-        stats = new PlayerStats(uuid);
-        stats.moneyWins = rs.getInt("money_wins");
-        stats.moneyLosses = rs.getInt("money_losses");
-        stats.moneyWagered = rs.getDouble("money_wagered");
-        stats.moneyWon = rs.getDouble("money_won");
-        stats.itemWins = rs.getInt("item_wins");
-        stats.itemLosses = rs.getInt("item_losses");
-        stats.itemsWagered = rs.getInt("items_wagered");
-        stats.itemsWon = rs.getInt("items_won");
+        stats.setMoneyWins(rs.getInt("money_wins"));
+        stats.setMoneyLosses(rs.getInt("money_losses"));
+        stats.setMoneyWagered(rs.getDouble("money_wagered"));
+        stats.setMoneyWon(rs.getDouble("money_won"));
+        stats.setItemWins(rs.getInt("item_wins"));
+        stats.setItemLosses(rs.getInt("item_losses"));
+        stats.setItemsWagered(rs.getInt("items_wagered"));
+        stats.setItemsWon(rs.getInt("items_won"));
       }
     } catch (SQLException e) {
       plugin.getLogger().severe("Error getting player stats: " + e.getMessage());
