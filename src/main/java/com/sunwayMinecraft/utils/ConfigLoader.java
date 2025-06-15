@@ -8,6 +8,10 @@ import java.io.File;
 
 public class ConfigLoader {
 
+  private ConfigLoader() {
+    throw new AssertionError("No ConfigLoader instances for you!");
+  }
+
   private static FileConfiguration beaconConfig;
 
   /**
