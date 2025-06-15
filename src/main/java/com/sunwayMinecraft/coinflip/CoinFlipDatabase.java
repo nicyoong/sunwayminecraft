@@ -44,7 +44,12 @@ public class CoinFlipDatabase {
 
   public PlayerStats getPlayerStats(UUID uuid) {
     PlayerStats stats = new PlayerStats(uuid);
-    String sql = "SELECT * FROM player_stats WHERE uuid = ?";
+    String sql =
+        "SELECT "
+            + "money_wins, money_losses, money_wagered, money_won, "
+            + "item_wins, item_losses, items_wagered, items_won "
+            + "FROM player_stats "
+            + "WHERE uuid = ?";
 
     try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
       pstmt.setString(1, uuid.toString());
