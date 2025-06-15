@@ -84,7 +84,14 @@ public class BeaconManager {
     int ticksPerTransition = configLoader.getTicksPerTransition();
     List<Material> colorCycle = configLoader.getColorCycle();
     // You might want to reset the ColorTransitionManager with new parameters
-    plugin.getLogger().log(Level.INFO, "Configuration reloaded.");
+    plugin
+        .getLogger()
+        .log(
+            Level.INFO,
+            "Configuration reloaded: ticksPerTransition="
+                + ticksPerTransition
+                + ", colorCycle="
+                + colorCycle);
   }
 
   /**
