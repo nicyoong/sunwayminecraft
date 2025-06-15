@@ -34,7 +34,6 @@ public class ColorTransitionManager implements ColorTransition {
   private int currentBinaryCycle = 0;
   private int ticksPerTransition;
   private BukkitTask colorTransitionTask;
-  private boolean isRunning = false;
 
   /**
    * Constructor for the ColorTransitionManager class. Initializes the manager with the provided
@@ -97,8 +96,6 @@ public class ColorTransitionManager implements ColorTransition {
             }
           }
         }.runTaskTimer(plugin, 0, this.ticksPerTransition);
-
-    isRunning = true;
     plugin
         .getLogger()
         .log(
@@ -116,7 +113,6 @@ public class ColorTransitionManager implements ColorTransition {
   public void pause() {
     if (colorTransitionTask != null && !colorTransitionTask.isCancelled()) {
       colorTransitionTask.cancel(); // Cancel the scheduled task
-      isRunning = false; // Mark as not running
       plugin.getLogger().log(Level.INFO, "Beacon color transitions paused.");
     }
   }
