@@ -60,6 +60,9 @@ public class CoinFlipCommands implements CommandExecutor, TabCompleter {
       case "stats":
         showStats(player);
         return true;
+      default:
+        handleMoneyFlip(player, args);
+        return true;
     }
 
     // Default to money flip
