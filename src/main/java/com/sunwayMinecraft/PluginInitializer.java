@@ -26,8 +26,6 @@ public class PluginInitializer {
   // Switches
   private LightConfigManager lightConfigManager;
   private SwitchConfigManager switchConfigManager;
-  private SwitchManager switchManager;
-  private CelestialLightScheduler celestialScheduler;
 
   // Cat healing
   // (no fields needed)
@@ -71,17 +69,18 @@ public class PluginInitializer {
   }
 
   private void initSwitchSystem() {
-    lightConfigManager = new LightConfigManager(plugin);
-    switchConfigManager = new SwitchConfigManager(plugin);
+    LightConfigManager lightCfgManager = new LightConfigManager(plugin);
+    SwitchConfigManager switchCfgManager = new SwitchConfigManager(plugin);
     lightConfigManager.reload();
     switchConfigManager.reload();
 
-    switchManager = new SwitchManager(switchConfigManager, lightConfigManager);
-    SwitchListener listener = new SwitchListener(switchManager, switchConfigManager);
+    SwitchManager switchManager = new SwitchManager(switchCfgManager, lightCfgManager);
+    SwitchListener listener = new SwitchListener(switchManager, switchCfgManager);
     plugin.getServer().getPluginManager().registerEvents(listener, plugin);
 
     // every tick to check for midnight
-    celestialScheduler = new CelestialLightScheduler(switchConfigManager, "world");
+    CelestialLightScheduler celestialScheduler =
+        new CelestialLightScheduler(switchCfgManager, "world");
     celestialScheduler.runTaskTimer(plugin, 0L, 20L);
   }
 
