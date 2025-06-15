@@ -29,8 +29,12 @@ import org.bukkit.World;
  */
 public class CuboidRegion {
   private final String worldName;
-  private final int minX, minY, minZ;
-  private final int maxX, maxY, maxZ;
+  private final int minX;
+  private final int minY;
+  private final int minZ;
+  private final int maxX;
+  private final int maxY;
+  private final int maxZ;
 
   public CuboidRegion(String worldName, Location pos1, Location pos2) {
     this.worldName = worldName;
