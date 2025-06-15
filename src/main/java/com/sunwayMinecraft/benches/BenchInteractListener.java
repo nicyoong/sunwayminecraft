@@ -44,7 +44,7 @@ public class BenchInteractListener implements Listener {
   private final RegionManager regionManager;
   private final EffectApplier effectApplier;
   private final Map<UUID, Long> cooldownEndTimes = new HashMap<>(); // Changed to Map
-  private final int COOLDOWN_TICKS = 80;
+  private static final int COOLDOWNTICKS = 80;
 
   /**
    * Constructs a new BenchInteractListener instance with the provided SunwayMinecraft plugin and
@@ -135,7 +135,7 @@ public class BenchInteractListener implements Listener {
 
       // Apply effects and cooldown
       effectApplier.applyRegeneration(player);
-      long cooldownEnd = currentTime + (COOLDOWN_TICKS * 50); // Convert ticks to milliseconds
+      long cooldownEnd = currentTime + (COOLDOWNTICKS * 50); // Convert ticks to milliseconds
       cooldownEndTimes.put(playerId, cooldownEnd);
 
       // Schedule cooldown removal
@@ -147,7 +147,7 @@ public class BenchInteractListener implements Listener {
               () -> {
                 cooldownEndTimes.remove(playerId);
               },
-              COOLDOWN_TICKS);
+              COOLDOWNTICKS);
     }
   }
 
