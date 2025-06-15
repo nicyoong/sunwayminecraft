@@ -43,7 +43,8 @@ public class LightManager {
           Material.JACK_O_LANTERN, Material.CARVED_PUMPKIN,
           Material.SHROOMLIGHT, Material.ORANGE_CONCRETE);
   private static final Map<Material, Material> REVERSE_MAPPINGS = createReverseMap();
-  private static final boolean COPPER_BULB_MODULE = true; // Toggle this flag
+  private static final boolean COPPER_BULB_MODULE = true; // Toggle this flag for copper bulbs support
+  private static final boolean REDSTONE_LAMP_MODULE = true; // Toggle this flag for redstone lamps support
   private final LightConfigManager configManager;
 
   public LightManager(LightConfigManager configManager) {
@@ -92,6 +93,21 @@ public class LightManager {
       block.setBlockData(lightable);
     }
   }
+
+  public static boolean isRedstoneLamp(Material material) {
+    return REDSTONE_LAMP_MODULE && material == Material.REDSTONE_LAMP;
+  }
+
+  public static void toggleRedstoneLamp(Block block) {
+    if (!REDSTONE_LAMP_MODULE) return;
+
+    BlockData data = block.getBlockData();
+    if (data instanceof Lightable lightable) {
+      lightable.setLit(!lightable.isLit());
+      block.setBlockData(lightable);
+    }
+  }
+
   /**
    * Scans the specified {@link LightRegion} for all blocks whose material matches one of the
    * configured light mappings.
@@ -132,7 +148,9 @@ public class LightManager {
       for (int y = region.minY(); y <= region.maxY(); y++) {
         for (int z = region.minZ(); z <= region.maxZ(); z++) {
           Block block = world.getBlockAt(x, y, z);
-          if (LIGHT_MAPPINGS.containsKey(block.getType())) {
+          if (LIGHT_MAPPINGS.containsKey(type) ||
+                  (COPPER_BULB_MODULE && isCopperBulb(type)) ||
+                  (REDSTONE_LAMP_MODULE && isRedstoneLamp(type))) {
             lightBlocks.add(block);
           }
         }
