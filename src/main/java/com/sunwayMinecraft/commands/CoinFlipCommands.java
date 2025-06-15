@@ -157,11 +157,12 @@ public class CoinFlipCommands implements CommandExecutor, TabCompleter {
         completions.add("50");
         completions.add("100");
       }
-    } else if (args.length == 3) {
-      if ("item".equalsIgnoreCase(args[0]) || !args[0].matches("(?i)help|mute|unmute")) {
-        completions.addAll(HEADS_ALIASES);
-        completions.addAll(TAILS_ALIASES);
-      }
+    } else if (args.length == 3
+            && ("item".equalsIgnoreCase(args[0])
+            || !args[0].matches("(?i)help|mute|unmute"))) {
+      completions.addAll(HEADS_ALIASES);
+      completions.addAll(TAILS_ALIASES);
+    }
     }
     return completions;
   }
