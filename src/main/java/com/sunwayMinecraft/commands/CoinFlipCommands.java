@@ -12,6 +12,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class CoinFlipCommands implements CommandExecutor, TabCompleter {
+  private static final Set<String> HEADS_ALIASES = Set.of("heads", "h");
+  private static final Set<String> TAILS_ALIASES = Set.of("tails", "t");
   private final CoinFlipSystem coinFlipSystem;
   private final ItemCoinFlipSystem itemCoinFlipSystem;
   private final CoinFlipDatabase database;
@@ -77,13 +79,13 @@ public class CoinFlipCommands implements CommandExecutor, TabCompleter {
 
       // Validate side argument
       String sideInput = args[1].toLowerCase();
-      Boolean side = parseSide(sideInput);
-      if (side == null) {
+      Optional<Boolean> sideOpt = parseSide(sideInput);
+      if (sideOpt.isEmpty()) {
         player.sendMessage("§cInvalid side! Use heads/h or tails/t");
         return;
       }
 
-      coinFlipSystem.processCoinFlip(player, amount, side);
+      coinFlipSystem.processCoinFlip(player, amount, sideOpt.get());
     } catch (NumberFormatException e) {
       player.sendMessage("§cInvalid amount! Must be a positive number.");
     }
@@ -101,24 +103,22 @@ public class CoinFlipCommands implements CommandExecutor, TabCompleter {
 
       // Validate side argument
       String sideInput = args[2].toLowerCase();
-      Boolean side = parseSide(sideInput);
-      if (side == null) {
+      Optional<Boolean> sideOpt = parseSide(sideInput);
+      if (sideOpt.isEmpty()) {
         player.sendMessage("§cInvalid side! Use heads/h or tails/t");
         return;
       }
 
-      itemCoinFlipSystem.processItemFlip(player, amount, side);
+      itemCoinFlipSystem.processItemFlip(player, amount, sideOpt.get());
     } catch (NumberFormatException e) {
       player.sendMessage("§cInvalid amount! Must be a positive integer.");
     }
   }
 
-  private Boolean parseSide(String input) {
-    return switch (input) {
-      case "heads", "h" -> true;
-      case "tails", "t" -> false;
-      default -> null;
-    };
+  private Optional<Boolean> parseSide(String input) {
+    if (HEADS_ALIASES.contains(input)) return Optional.of(true);
+    if (TAILS_ALIASES.contains(input)) return Optional.of(false);
+    return Optional.empty();
   }
 
   private void sendHelp(Player player) {
@@ -155,16 +155,9 @@ public class CoinFlipCommands implements CommandExecutor, TabCompleter {
         completions.add("100");
       }
     } else if (args.length == 3) {
-      if ("item".equalsIgnoreCase(args[0])) {
-        completions.add("heads");
-        completions.add("h");
-        completions.add("tails");
-        completions.add("t");
-      } else if (!args[0].matches("(?i)help|mute|unmute")) {
-        completions.add("heads");
-        completions.add("h");
-        completions.add("tails");
-        completions.add("t");
+      if ("item".equalsIgnoreCase(args[0]) || !args[0].matches("(?i)help|mute|unmute")) {
+        completions.addAll(HEADS_ALIASES);
+        completions.addAll(TAILS_ALIASES);
       }
     }
     return completions;
