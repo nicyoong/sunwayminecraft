@@ -7,7 +7,6 @@ import java.util.logging.Level;
 public final class SunwayMinecraft extends JavaPlugin {
 
   private PluginInitializer initializer;
-  private CommandRegistrar commandRegistrar;
 
   @Override
   public void onEnable() {
@@ -17,7 +16,7 @@ public final class SunwayMinecraft extends JavaPlugin {
     initializer = new PluginInitializer(this);
 
     // Register all commands in one place
-    commandRegistrar = new CommandRegistrar(this);
+    CommandRegistrar commandRegistrar = new CommandRegistrar(this);
     commandRegistrar.registerAll(initializer);
 
     getLogger().log(Level.INFO, "SunwayMinecraft plugin has been enabled.");
