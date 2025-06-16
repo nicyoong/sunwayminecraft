@@ -17,4 +17,4 @@ buttons:
 # Format:
 # [world],[x],[y],[z] (button location)
 # lights: list of [world],[x],[y],[z] (light locations)
-# Valid light types: SEA_LANTERN, GLOWSTONE, JACK_O_LANTERN
+# Valid light types: SEA_LANTERN, GLOWSTONE, JACK_O_LANTERN, SHROOMLIGHT
