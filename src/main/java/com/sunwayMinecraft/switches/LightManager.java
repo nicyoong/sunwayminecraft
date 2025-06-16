@@ -117,7 +117,7 @@ public class LightManager {
    * <ol>
    *   <li>Calculates the total volume of the region as (maxX - minX + 1) × (maxY - minY + 1) ×
    *       (maxZ - minZ + 1).
-   *   <li>If the volume exceeds 1,000,000 blocks, throws {@link IllegalArgumentException} to
+   *   <li>If the volume exceeds 200*200*384 blocks, throws {@link IllegalArgumentException} to
    *       prevent excessively large scans.
    *   <li>Iterates over each block coordinate within the region bounds.
    *   <li>For each block, checks if its type is present in the {@code LIGHT_MAPPINGS} key set.
@@ -139,8 +139,8 @@ public class LightManager {
             * (region.maxY() - region.minY() + 1)
             * (region.maxZ() - region.minZ() + 1);
 
-    if (volume > 1_000_000) {
-      throw new IllegalArgumentException("Region is too large! Max 1M blocks");
+    if (volume > 200 * 200 * 384) {
+      throw new IllegalArgumentException("Region is too large! Max 200*200*384 blocks");
     }
 
     List<Block> lightBlocks = new ArrayList<>();
@@ -148,9 +148,9 @@ public class LightManager {
       for (int y = region.minY(); y <= region.maxY(); y++) {
         for (int z = region.minZ(); z <= region.maxZ(); z++) {
           Block block = world.getBlockAt(x, y, z);
-          if (LIGHT_MAPPINGS.containsKey(type) ||
-                  (COPPER_BULB_MODULE && isCopperBulb(type)) ||
-                  (REDSTONE_LAMP_MODULE && isRedstoneLamp(type))) {
+          if (LIGHT_MAPPINGS.containsKey(block.getType()) ||
+                  (COPPER_BULB_MODULE && isCopperBulb(block.getType())) ||
+                  (REDSTONE_LAMP_MODULE && isRedstoneLamp(block.getType()))) {
             lightBlocks.add(block);
           }
         }
