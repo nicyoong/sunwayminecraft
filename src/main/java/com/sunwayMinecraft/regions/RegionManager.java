@@ -171,4 +171,27 @@ public class RegionManager {
         }
         return false;
     }
+
+    public boolean updateRegionBounds(String name, int minX, int minY, int minZ, int maxX, int maxY, int maxZ) {
+        Region region = regions.get(name.toLowerCase());
+        if (region == null || region.isDecoupled()) return false;
+
+        String sql = "UPDATE regions SET minX=?, minY=?, minZ=?, maxX=?, maxY=?, maxZ=? WHERE id=?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, minX);
+            stmt.setInt(2, minY);
+            stmt.setInt(3, minZ);
+            stmt.setInt(4, maxX);
+            stmt.setInt(5, maxY);
+            stmt.setInt(6, maxZ);
+            stmt.setInt(7, region.getId());
+            stmt.executeUpdate();
+
+            region.updateBounds(minX, minY, minZ, maxX, maxY, maxZ);
+            return true;
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, "Failed to update region: " + name, e);
+        }
+        return false;
+    }
 }
