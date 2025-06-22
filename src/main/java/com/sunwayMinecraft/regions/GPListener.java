@@ -38,4 +38,23 @@ public class GPListener implements Listener{
                 false
         );
     }
+
+    @EventHandler
+    public void onClaimModified(ClaimModifiedEvent event) {
+        Claim claim = event.getClaim();
+        Region region = regionManager.getRegionByClaimId(claim.getID());
+
+        // Only update if region exists and is still linked to GP
+        if (region != null && !region.isDecoupled()) {
+            regionManager.updateRegionBounds(
+                    region.getName(),
+                    claim.getLesserBoundaryCorner().getBlockX(),
+                    claim.getLesserBoundaryCorner().getBlockY(),
+                    claim.getLesserBoundaryCorner().getBlockZ(),
+                    claim.getGreaterBoundaryCorner().getBlockX(),
+                    claim.getGreaterBoundaryCorner().getBlockY(),
+                    claim.getGreaterBoundaryCorner().getBlockZ()
+            );
+        }
+    }
 }
