@@ -157,4 +157,26 @@ public class RegionCommands {
         }
         return true;
     }
+
+    private boolean manageTrust(CommandSender sender, String[] args, boolean add) {
+        if (args.length < 3) {
+            sender.sendMessage("§cUsage: /sunwayregion " + (add ? "trust" : "untrust") + " <name> <player>");
+            return true;
+        }
+
+        String name = args[1];
+        Player player = Bukkit.getPlayer(args[2]);
+        if (player == null) {
+            sender.sendMessage("§cPlayer not found: " + args[2]);
+            return true;
+        }
+
+        if (regionManager.manageTrust(name, player.getUniqueId(), add)) {
+            String action = add ? "trusted" : "untrusted";
+            sender.sendMessage("§aPlayer " + player.getName() + " " + action + " in region " + name);
+        } else {
+            sender.sendMessage("§cFailed to modify trust (region not found or not decoupled?)");
+        }
+        return true;
+    }
 }
