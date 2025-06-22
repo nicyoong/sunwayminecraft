@@ -256,4 +256,37 @@ public class RegionManager {
         }
         return false;
     }
+
+    public List<Region> getRegionsAt(Location location) {
+        List<Region> result = new ArrayList<>();
+        for (Region region : regionSpatialIndex) {
+            if (region.contains(location)) {
+                result.add(region);
+            }
+        }
+        return result;
+    }
+
+    public Region getRegionByName(String name) {
+        return regions.get(name.toLowerCase());
+    }
+
+    public Region getRegionByClaimId(long claimId) {
+        for (Region region : regions.values()) {
+            if (claimId == region.getClaimId()) {
+                return region;
+            }
+        }
+        return null;
+    }
+
+    public void closeConnection() {
+        try {
+            if (connection != null && !connection.isClosed()) {
+                connection.close();
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, "Failed to close database connection", e);
+        }
+    }
 }
