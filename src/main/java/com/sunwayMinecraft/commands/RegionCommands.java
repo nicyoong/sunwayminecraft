@@ -142,4 +142,19 @@ public class RegionCommands {
         }
         return true;
     }
+
+    private boolean decoupleRegion(CommandSender sender, String[] args) {
+        if (args.length < 2) {
+            sender.sendMessage("§cUsage: /sunwayregion decouple <name>");
+            return true;
+        }
+
+        String name = args[1];
+        if (regionManager.setDecoupled(name, true)) {
+            sender.sendMessage("§aRegion '" + name + "' decoupled from GP");
+        } else {
+            sender.sendMessage("§cRegion not found: " + name);
+        }
+        return true;
+    }
 }
