@@ -22,4 +22,37 @@ public class RegionCommands {
         this.plugin = plugin;
         this.regionManager = regionManager;
     }
+
+    public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
+        if (args.length == 0) {
+            sendUsage(sender);
+            return true;
+        }
+
+        String sub = args[0].toLowerCase();
+        switch (sub) {
+            case "create":
+                return createRegion(sender, args);
+            case "resize":
+                return resizeRegion(sender, args);
+            case "delete":
+                return deleteRegion(sender, args);
+            case "decouple":
+                return decoupleRegion(sender, args);
+            case "trust":
+                return manageTrust(sender, args, true);
+            case "untrust":
+                return manageTrust(sender, args, false);
+            case "trustlist":
+                return listTrust(sender, args);
+            case "list":
+                return listRegions(sender);
+            case "here":
+                return listRegionsAt(sender);
+            default:
+                sender.sendMessage(ChatColor.RED + "Unknown subcommand");
+                sendUsage(sender);
+                return true;
+        }
+    }
 }
