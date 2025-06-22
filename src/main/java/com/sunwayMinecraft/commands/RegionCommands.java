@@ -55,4 +55,17 @@ public class RegionCommands {
                 return true;
         }
     }
+
+    private void sendUsage(CommandSender sender) {
+        sender.sendMessage("§eRegion Commands:");
+        sender.sendMessage("§6/sunwayregion create <name> <world> <minX> <minY> <minZ> <maxX> <maxY> <maxZ>");
+        sender.sendMessage("§6/sunwayregion resize <name> <minX> <minY> <minZ> <maxX> <maxY> <maxZ>");
+        sender.sendMessage("§6/sunwayregion delete <name>");
+        sender.sendMessage("§6/sunwayregion decouple <name>");
+        sender.sendMessage("§6/sunwayregion trust <name> <player>");
+        sender.sendMessage("§6/sunwayregion untrust <name> <player>");
+        sender.sendMessage("§6/sunwayregion trustlist <name>");
+        sender.sendMessage("§6/sunwayregion list");
+        sender.sendMessage("§6/sunwayregion here");
+    }
 }
