@@ -257,6 +257,10 @@ public class RegionManager {
         return false;
     }
 
+    public Map<String, Region> getRegions() {
+        return Collections.unmodifiableMap(regions);
+    }
+
     public List<Region> getRegionsAt(Location location) {
         List<Region> result = new ArrayList<>();
         for (Region region : regionSpatialIndex) {

@@ -13,6 +13,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -209,6 +210,24 @@ public class RegionCommands {
         for (UUID uuid : trusted) {
             String name = Bukkit.getOfflinePlayer(uuid).getName();
             sender.sendMessage("§7 - " + (name != null ? name : uuid.toString()));
+        }
+        return true;
+    }
+
+    private boolean listRegions(CommandSender sender) {
+        Map<String, Region> regions = regionManager.getRegions();
+        if (regions.isEmpty()) {
+            sender.sendMessage("§eNo regions defined");
+            return true;
+        }
+
+        sender.sendMessage("§6Defined regions (" + regions.size() + "):");
+        for (Region region : regions.values()) {
+            String status = region.isDecoupled() ? "Decoupled" : "GP-Linked";
+            sender.sendMessage(
+                    "§a - " + region.getName() +
+                            "§7 (" + status + ")"
+            );
         }
         return true;
     }
