@@ -41,7 +41,7 @@ import java.util.*;
  */
 public class BenchInteractListener implements Listener {
   private final SunwayMinecraft plugin;
-  private final RegionManager regionManager;
+  private final BenchRegionManager regionManager;
   private final EffectApplier effectApplier;
   private final Map<UUID, Long> cooldownEndTimes = new HashMap<>(); // Changed to Map
   private static final int COOLDOWNTICKS = 80;
@@ -60,7 +60,7 @@ public class BenchInteractListener implements Listener {
    * @param regionManager The RegionManager instance, used to check if the player is within a
    *     specific region where bench interactions are allowed.
    */
-  public BenchInteractListener(SunwayMinecraft plugin, RegionManager regionManager) {
+  public BenchInteractListener(SunwayMinecraft plugin, BenchRegionManager regionManager) {
     this.plugin = plugin;
     this.regionManager = regionManager;
     this.effectApplier = new EffectApplier();

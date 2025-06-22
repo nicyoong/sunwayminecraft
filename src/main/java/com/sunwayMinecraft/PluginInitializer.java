@@ -2,7 +2,7 @@ package com.sunwayMinecraft;
 
 import com.sunwayMinecraft.beacon.BeaconManager;
 import com.sunwayMinecraft.benches.BenchesConfigManager;
-import com.sunwayMinecraft.benches.RegionManager;
+import com.sunwayMinecraft.benches.BenchRegionManager;
 import com.sunwayMinecraft.cathealer.HealingSystem;
 import com.sunwayMinecraft.petfinder.PetFinderManager;
 import com.sunwayMinecraft.realtime.RealTimeManager;
@@ -10,7 +10,6 @@ import com.sunwayMinecraft.coinflip.*;
 import com.sunwayMinecraft.switches.*;
 import com.sunwayMinecraft.utils.ConfigLoader;
 import net.milkbowl.vault.economy.Economy;
-import com.sunwayMinecraft.SunwayMinecraft;
 
 public class PluginInitializer {
 
@@ -21,7 +20,7 @@ public class PluginInitializer {
 
   // Benches
   private BenchesConfigManager benchesConfigManager;
-  private RegionManager regionManager;
+  private BenchRegionManager regionManager;
 
   // Switches
   private LightConfigManager lightConfigManager;
@@ -64,7 +63,7 @@ public class PluginInitializer {
 
   private void initBenchSystem() {
     benchesConfigManager = new BenchesConfigManager(plugin);
-    regionManager = new RegionManager(plugin, benchesConfigManager);
+    regionManager = new BenchRegionManager(plugin, benchesConfigManager);
     new com.sunwayMinecraft.benches.BenchInteractListener(plugin, regionManager).register();
   }
 
@@ -121,7 +120,7 @@ public class PluginInitializer {
     return benchesConfigManager;
   }
 
-  public RegionManager getRegionManager() {
+  public BenchRegionManager getRegionManager() {
     return regionManager;
   }
 

@@ -33,12 +33,12 @@ import java.util.*;
  * where the key is the region name (from the configuration file) and the value is the
  * `CuboidRegion` object.
  */
-public class RegionManager {
+public class BenchRegionManager {
   private final JavaPlugin plugin;
   private final BenchesConfigManager configManager;
   private final Map<String, CuboidRegion> regions = new HashMap<>();
 
-  public RegionManager(JavaPlugin plugin, BenchesConfigManager configManager) {
+  public BenchRegionManager(JavaPlugin plugin, BenchesConfigManager configManager) {
     this.plugin = plugin;
     this.configManager = configManager;
     loadRegions();

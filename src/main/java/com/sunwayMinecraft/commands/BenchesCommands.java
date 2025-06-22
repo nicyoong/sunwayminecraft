@@ -1,7 +1,6 @@
 package com.sunwayMinecraft.commands;
 
-import com.sunwayMinecraft.benches.BenchesConfigManager;
-import com.sunwayMinecraft.benches.RegionManager;
+import com.sunwayMinecraft.benches.BenchRegionManager;
 import com.sunwayMinecraft.benches.CuboidRegion;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -37,7 +36,7 @@ import java.util.List;
  * a specific type of action or query related to benches.
  */
 public class BenchesCommands implements CommandExecutor {
-  private final RegionManager regionManager;
+  private final BenchRegionManager regionManager;
 
   /**
    * Constructs a new BenchesCommands instance with the provided RegionManager.
@@ -48,7 +47,7 @@ public class BenchesCommands implements CommandExecutor {
    * @param regionManager The RegionManager instance, used to manage and check bench regions in the
    *     world.
    */
-  public BenchesCommands(RegionManager regionManager) {
+  public BenchesCommands(BenchRegionManager regionManager) {
     this.regionManager = regionManager;
   }
 
