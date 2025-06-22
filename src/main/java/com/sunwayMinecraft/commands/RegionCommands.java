@@ -1,5 +1,6 @@
 package com.sunwayMinecraft.commands;
 
+import com.sunwayMinecraft.regions.Region;
 import com.sunwayMinecraft.regions.RegionManager;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -12,6 +13,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 public class RegionCommands {
@@ -176,6 +178,37 @@ public class RegionCommands {
             sender.sendMessage("§aPlayer " + player.getName() + " " + action + " in region " + name);
         } else {
             sender.sendMessage("§cFailed to modify trust (region not found or not decoupled?)");
+        }
+        return true;
+    }
+
+    private boolean listTrust(CommandSender sender, String[] args) {
+        if (args.length < 2) {
+            sender.sendMessage("§cUsage: /sunwayregion trustlist <name>");
+            return true;
+        }
+
+        Region region = regionManager.getRegionByName(args[1]);
+        if (region == null) {
+            sender.sendMessage("§cRegion not found");
+            return true;
+        }
+
+        if (!region.isDecoupled()) {
+            sender.sendMessage("§cRegion is still coupled to GP");
+            return true;
+        }
+
+        Set<UUID> trusted = region.getTrustedPlayers();
+        if (trusted.isEmpty()) {
+            sender.sendMessage("§eNo trusted players for " + region.getName());
+            return true;
+        }
+
+        sender.sendMessage("§6Trusted players in " + region.getName() + ":");
+        for (UUID uuid : trusted) {
+            String name = Bukkit.getOfflinePlayer(uuid).getName();
+            sender.sendMessage("§7 - " + (name != null ? name : uuid.toString()));
         }
         return true;
     }
