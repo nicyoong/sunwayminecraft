@@ -212,4 +212,22 @@ public class RegionManager {
         }
         return false;
     }
+
+    public boolean setDecoupled(String name, boolean decoupled) {
+        Region region = regions.get(name.toLowerCase());
+        if (region == null) return false;
+
+        String sql = "UPDATE regions SET decoupled=? WHERE id=?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setBoolean(1, decoupled);
+            stmt.setInt(2, region.getId());
+            stmt.executeUpdate();
+
+            region.setDecoupled(decoupled);
+            return true;
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, "Failed to update region: " + name, e);
+        }
+        return false;
+    }
 }
