@@ -101,4 +101,30 @@ public class RegionCommands {
         }
         return true;
     }
+
+    private boolean resizeRegion(CommandSender sender, String[] args) {
+        if (args.length < 9) {
+            sender.sendMessage("§cUsage: /sunwayregion resize <name> <minX> <minY> <minZ> <maxX> <maxY> <maxZ>");
+            return true;
+        }
+
+        String name = args[1];
+        try {
+            int minX = Integer.parseInt(args[2]);
+            int minY = Integer.parseInt(args[3]);
+            int minZ = Integer.parseInt(args[4]);
+            int maxX = Integer.parseInt(args[5]);
+            int maxY = Integer.parseInt(args[6]);
+            int maxZ = Integer.parseInt(args[7]);
+
+            if (regionManager.updateRegionBounds(name, minX, minY, minZ, maxX, maxY, maxZ)) {
+                sender.sendMessage("§aRegion '" + name + "' resized");
+            } else {
+                sender.sendMessage("§cRegion resize failed (not found or decoupled?)");
+            }
+        } catch (NumberFormatException e) {
+            sender.sendMessage("§cCoordinates must be integers");
+        }
+        return true;
+    }
 }
