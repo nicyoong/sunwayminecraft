@@ -194,4 +194,22 @@ public class RegionManager {
         }
         return false;
     }
+
+    public boolean deleteRegion(String name) {
+        Region region = regions.get(name.toLowerCase());
+        if (region == null) return false;
+
+        String sql = "DELETE FROM regions WHERE id=?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, region.getId());
+            stmt.executeUpdate();
+
+            regions.remove(name.toLowerCase());
+            regionSpatialIndex.remove(region);
+            return true;
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, "Failed to delete region: " + name, e);
+        }
+        return false;
+    }
 }
