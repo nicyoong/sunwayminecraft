@@ -126,4 +126,49 @@ public class RegionManager {
         }
         plugin.getLogger().info("Imported " + imported + " regions from legacy configuration");
     }
+
+    public boolean createRegion(String name, String world, int minX, int minY, int minZ,
+                                int maxX, int maxY, int maxZ, Long claimId, boolean decoupled) {
+        // Validate coordinates
+        if (minX > maxX || minY > maxY || minZ > maxZ) return false;
+
+        // Check if region exists
+        if (regions.containsKey(name.toLowerCase())) return false;
+
+        // Insert into database
+        String sql = "INSERT INTO regions (name, world, minX, minY, minZ, maxX, maxY, maxZ, claimId, decoupled) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            stmt.setString(1, name);
+            stmt.setString(2, world);
+            stmt.setInt(3, minX);
+            stmt.setInt(4, minY);
+            stmt.setInt(5, minZ);
+            stmt.setInt(6, maxX);
+            stmt.setInt(7, maxY);
+            stmt.setInt(8, maxZ);
+            if (claimId != null) {
+                stmt.setLong(9, claimId);
+            } else {
+                stmt.setNull(9, Types.BIGINT);
+            }
+            stmt.setBoolean(10, decoupled);
+            stmt.executeUpdate();
+
+            // Get generated ID
+            ResultSet rs = stmt.getGeneratedKeys();
+            if (rs.next()) {
+                int id = rs.getInt(1);
+                Region region = new Region(id, name, world, minX, minY, minZ,
+                        maxX, maxY, maxZ, claimId, decoupled, new HashSet<>());
+                regions.put(name.toLowerCase(), region);
+                regionSpatialIndex.add(region);
+                return true;
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, "Failed to create region: " + name, e);
+        }
+        return false;
+    }
 }
