@@ -57,4 +57,15 @@ public class GPListener implements Listener{
             );
         }
     }
+
+    @EventHandler
+    public void onClaimDeleted(ClaimDeletedEvent event) {
+        Claim claim = event.getClaim();
+        Region region = regionManager.getRegionByClaimId(claim.getID());
+
+        // Only delete if region exists and is still linked to GP
+        if (region != null && !region.isDecoupled()) {
+            regionManager.deleteRegion(region.getName());
+        }
+    }
 }
