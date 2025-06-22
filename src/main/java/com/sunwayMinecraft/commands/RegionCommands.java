@@ -127,4 +127,19 @@ public class RegionCommands {
         }
         return true;
     }
+
+    private boolean deleteRegion(CommandSender sender, String[] args) {
+        if (args.length < 2) {
+            sender.sendMessage("§cUsage: /sunwayregion delete <name>");
+            return true;
+        }
+
+        String name = args[1];
+        if (regionManager.deleteRegion(name)) {
+            sender.sendMessage("§aRegion '" + name + "' deleted");
+        } else {
+            sender.sendMessage("§cRegion not found: " + name);
+        }
+        return true;
+    }
 }
