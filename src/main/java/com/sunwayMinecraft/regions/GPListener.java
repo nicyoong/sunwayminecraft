@@ -16,4 +16,26 @@ public class GPListener implements Listener{
         this.plugin = plugin;
         this.regionManager = regionManager;
     }
+
+    @EventHandler
+    public void onClaimCreated(ClaimCreatedEvent event) {
+        Claim claim = event.getClaim();
+        // Skip if region already exists for this claim
+        if (regionManager.getRegionByClaimId(claim.getID()) != null) return;
+
+        // Create new region linked to claim
+        String world = claim.getLesserBoundaryCorner().getWorld().getName();
+        regionManager.createRegion(
+                "GP_" + claim.getID(),
+                world,
+                claim.getLesserBoundaryCorner().getBlockX(),
+                claim.getLesserBoundaryCorner().getBlockY(),
+                claim.getLesserBoundaryCorner().getBlockZ(),
+                claim.getGreaterBoundaryCorner().getBlockX(),
+                claim.getGreaterBoundaryCorner().getBlockY(),
+                claim.getGreaterBoundaryCorner().getBlockZ(),
+                claim.getID(),
+                false
+        );
+    }
 }
