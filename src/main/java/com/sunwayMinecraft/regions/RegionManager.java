@@ -54,4 +54,49 @@ public class RegionManager {
             loadRegions();
         }
     }
+
+    private void loadRegions() throws SQLException {
+        regions.clear();
+        regionSpatialIndex.clear();
+
+        // Load regions
+        try (PreparedStatement stmt = connection.prepareStatement(
+                "SELECT id, name, world, minX, minY, minZ, maxX, maxY, maxZ, claimId, decoupled FROM regions")) {
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                int id = rs.getInt("id");
+                String name = rs.getString("name");
+                String world = rs.getString("world");
+                int minX = rs.getInt("minX");
+                int minY = rs.getInt("minY");
+                int minZ = rs.getInt("minZ");
+                int maxX = rs.getInt("maxX");
+                int maxY = rs.getInt("maxY");
+                int maxZ = rs.getInt("maxZ");
+                Long claimId = rs.getObject("claimId", Long.class);
+                boolean decoupled = rs.getBoolean("decoupled");
+
+                // Load trusted players
+                Set<UUID> trusted = loadTrustedPlayers(id);
+
+                Region region = new Region(id, name, world, minX, minY, minZ,
+                        maxX, maxY, maxZ, claimId, decoupled, trusted);
+                regions.put(name.toLowerCase(), region);
+                regionSpatialIndex.add(region);
+            }
+        }
+    }
+
+    private Set<UUID> loadTrustedPlayers(int regionId) throws SQLException {
+        Set<UUID> trusted = new HashSet<>();
+        try (PreparedStatement stmt = connection.prepareStatement(
+                "SELECT player_uuid FROM region_trust WHERE region_id = ?")) {
+            stmt.setInt(1, regionId);
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                trusted.add(UUID.fromString(rs.getString("player_uuid")));
+            }
+        }
+        return trusted;
+    }
 }
