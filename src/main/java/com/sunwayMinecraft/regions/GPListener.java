@@ -1,9 +1,7 @@
 package com.sunwayMinecraft.regions;
 
 import me.ryanhamshire.GriefPrevention.Claim;
-import me.ryanhamshire.GriefPrevention.events.ClaimCreatedEvent;
-import me.ryanhamshire.GriefPrevention.events.ClaimDeletedEvent;
-import me.ryanhamshire.GriefPrevention.events.ClaimModifiedEvent;
+import me.ryanhamshire.GriefPrevention.events.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -40,22 +38,12 @@ public class GPListener implements Listener{
     }
 
     @EventHandler
-    public void onClaimModified(ClaimModifiedEvent event) {
-        Claim claim = event.getClaim();
-        Region region = regionManager.getRegionByClaimId(claim.getID());
+    public void onClaimResize(ClaimResizeEvent event) {
+        updateRegionForClaim(event.getTo());
+    }
 
-        // Only update if region exists and is still linked to GP
-        if (region != null && !region.isDecoupled()) {
-            regionManager.updateRegionBounds(
-                    region.getName(),
-                    claim.getLesserBoundaryCorner().getBlockX(),
-                    claim.getLesserBoundaryCorner().getBlockY(),
-                    claim.getLesserBoundaryCorner().getBlockZ(),
-                    claim.getGreaterBoundaryCorner().getBlockX(),
-                    claim.getGreaterBoundaryCorner().getBlockY(),
-                    claim.getGreaterBoundaryCorner().getBlockZ()
-            );
-        }
+    public void onClaimExtend(ClaimExtendEvent event) {
+        updateRegionForClaim(event.getTo());
     }
 
     @EventHandler
@@ -66,6 +54,21 @@ public class GPListener implements Listener{
         // Only delete if region exists and is still linked to GP
         if (region != null && !region.isDecoupled()) {
             regionManager.deleteRegion(region.getName());
+        }
+    }
+
+    private void updateRegionForClaim(Claim claim) {
+        Region region = regionManager.getRegionByClaimId(claim.getID());
+        if (region != null && !region.isDecoupled()) {
+            regionManager.updateRegionBounds(
+                    region.getName(),
+                    claim.getLesserBoundaryCorner().getBlockX(),
+                    claim.getLesserBoundaryCorner().getBlockY(),
+                    claim.getLesserBoundaryCorner().getBlockZ(),
+                    claim.getGreaterBoundaryCorner().getBlockX(),
+                    claim.getGreaterBoundaryCorner().getBlockY(),
+                    claim.getGreaterBoundaryCorner().getBlockZ()
+            );
         }
     }
 }
