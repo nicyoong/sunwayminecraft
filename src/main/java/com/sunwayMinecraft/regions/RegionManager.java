@@ -230,4 +230,30 @@ public class RegionManager {
         }
         return false;
     }
+
+    public boolean manageTrust(String name, UUID player, boolean add) {
+        Region region = regions.get(name.toLowerCase());
+        if (region == null || !region.isDecoupled()) return false;
+
+        String sql = add ?
+                "INSERT OR IGNORE INTO region_trust (region_id, player_uuid) VALUES (?, ?)" :
+                "DELETE FROM region_trust WHERE region_id=? AND player_uuid=?";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, region.getId());
+            stmt.setString(2, player.toString());
+            stmt.executeUpdate();
+
+            if (add) {
+                region.getTrustedPlayers().add(player);
+            } else {
+                region.getTrustedPlayers().remove(player);
+            }
+            return true;
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, "Failed to " + (add ? "add" : "remove") +
+                    " trust for region: " + name, e);
+        }
+        return false;
+    }
 }
