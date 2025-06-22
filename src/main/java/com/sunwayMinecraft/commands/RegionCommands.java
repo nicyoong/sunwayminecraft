@@ -68,4 +68,37 @@ public class RegionCommands {
         sender.sendMessage("§6/sunwayregion list");
         sender.sendMessage("§6/sunwayregion here");
     }
+
+    private boolean createRegion(CommandSender sender, String[] args) {
+        if (args.length < 9) {
+            sender.sendMessage("§cUsage: /sunwayregion create <name> <world> <minX> <minY> <minZ> <maxX> <maxY> <maxZ>");
+            return true;
+        }
+
+        String name = args[1];
+        String worldName = args[2];
+        World world = Bukkit.getWorld(worldName);
+        if (world == null) {
+            sender.sendMessage("§cWorld not found: " + worldName);
+            return true;
+        }
+
+        try {
+            int minX = Integer.parseInt(args[3]);
+            int minY = Integer.parseInt(args[4]);
+            int minZ = Integer.parseInt(args[5]);
+            int maxX = Integer.parseInt(args[6]);
+            int maxY = Integer.parseInt(args[7]);
+            int maxZ = Integer.parseInt(args[8]);
+
+            if (regionManager.createRegion(name, worldName, minX, minY, minZ, maxX, maxY, maxZ, null, false)) {
+                sender.sendMessage("§aRegion '" + name + "' created");
+            } else {
+                sender.sendMessage("§cRegion creation failed (name already exists?)");
+            }
+        } catch (NumberFormatException e) {
+            sender.sendMessage("§cCoordinates must be integers");
+        }
+        return true;
+    }
 }
