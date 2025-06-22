@@ -231,4 +231,28 @@ public class RegionCommands {
         }
         return true;
     }
+
+    private boolean listRegionsAt(CommandSender sender) {
+        if (!(sender instanceof Player)) {
+            sender.sendMessage("§cOnly players can use this command");
+            return true;
+        }
+
+        Player player = (Player) sender;
+        List<Region> regions = regionManager.getRegionsAt(player.getLocation());
+        if (regions.isEmpty()) {
+            sender.sendMessage("§eNo regions at your location");
+            return true;
+        }
+
+        sender.sendMessage("§6Regions at your location:");
+        for (Region region : regions) {
+            String status = region.isDecoupled() ? "Decoupled" : "GP-Linked";
+            sender.sendMessage(
+                    "§a - " + region.getName() +
+                            "§7 (" + status + ")"
+            );
+        }
+        return true;
+    }
 }
