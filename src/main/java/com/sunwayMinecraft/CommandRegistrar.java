@@ -22,7 +22,7 @@ public class CommandRegistrar {
 
     // Bench commands
     BenchesCommands benchesCmds =
-        new BenchesCommands(init.getRegionManager());
+        new BenchesCommands(init.getBenchRegionManager());
     registerCommand("listbenches", benchesCmds);
     registerCommand("benchinfo", benchesCmds);
     registerCommand("checkbenchregion", benchesCmds);

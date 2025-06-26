@@ -46,6 +46,11 @@ public class RegionDatabase {
         }
     }
 
+    private Long getNullableLong(ResultSet rs, String column) throws SQLException {
+        long value = rs.getLong(column);
+        return rs.wasNull() ? null : value;
+    }
+
     public List<Region> loadAllRegions() throws SQLException {
         List<Region> regions = new ArrayList<>();
         try (PreparedStatement stmt = connection.prepareStatement(
@@ -61,7 +66,10 @@ public class RegionDatabase {
                 int maxX = rs.getInt("maxX");
                 int maxY = rs.getInt("maxY");
                 int maxZ = rs.getInt("maxZ");
-                Long claimId = rs.getObject("claimId", Long.class);
+
+                // Handle NULL claimId properly
+                Long claimId = getNullableLong(rs, "claimId");
+
                 boolean decoupled = rs.getBoolean("decoupled");
 
                 Set<UUID> trusted = loadTrustedPlayers(id);

@@ -7,23 +7,29 @@ import com.sunwayMinecraft.cathealer.HealingSystem;
 import com.sunwayMinecraft.petfinder.PetFinderManager;
 import com.sunwayMinecraft.realtime.RealTimeManager;
 import com.sunwayMinecraft.coinflip.*;
+import com.sunwayMinecraft.regions.RegionManager;
 import com.sunwayMinecraft.switches.*;
 import com.sunwayMinecraft.utils.ConfigLoader;
 import net.milkbowl.vault.economy.Economy;
+import org.bukkit.Bukkit;
+
+import java.util.logging.Level;
 
 public class PluginInitializer {
 
   private final SunwayMinecraft plugin;
+
+  // Region
+  private RegionManager regionManager;
 
   // Beacon
   private BeaconManager beaconManager;
 
   // Benches
   private BenchesConfigManager benchesConfigManager;
-  private BenchRegionManager regionManager;
+  private BenchRegionManager benchRegionManager;
 
   // Switches
-  private LightConfigManager lightConfigManager;
   private SwitchConfigManager switchConfigManager;
 
   // Cat healing
@@ -47,6 +53,7 @@ public class PluginInitializer {
     ConfigLoader.getConfig(plugin);
 
     // 2) Initialize each system
+    initRegionModule();
     initBeaconSystem();
     initBenchSystem();
     initSwitchSystem();
@@ -56,6 +63,22 @@ public class PluginInitializer {
     initCoinFlipSystem();
   }
 
+  private void initRegionModule() {
+    regionManager = new RegionManager(plugin);
+    try {
+      regionManager.initialize();
+
+      // Setup GP integration only if region manager initialized successfully
+      if (Bukkit.getPluginManager().getPlugin("GriefPrevention") != null) {
+        new com.sunwayMinecraft.regions.GPListener(plugin, regionManager);
+      }
+    } catch (Exception e) {
+      plugin.getLogger().log(Level.SEVERE, "Region module initialization failed", e);
+      // Disable region-dependent systems
+      regionManager = null;
+    }
+  }
+
   private void initBeaconSystem() {
     beaconManager = new BeaconManager(plugin);
     beaconManager.initialize();
@@ -63,24 +86,17 @@ public class PluginInitializer {
 
   private void initBenchSystem() {
     benchesConfigManager = new BenchesConfigManager(plugin);
-    regionManager = new BenchRegionManager(plugin, benchesConfigManager);
-    new com.sunwayMinecraft.benches.BenchInteractListener(plugin, regionManager).register();
+    benchRegionManager = new BenchRegionManager(plugin, benchesConfigManager);
+    new com.sunwayMinecraft.benches.BenchInteractListener(plugin, benchRegionManager).register();
   }
 
   private void initSwitchSystem() {
-    LightConfigManager lightCfgManager = new LightConfigManager(plugin);
-    SwitchConfigManager switchCfgManager = new SwitchConfigManager(plugin);
-    lightConfigManager.reload();
+    switchConfigManager = new SwitchConfigManager(plugin);
     switchConfigManager.reload();
 
-    SwitchManager switchManager = new SwitchManager(switchCfgManager, lightCfgManager);
-    SwitchListener listener = new SwitchListener(switchManager, switchCfgManager);
+    // Updated to use the new RegionManager
+    SwitchListener listener = new SwitchListener(regionManager, switchConfigManager);
     plugin.getServer().getPluginManager().registerEvents(listener, plugin);
-
-    // every tick to check for midnight
-    CelestialLightScheduler celestialScheduler =
-        new CelestialLightScheduler(switchCfgManager, "world");
-    celestialScheduler.runTaskTimer(plugin, 0L, 20L);
   }
 
   private void initCatHealingSystem() {
@@ -120,12 +136,8 @@ public class PluginInitializer {
     return benchesConfigManager;
   }
 
-  public BenchRegionManager getRegionManager() {
-    return regionManager;
-  }
-
-  public LightConfigManager getLightConfigManager() {
-    return lightConfigManager;
+  public BenchRegionManager getBenchRegionManager() {
+    return benchRegionManager;
   }
 
   public SwitchConfigManager getSwitchConfigManager() {

@@ -1,30 +1,58 @@
 package com.sunwayMinecraft.switches;
 
+import com.sunwayMinecraft.regions.RegionManager;
+import org.bukkit.Location;
+import org.bukkit.block.Block;
+import org.bukkit.block.data.Lightable;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.block.Block;
+
 import java.util.Map;
-import org.bukkit.Location;
 
 public class SwitchListener implements Listener {
-  private final SwitchManager switchManager;
-  private final SwitchConfigManager switchConfig;
 
-  public SwitchListener(SwitchManager switchManager, SwitchConfigManager switchConfig) {
-    this.switchManager = switchManager;
-    this.switchConfig = switchConfig;
+  private final RegionManager regionManager;
+  private final SwitchConfigManager switchConfigManager;
+
+  public SwitchListener(RegionManager regionManager, SwitchConfigManager switchConfigManager) {
+    this.regionManager = regionManager;
+    this.switchConfigManager = switchConfigManager;
   }
 
   @EventHandler
   public void onButtonPress(PlayerInteractEvent event) {
-    Block block = event.getClickedBlock();
-    if (block == null || !block.getType().toString().endsWith("_BUTTON")) return;
+    if (event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
 
-    Map<Location, ButtonSwitch> switches = switchConfig.getSwitches();
-    ButtonSwitch buttonSwitch = switches.get(block.getLocation());
-    if (buttonSwitch != null) {
-      switchManager.toggleLights(buttonSwitch, event.getPlayer());
+    Block block = event.getClickedBlock();
+    if (block == null) return;
+
+    // Check if it's a button
+    String material = block.getType().name();
+    if (!material.endsWith("_BUTTON")) return;
+
+    Location buttonLoc = block.getLocation();
+    Map<Location, ButtonSwitch> switches = switchConfigManager.getSwitches();
+
+    ButtonSwitch buttonSwitch = switches.get(buttonLoc);
+    if (buttonSwitch == null) return;
+
+    event.setCancelled(true); // Prevent accidental use
+
+    // Toggle lights using region-based permissions
+    for (Location lightLoc : buttonSwitch.lights()) {
+      if (regionManager.canModifyAtLocation(event.getPlayer(), lightLoc)) {
+        toggleLight(lightLoc.getBlock());
+      }
+    }
+  }
+
+  private void toggleLight(Block block) {
+    if (block.getBlockData() instanceof Lightable) {
+      Lightable lightable = (Lightable) block.getBlockData();
+      lightable.setLit(!lightable.isLit());
+      block.setBlockData(lightable);
     }
   }
 }
