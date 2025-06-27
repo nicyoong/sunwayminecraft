@@ -29,14 +29,17 @@ public class CommandRegistrar {
     registerCommand("reloadsunwaybenches", benchesCmds);
 
     // Switch commands
-    SwitchesCommands switchCmds =
-        new SwitchesCommands(plugin, init.getLightConfigManager(), init.getSwitchConfigManager());
+    SwitchesCommands switchCmds = new SwitchesCommands(
+            plugin,
+            init.getSwitchConfigManager(),
+            init.getRegionManager()  // Add RegionManager dependency
+    );
     registerCommand("scanlights", switchCmds);
     registerCommand("exportlights", switchCmds);
     registerCommand("listlightregions", switchCmds);
-    registerCommand("checklightregion", switchCmds);
-    registerCommand("lightinfo", switchCmds);
-    registerCommand("reloadsunwayswitches", switchCmds);
+//    registerCommand("checklightregion", switchCmds);
+//    registerCommand("lightinfo", switchCmds);
+//    registerCommand("reloadsunwayswitches", switchCmds);
 
     // Pet finder
     PetFinderCommands petCmds = new PetFinderCommands(init.getPetFinderManager());

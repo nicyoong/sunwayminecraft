@@ -128,6 +128,10 @@ public class PluginInitializer {
   }
 
   // ──────── getters for CommandRegistrar ─────────
+  public RegionManager getRegionManager() {
+    return regionManager;
+  }
+
   public BeaconManager getBeaconManager() {
     return beaconManager;
   }

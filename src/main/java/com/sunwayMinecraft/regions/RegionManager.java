@@ -1,6 +1,11 @@
 package com.sunwayMinecraft.regions;
 
+import me.ryanhamshire.GriefPrevention.Claim;
+import me.ryanhamshire.GriefPrevention.ClaimPermission;
+import me.ryanhamshire.GriefPrevention.GriefPrevention;
 import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import java.sql.SQLException;
 import java.util.*;
@@ -11,12 +16,21 @@ public class RegionManager {
     private final RegionDatabase database;
     private final RegionRepository repository;
     private final RegionImporter importer;
+    private final GriefPrevention griefPrevention;
 
     public RegionManager(JavaPlugin plugin) {
         this.plugin = plugin;
         this.database = new RegionDatabase(plugin);
         this.repository = new RegionRepository();
         this.importer = new RegionImporter();
+        this.griefPrevention = initGriefPrevention();
+    }
+
+    private GriefPrevention initGriefPrevention() {
+        if (plugin.getServer().getPluginManager().getPlugin("GriefPrevention") != null) {
+            return GriefPrevention.instance;
+        }
+        return null;
     }
 
     public void initialize() {
@@ -137,5 +151,43 @@ public class RegionManager {
 
     public void close() {
         database.close();
+    }
+
+    public boolean canModifyAtLocation(Player player, Location location) {
+        List<Region> regions = getRegionsAt(location);
+
+        if (regions.isEmpty()) {
+            // No regions = no restrictions (or deny based on your preference)
+            return true; // or false depending on your security model
+        }
+
+        for (Region region : regions) {
+            if (hasAccessToRegion(player, region)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean hasAccessToRegion(Player player, Region region) {
+        // Decoupled regions use trust lists
+        if (region.isDecoupled()) {
+            return region.getTrustedPlayers().contains(player.getUniqueId());
+        }
+        // GP-linked regions use GP permissions
+        else if (griefPrevention != null) {
+            return hasGPAccess(player, region);
+        }
+        return false;
+    }
+
+    private boolean hasGPAccess(Player player, Region region) {
+        if (region.getClaimId() == null) return false;
+
+        Claim claim = griefPrevention.dataStore.getClaim(region.getClaimId());
+        if (claim == null) return false;
+
+        // Check GP build permission
+        return claim.checkPermission(player, ClaimPermission.Edit, null) == null;
     }
 }

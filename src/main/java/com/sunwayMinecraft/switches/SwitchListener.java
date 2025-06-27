@@ -4,6 +4,7 @@ import com.sunwayMinecraft.regions.RegionManager;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.Lightable;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
@@ -40,11 +41,16 @@ public class SwitchListener implements Listener {
 
     event.setCancelled(true); // Prevent accidental use
 
+    Player player = event.getPlayer();
+    boolean hasAnyPermission = false;
     // Toggle lights using region-based permissions
-    for (Location lightLoc : buttonSwitch.lights()) {
+    for (Location lightLoc : buttonSwitch.lightLocations()) {
       if (regionManager.canModifyAtLocation(event.getPlayer(), lightLoc)) {
         toggleLight(lightLoc.getBlock());
       }
+    }
+    if (!hasAnyPermission) {
+      player.sendMessage("§cYou don't have permission to control these lights!");
     }
   }
 

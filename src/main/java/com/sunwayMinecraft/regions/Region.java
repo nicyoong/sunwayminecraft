@@ -1,5 +1,6 @@
 package com.sunwayMinecraft.regions;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 import java.util.Set;
@@ -66,6 +67,13 @@ public class Region {
     public int getMaxX() { return maxX; }
     public int getMaxY() { return maxY; }
     public int getMaxZ() { return maxZ; }
+    public Location getMin() {
+        return new Location(Bukkit.getWorld(worldName), minX, minY, minZ);
+    }
+
+    public Location getMax() {
+        return new Location(Bukkit.getWorld(worldName), maxX, maxY, maxZ);
+    }
     public Long getClaimId() { return claimId; }
     public boolean isDecoupled() { return decoupled; }
     public Set<UUID> getTrustedPlayers() { return trustedPlayers; }

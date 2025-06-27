@@ -8,8 +8,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class CoinFlipCommands implements CommandExecutor, TabCompleter {
   private static final Set<String> HEADS_ALIASES = Set.of("heads", "h");
@@ -64,10 +63,6 @@ public class CoinFlipCommands implements CommandExecutor, TabCompleter {
         handleMoneyFlip(player, args);
         return true;
     }
-
-    // Default to money flip
-    handleMoneyFlip(player, args);
-    return true;
   }
 
   private void handleMoneyFlip(Player player, String[] args) {
@@ -162,7 +157,6 @@ public class CoinFlipCommands implements CommandExecutor, TabCompleter {
             || !args[0].matches("(?i)help|mute|unmute"))) {
       completions.addAll(HEADS_ALIASES);
       completions.addAll(TAILS_ALIASES);
-    }
     }
     return completions;
   }

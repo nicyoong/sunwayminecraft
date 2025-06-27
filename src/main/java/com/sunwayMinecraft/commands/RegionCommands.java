@@ -53,7 +53,7 @@ public class RegionCommands {
             case "here":
                 return listRegionsAt(sender);
             default:
-                sender.sendMessage(ChatColor.RED + "Unknown subcommand");
+                sender.sendMessage("§cUnknown subcommand");
                 sendUsage(sender);
                 return true;
         }
