@@ -97,6 +97,42 @@ commands:
     description: "Coin flip game command"
     usage: "/cf <amount> <heads|tails> OR /cf item <amount> <heads|tails> OR /cf [mute|unmute|help]"
 
+  sunwayregioncreate:
+    description: "Create a new protected region"
+    usage: "/sunwayregioncreate <name> <world> <minX> <minY> <minZ> <maxX> <maxY> <maxZ>"
+
+  sunwayregionresize:
+    description: "Resize an existing region"
+    usage: "/sunwayregionresize <name> <minX> <minY> <minZ> <maxX> <maxY> <maxZ>"
+
+  sunwayregiondelete:
+    description: "Delete a region"
+    usage: "/sunwayregiondelete <name>"
+
+  sunwayregiondecouple:
+    description: "Decouple region from GP"
+    usage: "/sunwayregiondecouple <name>"
+
+  sunwayregiontrust:
+    description: "Trust player in decoupled region"
+    usage: "/sunwayregiontrust <name> <player>"
+
+  sunwayregionuntrust:
+    description: "Untrust player in decoupled region"
+    usage: "/sunwayregionuntrust <name> <player>"
+
+  sunwayregiontrustlist:
+    description: "List trusted players in region"
+    usage: "/sunwayregiontrustlist <name>"
+
+  sunwayregionlist:
+    description: "List all regions"
+    usage: "/sunwayregionlist"
+
+  sunwayregionhere:
+    description: "Show regions at current location"
+    usage: "/sunwayregionhere"
+
 permissions:
   sunwayminecraft.beacons.pause:
     description: "Allows the user to pause beacon color transitions."
@@ -167,3 +203,53 @@ permissions:
     default: op
     children:
       sunwayminecraft.switches.*: true
+
+  sunwayminecraft.region.admin:
+    description: "Full access to all region commands"
+    default: op
+    children:
+      sunwayminecraft.region.create: true
+      sunwayminecraft.region.resize: true
+      sunwayminecraft.region.delete: true
+      sunwayminecraft.region.decouple: true
+      sunwayminecraft.region.trust: true
+      sunwayminecraft.region.untrust: true
+      sunwayminecraft.region.trustlist: true
+      sunwayminecraft.region.list: true
+      sunwayminecraft.region.here: true
+
+  sunwayminecraft.region.create:
+    description: "Create regions"
+    default: op
+
+  sunwayminecraft.region.resize:
+    description: "Resize regions"
+    default: op
+
+  sunwayminecraft.region.delete:
+    description: "Delete regions"
+    default: op
+
+  sunwayminecraft.region.decouple:
+    description: "Decouple regions from GP"
+    default: op
+
+  sunwayminecraft.region.trust:
+    description: "Add players to region trust"
+    default: op
+
+  sunwayminecraft.region.untrust:
+    description: "Remove players from region trust"
+    default: op
+
+  sunwayminecraft.region.trustlist:
+    description: "View region trust lists"
+    default: true
+
+  sunwayminecraft.region.list:
+    description: "List all regions"
+    default: true
+
+  sunwayminecraft.region.here:
+    description: "View regions at current location"
+    default: true

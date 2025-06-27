@@ -17,12 +17,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-public class RegionCommands {
-    private final JavaPlugin plugin;
+public class RegionCommands implements CommandExecutor {
     private final RegionManager regionManager;
 
-    public RegionCommands(JavaPlugin plugin, RegionManager regionManager) {
-        this.plugin = plugin;
+    public RegionCommands(RegionManager regionManager) {
         this.regionManager = regionManager;
     }
 

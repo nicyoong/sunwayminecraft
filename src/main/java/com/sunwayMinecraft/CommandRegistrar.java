@@ -13,6 +13,18 @@ public class CommandRegistrar {
   }
 
   public void registerAll(PluginInitializer init) {
+    // Region Commands
+    RegionCommands regionCmds = new RegionCommands(init.getRegionManager());
+
+    registerCommand("sunwayregioncreate", regionCmds);
+    registerCommand("sunwayregionresize", regionCmds);
+    registerCommand("sunwayregiondelete", regionCmds);
+    registerCommand("sunwayregiondecouple", regionCmds);
+    registerCommand("sunwayregiontrust", regionCmds);
+    registerCommand("sunwayregionuntrust", regionCmds);
+    registerCommand("sunwayregiontrustlist", regionCmds);
+    registerCommand("sunwayregionlist", regionCmds);
+    registerCommand("sunwayregionhere", regionCmds);
     // Beacon commands
     BeaconCommands beaconCmds = new BeaconCommands(init.getBeaconManager());
     registerCommand("pausebeacons", beaconCmds);
