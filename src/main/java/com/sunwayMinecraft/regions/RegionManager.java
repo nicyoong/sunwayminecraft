@@ -39,6 +39,14 @@ public class RegionManager {
             database.initializeSchema();
             loadRegions();
             importer.importLegacyRegions(plugin, this);
+
+            // Add GP file watcher if GP is installed
+            if (griefPrevention != null) {
+                GPClaimWatcher watcher = new GPClaimWatcher(plugin, this);
+                watcher.run(); // Initial import
+                // Run every 10 seconds (200 ticks)
+                plugin.getServer().getScheduler().runTaskTimer(plugin, watcher, 200, 200);
+            }
         } catch (SQLException e) {
             plugin.getLogger().log(Level.SEVERE, "Database initialization failed", e);
         }
@@ -154,19 +162,20 @@ public class RegionManager {
     }
 
     public boolean canModifyAtLocation(Player player, Location location) {
-        if (player.hasPermission("sunwayminecraft.switches.controlany")) {
-            return true;
-        }
         List<Region> regions = getRegionsAt(location);
-
-        if (regions.isEmpty()) {
-            // No regions = no restrictions (or deny based on your preference)
-            return true; // or false depending on your security model
-        }
+        if (regions.isEmpty()) return false;
 
         for (Region region : regions) {
-            if (hasAccessToRegion(player, region)) {
-                return true;
+            if (region.isDecoupled()) {
+                // Handle decoupled region trust
+                if (region.getTrustedPlayers().contains(player.getUniqueId())) {
+                    return true;
+                }
+            } else {
+                // Handle GP-coupled region
+                if (hasGPAccess(player, region)) {
+                    return true;
+                }
             }
         }
         return false;

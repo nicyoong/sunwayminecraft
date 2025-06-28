@@ -67,11 +67,6 @@ public class PluginInitializer {
     regionManager = new RegionManager(plugin);
     try {
       regionManager.initialize();
-
-      // Setup GP integration only if region manager initialized successfully
-      if (Bukkit.getPluginManager().getPlugin("GriefPrevention") != null) {
-        new com.sunwayMinecraft.regions.GPListener(plugin, regionManager);
-      }
     } catch (Exception e) {
       plugin.getLogger().log(Level.SEVERE, "Region module initialization failed", e);
       // Disable region-dependent systems
