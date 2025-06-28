@@ -253,3 +253,7 @@ permissions:
   sunwayminecraft.region.here:
     description: "View regions at current location"
     default: true
+
+  sunwayminecraft.switches.controlany:
+    description: "Allows controlling any light regardless of region"
+    default: op

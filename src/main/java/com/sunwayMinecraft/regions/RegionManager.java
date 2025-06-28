@@ -154,6 +154,9 @@ public class RegionManager {
     }
 
     public boolean canModifyAtLocation(Player player, Location location) {
+        if (player.hasPermission("sunwayminecraft.switches.controlany")) {
+            return true;
+        }
         List<Region> regions = getRegionsAt(location);
 
         if (regions.isEmpty()) {
