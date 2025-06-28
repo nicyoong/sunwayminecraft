@@ -205,6 +205,7 @@ public class RegionManager {
 
         // Also allow if player has higher trust levels
         return claim.checkPermission(player, ClaimPermission.Build, null) == null ||
+                claim.checkPermission(player, ClaimPermission.Inventory, null) == null ||
                 claim.checkPermission(player, ClaimPermission.Edit, null) == null;
     }
 }
