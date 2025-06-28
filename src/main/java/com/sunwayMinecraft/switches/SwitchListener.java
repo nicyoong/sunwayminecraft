@@ -46,6 +46,7 @@ public class SwitchListener implements Listener {
     // Toggle lights using region-based permissions
     for (Location lightLoc : buttonSwitch.lightLocations()) {
       if (regionManager.canModifyAtLocation(event.getPlayer(), lightLoc)) {
+        hasAnyPermission = true;
         toggleLight(lightLoc.getBlock());
       }
     }
