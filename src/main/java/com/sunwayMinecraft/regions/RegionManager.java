@@ -195,11 +195,16 @@ public class RegionManager {
 
     private boolean hasGPAccess(Player player, Region region) {
         if (region.getClaimId() == null) return false;
-
         Claim claim = griefPrevention.dataStore.getClaim(region.getClaimId());
         if (claim == null) return false;
 
-        // Check GP build permission
-        return claim.checkPermission(player, ClaimPermission.Edit, null) == null;
+        // First check access trust (minimum required for switches)
+        if (claim.checkPermission(player, ClaimPermission.Access, null) == null) {
+            return true;
+        }
+
+        // Also allow if player has higher trust levels
+        return claim.checkPermission(player, ClaimPermission.Build, null) == null ||
+                claim.checkPermission(player, ClaimPermission.Edit, null) == null;
     }
 }
