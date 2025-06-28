@@ -163,7 +163,6 @@ public class CoinFlipCommands implements CommandExecutor, TabCompleter {
       completions.addAll(HEADS_ALIASES);
       completions.addAll(TAILS_ALIASES);
     }
-    }
     return completions;
   }
 
