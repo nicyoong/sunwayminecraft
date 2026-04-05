@@ -69,18 +69,18 @@ public class PluginInitializer {
   }
 
   private void initSwitchSystem() {
-    LightConfigManager lightCfgManager = new LightConfigManager(plugin);
-    SwitchConfigManager switchCfgManager = new SwitchConfigManager(plugin);
+    lightConfigManager = new LightConfigManager(plugin);
+    switchConfigManager = new SwitchConfigManager(plugin);
     lightConfigManager.reload();
     switchConfigManager.reload();
 
-    SwitchManager switchManager = new SwitchManager(switchCfgManager, lightCfgManager);
-    SwitchListener listener = new SwitchListener(switchManager, switchCfgManager);
+    SwitchManager switchManager = new SwitchManager(switchConfigManager, lightConfigManager);
+    SwitchListener listener = new SwitchListener(switchManager, switchConfigManager);
     plugin.getServer().getPluginManager().registerEvents(listener, plugin);
 
     // every tick to check for midnight
     CelestialLightScheduler celestialScheduler =
-        new CelestialLightScheduler(switchCfgManager, "world");
+        new CelestialLightScheduler(switchConfigManager, "world");
     celestialScheduler.runTaskTimer(plugin, 0L, 20L);
   }
 
