@@ -378,4 +378,8 @@ public class ContainerSearchTask extends BukkitRunnable {
         counts.merge(group.key, (long) group.amount, Long::sum);
         labels.putIfAbsent(group.key, group.label);
     }
+
+    private boolean isInArea(Location location) {
+        return area.contains(location.getX(), location.getY(), location.getZ());
+    }
 }
