@@ -33,5 +33,37 @@ import java.util.*;
  * Batched task that scans loaded chunks for chests, double chests, trapped chests, and barrels.
  */
 public class ContainerSearchTask extends BukkitRunnable {
+    private static final int CHUNKS_PER_TICK = 4;
+    private static final int PROGRESS_EVERY_N_CHUNKS = 10;
+    private static final DateTimeFormatter FILE_TS =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss");
+
+    private final JavaPlugin plugin;
+    private final CommandSender sender;
+    private final ContainerFinderManager manager;
+    private final World world;
+    private final BoundingBox area;
+    private final int radius;
+    private final boolean nearFloorOnly;
+    private final List<Chunk> chunks;
+    private final int skippedUnloadedChunks;
+
+    private final Set<String> seenDoubleChests = new HashSet<>();
+    private final List<ContainerRecord> nonEmptyRecords = new ArrayList<>();
+    private final Map<String, Long> directTotals = new LinkedHashMap<>();
+    private final Map<String, String> directLabels = new LinkedHashMap<>();
+    private final Map<String, Long> nestedTotals = new LinkedHashMap<>();
+    private final Map<String, String> nestedLabels = new LinkedHashMap<>();
+    private final Set<String> distinctItemGroups = new HashSet<>();
+
+    private int chunkIndex = 0;
+    private int totalContainers = 0;
+    private int chestCount = 0;
+    private int trappedChestCount = 0;
+    private int doubleChestCount = 0;
+    private int barrelCount = 0;
+    private int nonEmptyCount = 0;
+    private boolean stoppedByCap = false;
+
     
 }
