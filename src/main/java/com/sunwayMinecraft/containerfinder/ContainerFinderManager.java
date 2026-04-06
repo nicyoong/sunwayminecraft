@@ -81,4 +81,13 @@ public class ContainerFinderManager {
                         skippedUnloaded);
         task.runTaskTimer(plugin, 0L, 1L);
     }
+
+    public void setSearchComplete(ContainerScanCache cache) {
+        this.lastScanCache = cache;
+        this.searchRunning = false;
+    }
+
+    public void markSearchCompleteWithoutCache() {
+        this.searchRunning = false;
+    }
 }
