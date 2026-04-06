@@ -12,4 +12,16 @@ import org.bukkit.util.BoundingBox;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ContainerFinderManager {}
+public class ContainerFinderManager {
+    public static final int DEFAULT_RADIUS = 96;
+    public static final int PAGE_SIZE = 10;
+    public static final int CONTAINER_LIMIT = 2000;
+
+    private final JavaPlugin plugin;
+    private boolean searchRunning = false;
+    private ContainerScanCache lastScanCache;
+
+    public ContainerFinderManager(JavaPlugin plugin) {
+        this.plugin = plugin;
+    }
+}
