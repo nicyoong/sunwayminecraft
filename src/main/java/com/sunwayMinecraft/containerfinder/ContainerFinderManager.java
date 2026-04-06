@@ -90,4 +90,35 @@ public class ContainerFinderManager {
     public void markSearchCompleteWithoutCache() {
         this.searchRunning = false;
     }
+
+    public void sendPage(CommandSender sender, int page) {
+        if (lastScanCache == null) {
+            sender.sendMessage("§eNo completed container scan is available yet.");
+            return;
+        }
+
+        int totalPages = lastScanCache.getTotalPages();
+        if (totalPages == 0) {
+            sender.sendMessage("§eThe last scan had no non-empty containers to page through.");
+            return;
+        }
+
+        if (page > totalPages) {
+            sender.sendMessage(
+                    String.format("§cPage %d does not exist. Available pages: 1-%d.", page, totalPages));
+            return;
+        }
+
+        sender.sendMessage(
+                String.format(
+                        "§aContainer scan results page §e%d/%d§a:", page, totalPages));
+
+        for (String line : lastScanCache.getPageLines(page)) {
+            sender.sendMessage(line);
+        }
+
+        sender.sendMessage(
+                String.format(
+                        "§7Use §f/findcontainers page <number> §7to view another page."));
+    }
 }
