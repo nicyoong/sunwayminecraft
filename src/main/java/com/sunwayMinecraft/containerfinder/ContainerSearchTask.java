@@ -29,4 +29,9 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
-public class ContainerSearchTask {}
+/**
+ * Batched task that scans loaded chunks for chests, double chests, trapped chests, and barrels.
+ */
+public class ContainerSearchTask extends BukkitRunnable {
+    
+}
