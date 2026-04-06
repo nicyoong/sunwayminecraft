@@ -351,4 +351,25 @@ public class ContainerSearchTask extends BukkitRunnable {
 
         return new ItemGroup(key, label, item.getAmount());
     }
+
+    private String extractDisplayName(ItemMeta meta) {
+        try {
+            if (meta.hasDisplayName()) {
+                return meta.getDisplayName();
+            }
+        } catch (Throwable ignored) {
+            // Fall through to Adventure-based lookup if present.
+        }
+
+        try {
+            Component component = meta.displayName();
+            if (component != null) {
+                return PlainTextComponentSerializer.plainText().serialize(component);
+            }
+        } catch (Throwable ignored) {
+            // Safe fallback.
+        }
+
+        return null;
+    }
 }
