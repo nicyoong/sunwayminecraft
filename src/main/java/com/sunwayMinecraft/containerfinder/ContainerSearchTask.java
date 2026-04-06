@@ -141,4 +141,43 @@ public class ContainerSearchTask extends BukkitRunnable {
         Inventory inventory = barrel.getInventory();
         processContainer("Barrel", loc, inventory);
     }
+
+    private void processChest(Chest chest) {
+        Inventory inventory = chest.getInventory();
+        InventoryHolder holder = inventory.getHolder(false);
+
+        if (holder instanceof DoubleChest doubleChest) {
+            String key = buildDoubleChestKey(doubleChest);
+            if (!seenDoubleChests.add(key)) {
+                return;
+            }
+
+            if (hitLimit()) {
+                return;
+            }
+
+            totalContainers++;
+            doubleChestCount++;
+
+            Location loc = chooseLowerDoubleChestLocation(doubleChest);
+            processContainer("Double Chest", loc, inventory);
+            return;
+        }
+
+        if (hitLimit()) {
+            return;
+        }
+
+        Material type = chest.getBlock().getType();
+        String label = type == Material.TRAPPED_CHEST ? "Trapped Chest" : "Chest";
+
+        totalContainers++;
+        if (type == Material.TRAPPED_CHEST) {
+            trappedChestCount++;
+        } else {
+            chestCount++;
+        }
+
+        processContainer(label, chest.getLocation(), inventory);
+    }
 }
