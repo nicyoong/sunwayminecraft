@@ -188,4 +188,59 @@ public class ContainerSearchTask extends BukkitRunnable {
         }
         return false;
     }
+
+    private void processContainer(String containerType, Location location, Inventory inventory) {
+        Map<String, Long> directCounts = new LinkedHashMap<>();
+        Map<String, String> directGroupLabels = new LinkedHashMap<>();
+        Map<String, Long> nestedCounts = new LinkedHashMap<>();
+        Map<String, String> nestedGroupLabels = new LinkedHashMap<>();
+
+        ItemStack[] contents = inventory.getContents();
+        boolean nonEmpty = false;
+
+        for (ItemStack item : contents) {
+            if (item == null || item.getType() == Material.AIR || item.getAmount() <= 0) {
+                continue;
+            }
+
+            nonEmpty = true;
+            ItemGroup group = toItemGroup(item);
+            mergeCount(directCounts, directGroupLabels, group);
+
+            distinctItemGroups.add("DIRECT:" + group.key);
+            mergeCount(directTotals, directLabels, group);
+
+            extractNestedShulkerContents(item, nestedCounts, nestedGroupLabels);
+        }
+
+        if (!nonEmpty) {
+            return;
+        }
+
+        nonEmptyCount++;
+
+        for (Map.Entry<String, Long> entry : nestedCounts.entrySet()) {
+            String key = entry.getKey();
+            String label = nestedGroupLabels.getOrDefault(key, key);
+            long amount = entry.getValue();
+
+            nestedTotals.merge(key, amount, Long::sum);
+            nestedLabels.putIfAbsent(key, label);
+            distinctItemGroups.add("NESTED:" + key);
+        }
+
+        ContainerRecord record =
+                new ContainerRecord(
+                        containerType,
+                        world.getName(),
+                        location.getBlockX(),
+                        location.getBlockY(),
+                        location.getBlockZ(),
+                        directCounts,
+                        directGroupLabels,
+                        nestedCounts,
+                        nestedGroupLabels);
+
+        nonEmptyRecords.add(record);
+    }
 }
