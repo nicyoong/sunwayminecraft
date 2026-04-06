@@ -180,4 +180,12 @@ public class ContainerSearchTask extends BukkitRunnable {
 
         processContainer(label, chest.getLocation(), inventory);
     }
+
+    private boolean hitLimit() {
+        if (totalContainers >= ContainerFinderManager.CONTAINER_LIMIT) {
+            stoppedByCap = true;
+            return true;
+        }
+        return false;
+    }
 }
