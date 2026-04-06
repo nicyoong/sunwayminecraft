@@ -24,4 +24,8 @@ public class ContainerFinderManager {
     public ContainerFinderManager(JavaPlugin plugin) {
         this.plugin = plugin;
     }
+
+    public int getDefaultRadius() {
+        return DEFAULT_RADIUS;
+    }
 }
