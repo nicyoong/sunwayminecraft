@@ -505,4 +505,28 @@ public class ContainerSearchTask extends BukkitRunnable {
             e.printStackTrace();
         }
     }
+
+    private List<String> buildPageLines() {
+        List<String> lines = new ArrayList<>();
+
+        for (ContainerRecord record : nonEmptyRecords) {
+            lines.add(record.toChatSummaryLine());
+
+            if (!record.getDirectCounts().isEmpty()) {
+                lines.add("§7  Direct:");
+                for (String line : formatGroupLines(record.getDirectCounts(), record.getDirectLabels())) {
+                    lines.add("§7    - §f" + line);
+                }
+            }
+
+            if (!record.getNestedCounts().isEmpty()) {
+                lines.add("§7  Nested shulker contents:");
+                for (String line : formatGroupLines(record.getNestedCounts(), record.getNestedLabels())) {
+                    lines.add("§7    - §d" + line);
+                }
+            }
+        }
+
+        return lines;
+    }
 }
