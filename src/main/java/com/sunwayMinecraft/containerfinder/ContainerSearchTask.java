@@ -575,4 +575,58 @@ public class ContainerSearchTask extends BukkitRunnable {
         sender.sendMessage("§7Text report: §f" + cache.getTextReportFile().getAbsolutePath());
         sender.sendMessage("§7JSON report: §f" + cache.getJsonReportFile().getAbsolutePath());
     }
+
+    private void sendTopItems(String title, List<String> entries) {
+        sender.sendMessage("§a" + title + ":");
+        if (entries.isEmpty()) {
+            sender.sendMessage("§7  None");
+            return;
+        }
+        for (String entry : entries) {
+            sender.sendMessage("§7  - §f" + entry);
+        }
+    }
+
+    private List<String> topEntries(
+            Map<String, Long> counts, Map<String, String> labels, int limit) {
+        List<Map.Entry<String, Long>> sorted = new ArrayList<>(counts.entrySet());
+        sorted.sort((a, b) -> Long.compare(b.getValue(), a.getValue()));
+
+        List<String> out = new ArrayList<>();
+        for (int i = 0; i < Math.min(limit, sorted.size()); i++) {
+            Map.Entry<String, Long> entry = sorted.get(i);
+            String label = labels.getOrDefault(entry.getKey(), entry.getKey());
+            out.add(label + " x" + entry.getValue());
+        }
+        return out;
+    }
+
+    private List<String> formatGroupLines(
+            Map<String, Long> counts, Map<String, String> labels) {
+        List<Map.Entry<String, Long>> entries = new ArrayList<>(counts.entrySet());
+        entries.sort((a, b) -> {
+            int cmp = Long.compare(b.getValue(), a.getValue());
+            if (cmp != 0) return cmp;
+            return labels.getOrDefault(a.getKey(), a.getKey())
+                    .compareToIgnoreCase(labels.getOrDefault(b.getKey(), b.getKey()));
+        });
+
+        List<String> lines = new ArrayList<>();
+        for (Map.Entry<String, Long> entry : entries) {
+            lines.add(labels.getOrDefault(entry.getKey(), entry.getKey()) + " x" + entry.getValue());
+        }
+        return lines;
+    }
+
+    private static final class ItemGroup {
+        private final String key;
+        private final String label;
+        private final int amount;
+
+        private ItemGroup(String key, String label, int amount) {
+            this.key = key;
+            this.label = label;
+            this.amount = amount;
+        }
+    }
 }
