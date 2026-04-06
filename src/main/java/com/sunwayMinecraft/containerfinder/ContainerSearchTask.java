@@ -372,4 +372,10 @@ public class ContainerSearchTask extends BukkitRunnable {
 
         return null;
     }
+
+    private void mergeCount(
+            Map<String, Long> counts, Map<String, String> labels, ItemGroup group) {
+        counts.merge(group.key, (long) group.amount, Long::sum);
+        labels.putIfAbsent(group.key, group.label);
+    }
 }
