@@ -382,4 +382,16 @@ public class ContainerSearchTask extends BukkitRunnable {
     private boolean isInArea(Location location) {
         return area.contains(location.getX(), location.getY(), location.getZ());
     }
+
+    private String buildDoubleChestKey(DoubleChest doubleChest) {
+        List<Location> locations = extractDoubleChestLocations(doubleChest);
+        if (locations.size() == 2) {
+            String a = locationKey(locations.get(0));
+            String b = locationKey(locations.get(1));
+            return a.compareTo(b) <= 0 ? a + "|" + b : b + "|" + a;
+        }
+
+        Location loc = doubleChest.getLocation();
+        return locationKey(loc);
+    }
 }
