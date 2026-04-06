@@ -529,4 +529,50 @@ public class ContainerSearchTask extends BukkitRunnable {
 
         return lines;
     }
+
+    private void sendFinalSummary(ContainerScanCache cache) {
+        sender.sendMessage("§aContainer scan complete.");
+        sender.sendMessage(
+                String.format(
+                        "§aFound §e%d §acontainers. §7(Chests: §e%d§7, Trapped: §e%d§7, Double: §e%d§7, Barrels: §e%d§7)",
+                        cache.getTotalContainers(),
+                        cache.getChestCount(),
+                        cache.getTrappedChestCount(),
+                        cache.getDoubleChestCount(),
+                        cache.getBarrelCount()));
+
+        sender.sendMessage(
+                String.format(
+                        "§aNon-empty containers: §e%d §7| Distinct item groups: §e%d",
+                        cache.getNonEmptyCount(),
+                        cache.getDistinctItemGroups()));
+
+        sender.sendMessage(
+                String.format(
+                        "§aChunks scanned: §e%d §7| Skipped unloaded: §e%d",
+                        cache.getScannedChunks(),
+                        cache.getSkippedUnloadedChunks()));
+
+        if (cache.isStoppedByCap()) {
+            sender.sendMessage(
+                    String.format(
+                            "§eScan stopped early after reaching the safety cap of %d containers.",
+                            ContainerFinderManager.CONTAINER_LIMIT));
+        }
+
+        sendTopItems("Top direct items", cache.getTopDirectItems());
+        sendTopItems("Top nested shulker items", cache.getTopNestedItems());
+
+        if (cache.getTotalPages() > 0) {
+            sender.sendMessage(
+                    String.format(
+                            "§aPages available: §e%d §7| Use §f/findcontainers page 1 §7to view details.",
+                            cache.getTotalPages()));
+        } else {
+            sender.sendMessage("§eNo non-empty containers were found to page through.");
+        }
+
+        sender.sendMessage("§7Text report: §f" + cache.getTextReportFile().getAbsolutePath());
+        sender.sendMessage("§7JSON report: §f" + cache.getJsonReportFile().getAbsolutePath());
+    }
 }
