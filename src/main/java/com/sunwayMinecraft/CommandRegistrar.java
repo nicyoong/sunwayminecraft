@@ -38,6 +38,11 @@ public class CommandRegistrar {
     registerCommand("lightinfo", switchCmds);
     registerCommand("reloadsunwayswitches", switchCmds);
 
+    // Container finder
+    ContainerFinderCommands containerCmds =
+            new ContainerFinderCommands(init.getContainerFinderManager());
+    registerCommand("findcontainers", containerCmds);
+
     // Pet finder
     PetFinderCommands petCmds = new PetFinderCommands(init.getPetFinderManager());
     registerCommand("findpets", petCmds);
