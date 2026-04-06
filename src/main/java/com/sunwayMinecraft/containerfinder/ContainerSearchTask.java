@@ -128,4 +128,17 @@ public class ContainerSearchTask extends BukkitRunnable {
             }
         }
     }
+
+    private void processBarrel(Barrel barrel) {
+        if (hitLimit()) {
+            return;
+        }
+
+        totalContainers++;
+        barrelCount++;
+
+        Location loc = barrel.getLocation();
+        Inventory inventory = barrel.getInventory();
+        processContainer("Barrel", loc, inventory);
+    }
 }
