@@ -28,4 +28,8 @@ public class ContainerFinderManager {
     public int getDefaultRadius() {
         return DEFAULT_RADIUS;
     }
+
+    public boolean isSearchRunning() {
+        return searchRunning;
+    }
 }
