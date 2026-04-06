@@ -243,4 +243,32 @@ public class ContainerSearchTask extends BukkitRunnable {
 
         nonEmptyRecords.add(record);
     }
+
+    private void extractNestedShulkerContents(
+            ItemStack item,
+            Map<String, Long> nestedCounts,
+            Map<String, String> nestedGroupLabels) {
+        ItemMeta meta = item.getItemMeta();
+        if (!(meta instanceof BlockStateMeta blockStateMeta)) {
+            return;
+        }
+
+        if (!blockStateMeta.hasBlockState()) {
+            return;
+        }
+
+        BlockState state = blockStateMeta.getBlockState();
+        if (!(state instanceof ShulkerBox shulkerBox)) {
+            return;
+        }
+
+        for (ItemStack nested : shulkerBox.getInventory().getContents()) {
+            if (nested == null || nested.getType() == Material.AIR || nested.getAmount() <= 0) {
+                continue;
+            }
+
+            ItemGroup group = toItemGroup(nested);
+            mergeCount(nestedCounts, nestedGroupLabels, group);
+        }
+    }
 }
