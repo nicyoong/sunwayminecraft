@@ -110,5 +110,22 @@ public class ContainerSearchTask extends BukkitRunnable {
         }
     }
 
+    private void scanChunk(Chunk chunk) {
+        for (BlockState state : chunk.getTileEntities(false)) {
+            if (stoppedByCap) {
+                return;
+            }
 
+            Location loc = state.getLocation();
+            if (!isInArea(loc)) {
+                continue;
+            }
+
+            if (state instanceof Barrel barrel) {
+                processBarrel(barrel);
+            } else if (state instanceof Chest chest) {
+                processChest(chest);
+            }
+        }
+    }
 }
