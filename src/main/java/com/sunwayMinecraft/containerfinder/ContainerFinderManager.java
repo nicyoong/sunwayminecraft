@@ -121,4 +121,34 @@ public class ContainerFinderManager {
                 String.format(
                         "§7Use §f/findcontainers page <number> §7to view another page."));
     }
+
+    private BoundingBox createArea(Location center, int radius, boolean nearFloorOnly) {
+        World world = center.getWorld();
+        if (world == null) {
+            throw new IllegalStateException("Player world cannot be null.");
+        }
+
+        double minY;
+        double maxY;
+
+        if (nearFloorOnly) {
+            minY = center.getBlockY() - 5;
+            maxY = center.getBlockY() + 5;
+        } else {
+            minY = world.getMinHeight();
+            maxY = world.getMaxHeight() - 1;
+        }
+
+        return new BoundingBox(
+                center.getX() - radius,
+                minY,
+                center.getZ() - radius,
+                center.getX() + radius,
+                maxY,
+                center.getZ() + radius);
+    }
+
+    private int floorToChunk(double value) {
+        return ((int) Math.floor(value)) >> 4;
+    }
 }
