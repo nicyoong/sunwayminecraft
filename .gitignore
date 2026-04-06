@@ -2,3 +2,5 @@
 /.gradle
 /.idea
 /notes
+*.class
+*.log
