@@ -86,5 +86,29 @@ public class ContainerSearchTask extends BukkitRunnable {
         this.skippedUnloadedChunks = skippedUnloadedChunks;
     }
 
+    @Override
+    public void run() {
+        int processedThisTick = 0;
+
+        while (processedThisTick < CHUNKS_PER_TICK && chunkIndex < chunks.size() && !stoppedByCap) {
+            Chunk chunk = chunks.get(chunkIndex);
+            scanChunk(chunk);
+            chunkIndex++;
+            processedThisTick++;
+
+            if (chunkIndex % PROGRESS_EVERY_N_CHUNKS == 0 || chunkIndex == chunks.size()) {
+                sender.sendMessage(
+                        String.format(
+                                "§7Scanned chunks: §f%d/%d §7| Containers found: §f%d",
+                                chunkIndex, chunks.size(), totalContainers));
+            }
+        }
+
+        if (chunkIndex >= chunks.size() || stoppedByCap) {
+            finish();
+            cancel();
+        }
+    }
+
 
 }
