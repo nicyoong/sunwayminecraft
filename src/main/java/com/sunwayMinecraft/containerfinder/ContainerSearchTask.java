@@ -394,4 +394,59 @@ public class ContainerSearchTask extends BukkitRunnable {
         Location loc = doubleChest.getLocation();
         return locationKey(loc);
     }
+
+    private Location chooseLowerDoubleChestLocation(DoubleChest doubleChest) {
+        List<Location> locations = extractDoubleChestLocations(doubleChest);
+        if (locations.isEmpty()) {
+            return doubleChest.getLocation();
+        }
+
+        locations.sort(this::compareLocation);
+        return locations.get(0);
+    }
+
+    private List<Location> extractDoubleChestLocations(DoubleChest doubleChest) {
+        List<Location> locations = new ArrayList<>(2);
+
+        addHolderLocation(locations, doubleChest.getLeftSide());
+        addHolderLocation(locations, doubleChest.getRightSide());
+
+        return locations;
+    }
+
+    private void addHolderLocation(List<Location> locations, InventoryHolder holder) {
+        if (holder instanceof Chest chest) {
+            locations.add(chest.getLocation());
+        }
+    }
+
+    private int compareLocation(Location a, Location b) {
+        int cmpX = Integer.compare(a.getBlockX(), b.getBlockX());
+        if (cmpX != 0) return cmpX;
+
+        int cmpY = Integer.compare(a.getBlockY(), b.getBlockY());
+        if (cmpY != 0) return cmpY;
+
+        return Integer.compare(a.getBlockZ(), b.getBlockZ());
+    }
+
+    private String locationKey(Location loc) {
+        return String.format(
+                "%s:%d:%d:%d",
+                loc.getWorld() == null ? "unknown" : loc.getWorld().getName(),
+                loc.getBlockX(),
+                loc.getBlockY(),
+                loc.getBlockZ());
+    }
+
+    private String prettifyEnum(String raw) {
+        String[] parts = raw.toLowerCase(Locale.ROOT).split("_");
+        StringBuilder out = new StringBuilder();
+        for (String part : parts) {
+            if (part.isEmpty()) continue;
+            if (!out.isEmpty()) out.append(' ');
+            out.append(Character.toUpperCase(part.charAt(0))).append(part.substring(1));
+        }
+        return out.toString();
+    }
 }
