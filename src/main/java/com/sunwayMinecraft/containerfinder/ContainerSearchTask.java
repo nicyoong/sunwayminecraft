@@ -271,4 +271,84 @@ public class ContainerSearchTask extends BukkitRunnable {
             mergeCount(nestedCounts, nestedGroupLabels, group);
         }
     }
+
+    private ItemGroup toItemGroup(ItemStack item) {
+        Material material = item.getType();
+        ItemMeta meta = item.getItemMeta();
+
+        List<String> parts = new ArrayList<>();
+        String baseLabel = prettifyEnum(material.name());
+
+        if (meta != null) {
+            String customName = extractDisplayName(meta);
+            if (customName != null && !customName.isBlank()) {
+                parts.add("Name=" + customName);
+            }
+
+            if (meta.hasEnchants()) {
+                List<String> enchants = new ArrayList<>();
+                meta.getEnchants().forEach((enchant, level) -> enchants.add(enchant.getKey().getKey() + ":" + level));
+                Collections.sort(enchants);
+                parts.add("Enchants=" + String.join(",", enchants));
+            }
+
+            if (meta instanceof PotionMeta potionMeta) {
+                List<String> potionParts = new ArrayList<>();
+                if (potionMeta.hasBasePotionType() && potionMeta.getBasePotionType() != null) {
+                    potionParts.add("Base=" + potionMeta.getBasePotionType().name());
+                }
+                if (potionMeta.hasCustomEffects()) {
+                    List<String> effects = new ArrayList<>();
+                    potionMeta.getCustomEffects()
+                            .forEach(
+                                    effect ->
+                                            effects.add(
+                                                    effect.getType().getKey().getKey()
+                                                            + ":"
+                                                            + effect.getAmplifier()
+                                                            + ":"
+                                                            + effect.getDuration()));
+                    Collections.sort(effects);
+                    potionParts.add("Effects=" + String.join(",", effects));
+                }
+                if (!potionParts.isEmpty()) {
+                    parts.add("Potion=" + String.join("|", potionParts));
+                }
+            }
+
+            if (meta instanceof BookMeta bookMeta) {
+                List<String> bookParts = new ArrayList<>();
+                if (bookMeta.hasTitle() && bookMeta.getTitle() != null) {
+                    bookParts.add("Title=" + bookMeta.getTitle());
+                }
+                if (bookMeta.hasAuthor() && bookMeta.getAuthor() != null) {
+                    bookParts.add("Author=" + bookMeta.getAuthor());
+                }
+                if (!bookParts.isEmpty()) {
+                    parts.add("Book=" + String.join("|", bookParts));
+                }
+            }
+
+            if (meta.hasLore() && meta.getLore() != null && !meta.getLore().isEmpty()) {
+                parts.add("Lore=" + String.join(" / ", meta.getLore()));
+            }
+
+            if (meta instanceof BlockStateMeta blockStateMeta && blockStateMeta.hasBlockState()) {
+                BlockState blockState = blockStateMeta.getBlockState();
+                if (blockState instanceof ShulkerBox shulkerBox && shulkerBox.getColor() != null) {
+                    parts.add("ShulkerColor=" + shulkerBox.getColor().name());
+                }
+            }
+        }
+
+        String key = material.name();
+        String label = baseLabel;
+
+        if (!parts.isEmpty()) {
+            key += "|" + String.join("|", parts);
+            label += " {" + String.join("; ", parts) + "}";
+        }
+
+        return new ItemGroup(key, label, item.getAmount());
+    }
 }
