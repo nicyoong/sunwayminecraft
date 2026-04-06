@@ -449,4 +449,60 @@ public class ContainerSearchTask extends BukkitRunnable {
         }
         return out.toString();
     }
+
+    private void finish() {
+        try {
+            LocalDateTime now = LocalDateTime.now();
+            String timestamp = now.format(FILE_TS);
+
+            List<String> pageLines = buildPageLines();
+            int totalPages =
+                    pageLines.isEmpty()
+                            ? 0
+                            : (int) Math.ceil(pageLines.size() / (double) ContainerFinderManager.PAGE_SIZE);
+
+            File reportsDir = new File(plugin.getDataFolder(), "reports");
+            if (!reportsDir.exists() && !reportsDir.mkdirs()) {
+                throw new IOException("Could not create reports directory: " + reportsDir.getAbsolutePath());
+            }
+
+            File textFile = new File(reportsDir, "container-scan-" + timestamp + ".txt");
+            File jsonFile = new File(reportsDir, "container-scan-" + timestamp + ".json");
+
+            ContainerScanCache cache =
+                    new ContainerScanCache(
+                            timestamp,
+                            world.getName(),
+                            radius,
+                            nearFloorOnly,
+                            totalContainers,
+                            chestCount,
+                            trappedChestCount,
+                            doubleChestCount,
+                            barrelCount,
+                            nonEmptyCount,
+                            distinctItemGroups.size(),
+                            topEntries(directTotals, directLabels, 10),
+                            topEntries(nestedTotals, nestedLabels, 10),
+                            chunks.size(),
+                            skippedUnloadedChunks,
+                            stoppedByCap,
+                            nonEmptyRecords,
+                            pageLines,
+                            totalPages,
+                            textFile,
+                            jsonFile);
+
+            ContainerReportWriter.writeTextReport(cache, textFile);
+            ContainerReportWriter.writeJsonReport(cache, jsonFile);
+
+            manager.setSearchComplete(cache);
+            sendFinalSummary(cache);
+        } catch (Exception e) {
+            manager.markSearchCompleteWithoutCache();
+            sender.sendMessage("§cContainer scan finished, but writing the report failed.");
+            plugin.getLogger().severe("Container scan report write failed: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
 }
