@@ -32,4 +32,53 @@ public class ContainerFinderManager {
     public boolean isSearchRunning() {
         return searchRunning;
     }
+
+    public void startSearch(Player player, int radius, boolean nearFloorOnly) {
+        if (searchRunning) {
+            player.sendMessage("§cA container scan is already in progress.");
+            return;
+        }
+
+        World world = player.getWorld();
+        BoundingBox area = createArea(player.getLocation(), radius, nearFloorOnly);
+
+        int minChunkX = floorToChunk(area.getMinX());
+        int maxChunkX = floorToChunk(area.getMaxX());
+        int minChunkZ = floorToChunk(area.getMinZ());
+        int maxChunkZ = floorToChunk(area.getMaxZ());
+
+        List<Chunk> loadedChunks = new ArrayList<>();
+        int skippedUnloaded = 0;
+
+        for (int chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
+            for (int chunkZ = minChunkZ; chunkZ <= maxChunkZ; chunkZ++) {
+                if (world.isChunkLoaded(chunkX, chunkZ)) {
+                    loadedChunks.add(world.getChunkAt(chunkX, chunkZ));
+                } else {
+                    skippedUnloaded++;
+                }
+            }
+        }
+
+        searchRunning = true;
+        lastScanCache = null;
+
+        player.sendMessage(
+                String.format(
+                        "§aStarting container scan in §e%s§a with radius §e%d§a. Loaded chunks: §e%d§a, skipped unloaded: §e%d§a.",
+                        world.getName(), radius, loadedChunks.size(), skippedUnloaded));
+
+        BukkitRunnable task =
+                new ContainerSearchTask(
+                        plugin,
+                        player,
+                        this,
+                        world,
+                        area,
+                        radius,
+                        nearFloorOnly,
+                        loadedChunks,
+                        skippedUnloaded);
+        task.runTaskTimer(plugin, 0L, 1L);
+    }
 }
