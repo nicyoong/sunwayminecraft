@@ -65,5 +65,26 @@ public class ContainerSearchTask extends BukkitRunnable {
     private int nonEmptyCount = 0;
     private boolean stoppedByCap = false;
 
-    
+    public ContainerSearchTask(
+            JavaPlugin plugin,
+            CommandSender sender,
+            ContainerFinderManager manager,
+            World world,
+            BoundingBox area,
+            int radius,
+            boolean nearFloorOnly,
+            List<Chunk> chunks,
+            int skippedUnloadedChunks) {
+        this.plugin = plugin;
+        this.sender = sender;
+        this.manager = manager;
+        this.world = world;
+        this.area = area;
+        this.radius = radius;
+        this.nearFloorOnly = nearFloorOnly;
+        this.chunks = new ArrayList<>(chunks);
+        this.skippedUnloadedChunks = skippedUnloadedChunks;
+    }
+
+
 }
