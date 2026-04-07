@@ -370,8 +370,12 @@ public class ContainerScanProcessor {
                 }
             }
 
-            if (meta.hasLore() && meta.getLore() != null && !meta.getLore().isEmpty()) {
-                parts.add("Lore=" + String.join(" / ", meta.getLore()));
+            if (meta.hasLore() && meta.lore() != null && !meta.lore().isEmpty()) {
+                List<String> loreLines = new ArrayList<>();
+                for (Component line : meta.lore()) {
+                    loreLines.add(PlainTextComponentSerializer.plainText().serialize(line));
+                }
+                parts.add("Lore=" + String.join(" / ", loreLines));
             }
 
             if (meta instanceof BlockStateMeta blockStateMeta && blockStateMeta.hasBlockState()) {
