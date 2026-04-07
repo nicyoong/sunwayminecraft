@@ -370,9 +370,10 @@ public class ContainerScanProcessor {
                 }
             }
 
-            if (meta.hasLore() && meta.lore() != null && !meta.lore().isEmpty()) {
+            List<Component> lore = meta.lore();
+            if (meta.hasLore() && lore != null && !lore.isEmpty()) {
                 List<String> loreLines = new ArrayList<>();
-                for (Component line : meta.lore()) {
+                for (Component line : lore) {
                     loreLines.add(PlainTextComponentSerializer.plainText().serialize(line));
                 }
                 parts.add("Lore=" + String.join(" / ", loreLines));
