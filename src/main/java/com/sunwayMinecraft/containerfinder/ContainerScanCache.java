@@ -18,6 +18,7 @@ public class ContainerScanCache {
     private final int trappedChestCount;
     private final int doubleChestCount;
     private final int barrelCount;
+    private final int shulkerBoxCount;
     private final int nonEmptyCount;
     private final int distinctItemGroups;
     private final List<String> topDirectItems;
@@ -41,6 +42,7 @@ public class ContainerScanCache {
             int trappedChestCount,
             int doubleChestCount,
             int barrelCount,
+            int shulkerBoxCount,
             int nonEmptyCount,
             int distinctItemGroups,
             List<String> topDirectItems,
@@ -62,6 +64,7 @@ public class ContainerScanCache {
         this.trappedChestCount = trappedChestCount;
         this.doubleChestCount = doubleChestCount;
         this.barrelCount = barrelCount;
+        this.shulkerBoxCount = shulkerBoxCount;
         this.nonEmptyCount = nonEmptyCount;
         this.distinctItemGroups = distinctItemGroups;
         this.topDirectItems = new ArrayList<>(topDirectItems);
@@ -110,6 +113,10 @@ public class ContainerScanCache {
 
     public int getBarrelCount() {
         return barrelCount;
+    }
+
+    public int getShulkerBoxCount() {
+        return shulkerBoxCount;
     }
 
     public int getNonEmptyCount() {

@@ -62,6 +62,7 @@ public class ContainerSearchTask extends BukkitRunnable {
     private int trappedChestCount = 0;
     private int doubleChestCount = 0;
     private int barrelCount = 0;
+    private int shulkerBoxCount = 0;
     private int nonEmptyCount = 0;
     private boolean stoppedByCap = false;
 
@@ -125,6 +126,8 @@ public class ContainerSearchTask extends BukkitRunnable {
                 processBarrel(barrel);
             } else if (state instanceof Chest chest) {
                 processChest(chest);
+            } else if (state instanceof ShulkerBox shulkerBox) {
+                processShulkerBox(shulkerBox);
             }
         }
     }
@@ -179,6 +182,22 @@ public class ContainerSearchTask extends BukkitRunnable {
         }
 
         processContainer(label, chest.getLocation(), inventory);
+    }
+
+    private void processShulkerBox(ShulkerBox shulkerBox) {
+        if (hitLimit()) {
+            return;
+        }
+
+        totalContainers++;
+        shulkerBoxCount++;
+
+        String label = "Shulker Box";
+        if (shulkerBox.getColor() != null) {
+            label = prettifyEnum(shulkerBox.getColor().name()) + " Shulker Box";
+        }
+
+        processContainer(label, shulkerBox.getLocation(), shulkerBox.getInventory());
     }
 
     private boolean hitLimit() {
@@ -480,6 +499,7 @@ public class ContainerSearchTask extends BukkitRunnable {
                             trappedChestCount,
                             doubleChestCount,
                             barrelCount,
+                            shulkerBoxCount,
                             nonEmptyCount,
                             distinctItemGroups.size(),
                             topEntries(directTotals, directLabels, 10),
@@ -539,7 +559,8 @@ public class ContainerSearchTask extends BukkitRunnable {
                         cache.getChestCount(),
                         cache.getTrappedChestCount(),
                         cache.getDoubleChestCount(),
-                        cache.getBarrelCount()));
+                        cache.getBarrelCount(),
+                        cache.getShulkerBoxCount()));
 
         sender.sendMessage(
                 String.format(

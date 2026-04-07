@@ -48,6 +48,8 @@ public final class ContainerReportWriter {
             writer.newLine();
             writer.write("Barrel: " + cache.getBarrelCount());
             writer.newLine();
+            writer.write("Shulker Box: " + cache.getShulkerBoxCount());
+            writer.newLine();
             writer.write("Non-empty containers: " + cache.getNonEmptyCount());
             writer.newLine();
             writer.write("Distinct item groups: " + cache.getDistinctItemGroups());
@@ -140,6 +142,7 @@ public final class ContainerReportWriter {
         summary.put("trappedChestCount", cache.getTrappedChestCount());
         summary.put("doubleChestCount", cache.getDoubleChestCount());
         summary.put("barrelCount", cache.getBarrelCount());
+        summary.put("shulkerBoxCount", cache.getShulkerBoxCount());
         summary.put("nonEmptyCount", cache.getNonEmptyCount());
         summary.put("distinctItemGroups", cache.getDistinctItemGroups());
         summary.put("topDirectItems", cache.getTopDirectItems());
