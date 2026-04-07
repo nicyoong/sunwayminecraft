@@ -15,7 +15,7 @@ import java.util.List;
 public class ContainerFinderManager {
     public static final int DEFAULT_RADIUS = 96;
     public static final int PAGE_SIZE = 10;
-    public static final int CONTAINER_LIMIT = 2000;
+    public static final int CONTAINER_LIMIT = 5000;
 
     private final JavaPlugin plugin;
     private boolean searchRunning = false;
