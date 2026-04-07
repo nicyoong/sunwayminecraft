@@ -395,14 +395,6 @@ public class ContainerScanProcessor {
 
     private String extractDisplayName(ItemMeta meta) {
         try {
-            if (meta.hasDisplayName()) {
-                return meta.getDisplayName();
-            }
-        } catch (Throwable ignored) {
-            // fallback below
-        }
-
-        try {
             Component component = meta.displayName();
             if (component != null) {
                 return PlainTextComponentSerializer.plainText().serialize(component);
