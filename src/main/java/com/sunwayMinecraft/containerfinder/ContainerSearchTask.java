@@ -1,42 +1,34 @@
 package com.sunwayMinecraft.containerfinder;
 
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Chunk;
-import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.World;
-import org.bukkit.block.Barrel;
-import org.bukkit.block.BlockState;
-import org.bukkit.block.Chest;
-import org.bukkit.block.DoubleChest;
-import org.bukkit.block.ShulkerBox;
 import org.bukkit.command.CommandSender;
-import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.InventoryHolder;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.BlockStateMeta;
-import org.bukkit.inventory.meta.BookMeta;
-import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.BoundingBox;
 
 import java.io.File;
 import java.io.IOException;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
- * Batched task that scans loaded chunks for chests, double chests, trapped chests, and barrels.
+ * Schedules and coordinates a batched container scan over loaded chunks.
+ *
+ * <p>This class intentionally focuses on:
+ *
+ * <ul>
+ *   <li>Tick-based batching
+ *   <li>Progress messages
+ *   <li>Report writing
+ *   <li>Passing final cache data back to the manager
+ * </ul>
+ *
+ * <p>The actual scan and aggregation logic lives in {@link ContainerScanProcessor}.
  */
 public class ContainerSearchTask extends BukkitRunnable {
     private static final int CHUNKS_PER_TICK = 4;
     private static final int PROGRESS_EVERY_N_CHUNKS = 10;
-    private static final DateTimeFormatter FILE_TS =
-            DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss");
 
     private final JavaPlugin plugin;
     private final CommandSender sender;
@@ -46,25 +38,9 @@ public class ContainerSearchTask extends BukkitRunnable {
     private final int radius;
     private final boolean nearFloorOnly;
     private final List<Chunk> chunks;
-    private final int skippedUnloadedChunks;
-
-    private final Set<String> seenDoubleChests = new HashSet<>();
-    private final List<ContainerRecord> nonEmptyRecords = new ArrayList<>();
-    private final Map<String, Long> directTotals = new LinkedHashMap<>();
-    private final Map<String, String> directLabels = new LinkedHashMap<>();
-    private final Map<String, Long> nestedTotals = new LinkedHashMap<>();
-    private final Map<String, String> nestedLabels = new LinkedHashMap<>();
-    private final Set<String> distinctItemGroups = new HashSet<>();
+    private final ContainerScanProcessor processor;
 
     private int chunkIndex = 0;
-    private int totalContainers = 0;
-    private int chestCount = 0;
-    private int trappedChestCount = 0;
-    private int doubleChestCount = 0;
-    private int barrelCount = 0;
-    private int shulkerBoxCount = 0;
-    private int nonEmptyCount = 0;
-    private boolean stoppedByCap = false;
 
     public ContainerSearchTask(
             JavaPlugin plugin,
@@ -84,16 +60,21 @@ public class ContainerSearchTask extends BukkitRunnable {
         this.radius = radius;
         this.nearFloorOnly = nearFloorOnly;
         this.chunks = new ArrayList<>(chunks);
-        this.skippedUnloadedChunks = skippedUnloadedChunks;
+        this.processor =
+                new ContainerScanProcessor(
+                        world, area, radius, nearFloorOnly, chunks.size(), skippedUnloadedChunks);
     }
 
     @Override
     public void run() {
         int processedThisTick = 0;
 
-        while (processedThisTick < CHUNKS_PER_TICK && chunkIndex < chunks.size() && !stoppedByCap) {
+        while (processedThisTick < CHUNKS_PER_TICK
+                && chunkIndex < chunks.size()
+                && !processor.isStoppedByCap()) {
             Chunk chunk = chunks.get(chunkIndex);
-            scanChunk(chunk);
+            processor.scanChunk(chunk);
+
             chunkIndex++;
             processedThisTick++;
 
@@ -101,417 +82,30 @@ public class ContainerSearchTask extends BukkitRunnable {
                 sender.sendMessage(
                         String.format(
                                 "§7Scanned chunks: §f%d/%d §7| Containers found: §f%d",
-                                chunkIndex, chunks.size(), totalContainers));
+                                chunkIndex, chunks.size(), processor.getTotalContainers()));
             }
         }
 
-        if (chunkIndex >= chunks.size() || stoppedByCap) {
+        if (chunkIndex >= chunks.size() || processor.isStoppedByCap()) {
             finish();
             cancel();
         }
     }
 
-    private void scanChunk(Chunk chunk) {
-        for (BlockState state : chunk.getTileEntities(false)) {
-            if (stoppedByCap) {
-                return;
-            }
-
-            Location loc = state.getLocation();
-            if (!isInArea(loc)) {
-                continue;
-            }
-
-            if (state instanceof Barrel barrel) {
-                processBarrel(barrel);
-            } else if (state instanceof Chest chest) {
-                processChest(chest);
-            } else if (state instanceof ShulkerBox shulkerBox) {
-                processShulkerBox(shulkerBox);
-            }
-        }
-    }
-
-    private void processBarrel(Barrel barrel) {
-        if (hitLimit()) {
-            return;
-        }
-
-        totalContainers++;
-        barrelCount++;
-
-        Location loc = barrel.getLocation();
-        Inventory inventory = barrel.getInventory();
-        processContainer("Barrel", loc, inventory);
-    }
-
-    private void processChest(Chest chest) {
-        Inventory inventory = chest.getInventory();
-        InventoryHolder holder = inventory.getHolder(false);
-
-        if (holder instanceof DoubleChest doubleChest) {
-            String key = buildDoubleChestKey(doubleChest);
-            if (!seenDoubleChests.add(key)) {
-                return;
-            }
-
-            if (hitLimit()) {
-                return;
-            }
-
-            totalContainers++;
-            doubleChestCount++;
-
-            Location loc = chooseLowerDoubleChestLocation(doubleChest);
-            processContainer("Double Chest", loc, inventory);
-            return;
-        }
-
-        if (hitLimit()) {
-            return;
-        }
-
-        Material type = chest.getBlock().getType();
-        String label = type == Material.TRAPPED_CHEST ? "Trapped Chest" : "Chest";
-
-        totalContainers++;
-        if (type == Material.TRAPPED_CHEST) {
-            trappedChestCount++;
-        } else {
-            chestCount++;
-        }
-
-        processContainer(label, chest.getLocation(), inventory);
-    }
-
-    private void processShulkerBox(ShulkerBox shulkerBox) {
-        if (hitLimit()) {
-            return;
-        }
-
-        totalContainers++;
-        shulkerBoxCount++;
-
-        String label = "Shulker Box";
-        if (shulkerBox.getColor() != null) {
-            label = prettifyEnum(shulkerBox.getColor().name()) + " Shulker Box";
-        }
-
-        processContainer(label, shulkerBox.getLocation(), shulkerBox.getInventory());
-    }
-
-    private boolean hitLimit() {
-        if (totalContainers >= ContainerFinderManager.CONTAINER_LIMIT) {
-            stoppedByCap = true;
-            return true;
-        }
-        return false;
-    }
-
-    private void processContainer(String containerType, Location location, Inventory inventory) {
-        Map<String, Long> directCounts = new LinkedHashMap<>();
-        Map<String, String> directGroupLabels = new LinkedHashMap<>();
-        Map<String, Long> nestedCounts = new LinkedHashMap<>();
-        Map<String, String> nestedGroupLabels = new LinkedHashMap<>();
-
-        ItemStack[] contents = inventory.getContents();
-        boolean nonEmpty = false;
-
-        for (ItemStack item : contents) {
-            if (item == null || item.getType() == Material.AIR || item.getAmount() <= 0) {
-                continue;
-            }
-
-            nonEmpty = true;
-            ItemGroup group = toItemGroup(item);
-            mergeCount(directCounts, directGroupLabels, group);
-
-            distinctItemGroups.add("DIRECT:" + group.key);
-            mergeCount(directTotals, directLabels, group);
-
-            extractNestedShulkerContents(item, nestedCounts, nestedGroupLabels);
-        }
-
-        if (!nonEmpty) {
-            return;
-        }
-
-        nonEmptyCount++;
-
-        for (Map.Entry<String, Long> entry : nestedCounts.entrySet()) {
-            String key = entry.getKey();
-            String label = nestedGroupLabels.getOrDefault(key, key);
-            long amount = entry.getValue();
-
-            nestedTotals.merge(key, amount, Long::sum);
-            nestedLabels.putIfAbsent(key, label);
-            distinctItemGroups.add("NESTED:" + key);
-        }
-
-        ContainerRecord record =
-                new ContainerRecord(
-                        containerType,
-                        world.getName(),
-                        location.getBlockX(),
-                        location.getBlockY(),
-                        location.getBlockZ(),
-                        directCounts,
-                        directGroupLabels,
-                        nestedCounts,
-                        nestedGroupLabels);
-
-        nonEmptyRecords.add(record);
-    }
-
-    private void extractNestedShulkerContents(
-            ItemStack item,
-            Map<String, Long> nestedCounts,
-            Map<String, String> nestedGroupLabels) {
-        ItemMeta meta = item.getItemMeta();
-        if (!(meta instanceof BlockStateMeta blockStateMeta)) {
-            return;
-        }
-
-        if (!blockStateMeta.hasBlockState()) {
-            return;
-        }
-
-        BlockState state = blockStateMeta.getBlockState();
-        if (!(state instanceof ShulkerBox shulkerBox)) {
-            return;
-        }
-
-        for (ItemStack nested : shulkerBox.getInventory().getContents()) {
-            if (nested == null || nested.getType() == Material.AIR || nested.getAmount() <= 0) {
-                continue;
-            }
-
-            ItemGroup group = toItemGroup(nested);
-            mergeCount(nestedCounts, nestedGroupLabels, group);
-        }
-    }
-
-    private ItemGroup toItemGroup(ItemStack item) {
-        Material material = item.getType();
-        ItemMeta meta = item.getItemMeta();
-
-        List<String> parts = new ArrayList<>();
-        String baseLabel = prettifyEnum(material.name());
-
-        if (meta != null) {
-            String customName = extractDisplayName(meta);
-            if (customName != null && !customName.isBlank()) {
-                parts.add("Name=" + customName);
-            }
-
-            if (meta.hasEnchants()) {
-                List<String> enchants = new ArrayList<>();
-                meta.getEnchants().forEach((enchant, level) -> enchants.add(enchant.getKey().getKey() + ":" + level));
-                Collections.sort(enchants);
-                parts.add("Enchants=" + String.join(",", enchants));
-            }
-
-            if (meta instanceof PotionMeta potionMeta) {
-                List<String> potionParts = new ArrayList<>();
-                if (potionMeta.hasBasePotionType() && potionMeta.getBasePotionType() != null) {
-                    potionParts.add("Base=" + potionMeta.getBasePotionType().name());
-                }
-                if (potionMeta.hasCustomEffects()) {
-                    List<String> effects = new ArrayList<>();
-                    potionMeta.getCustomEffects()
-                            .forEach(
-                                    effect ->
-                                            effects.add(
-                                                    effect.getType().getKey().getKey()
-                                                            + ":"
-                                                            + effect.getAmplifier()
-                                                            + ":"
-                                                            + effect.getDuration()));
-                    Collections.sort(effects);
-                    potionParts.add("Effects=" + String.join(",", effects));
-                }
-                if (!potionParts.isEmpty()) {
-                    parts.add("Potion=" + String.join("|", potionParts));
-                }
-            }
-
-            if (meta instanceof BookMeta bookMeta) {
-                List<String> bookParts = new ArrayList<>();
-                if (bookMeta.hasTitle() && bookMeta.getTitle() != null) {
-                    bookParts.add("Title=" + bookMeta.getTitle());
-                }
-                if (bookMeta.hasAuthor() && bookMeta.getAuthor() != null) {
-                    bookParts.add("Author=" + bookMeta.getAuthor());
-                }
-                if (!bookParts.isEmpty()) {
-                    parts.add("Book=" + String.join("|", bookParts));
-                }
-            }
-
-            if (meta.hasLore() && meta.getLore() != null && !meta.getLore().isEmpty()) {
-                parts.add("Lore=" + String.join(" / ", meta.getLore()));
-            }
-
-            if (meta instanceof BlockStateMeta blockStateMeta && blockStateMeta.hasBlockState()) {
-                BlockState blockState = blockStateMeta.getBlockState();
-                if (blockState instanceof ShulkerBox shulkerBox && shulkerBox.getColor() != null) {
-                    parts.add("ShulkerColor=" + shulkerBox.getColor().name());
-                }
-            }
-        }
-
-        String key = material.name();
-        String label = baseLabel;
-
-        if (!parts.isEmpty()) {
-            key += "|" + String.join("|", parts);
-            label += " {" + String.join("; ", parts) + "}";
-        }
-
-        return new ItemGroup(key, label, item.getAmount());
-    }
-
-    private String extractDisplayName(ItemMeta meta) {
-        try {
-            if (meta.hasDisplayName()) {
-                return meta.getDisplayName();
-            }
-        } catch (Throwable ignored) {
-            // Fall through to Adventure-based lookup if present.
-        }
-
-        try {
-            Component component = meta.displayName();
-            if (component != null) {
-                return PlainTextComponentSerializer.plainText().serialize(component);
-            }
-        } catch (Throwable ignored) {
-            // Safe fallback.
-        }
-
-        return null;
-    }
-
-    private void mergeCount(
-            Map<String, Long> counts, Map<String, String> labels, ItemGroup group) {
-        counts.merge(group.key, (long) group.amount, Long::sum);
-        labels.putIfAbsent(group.key, group.label);
-    }
-
-    private boolean isInArea(Location location) {
-        return area.contains(location.getX(), location.getY(), location.getZ());
-    }
-
-    private String buildDoubleChestKey(DoubleChest doubleChest) {
-        List<Location> locations = extractDoubleChestLocations(doubleChest);
-        if (locations.size() == 2) {
-            String a = locationKey(locations.get(0));
-            String b = locationKey(locations.get(1));
-            return a.compareTo(b) <= 0 ? a + "|" + b : b + "|" + a;
-        }
-
-        Location loc = doubleChest.getLocation();
-        return locationKey(loc);
-    }
-
-    private Location chooseLowerDoubleChestLocation(DoubleChest doubleChest) {
-        List<Location> locations = extractDoubleChestLocations(doubleChest);
-        if (locations.isEmpty()) {
-            return doubleChest.getLocation();
-        }
-
-        locations.sort(this::compareLocation);
-        return locations.get(0);
-    }
-
-    private List<Location> extractDoubleChestLocations(DoubleChest doubleChest) {
-        List<Location> locations = new ArrayList<>(2);
-
-        addHolderLocation(locations, doubleChest.getLeftSide());
-        addHolderLocation(locations, doubleChest.getRightSide());
-
-        return locations;
-    }
-
-    private void addHolderLocation(List<Location> locations, InventoryHolder holder) {
-        if (holder instanceof Chest chest) {
-            locations.add(chest.getLocation());
-        }
-    }
-
-    private int compareLocation(Location a, Location b) {
-        int cmpX = Integer.compare(a.getBlockX(), b.getBlockX());
-        if (cmpX != 0) return cmpX;
-
-        int cmpY = Integer.compare(a.getBlockY(), b.getBlockY());
-        if (cmpY != 0) return cmpY;
-
-        return Integer.compare(a.getBlockZ(), b.getBlockZ());
-    }
-
-    private String locationKey(Location loc) {
-        return String.format(
-                "%s:%d:%d:%d",
-                loc.getWorld() == null ? "unknown" : loc.getWorld().getName(),
-                loc.getBlockX(),
-                loc.getBlockY(),
-                loc.getBlockZ());
-    }
-
-    private String prettifyEnum(String raw) {
-        String[] parts = raw.toLowerCase(Locale.ROOT).split("_");
-        StringBuilder out = new StringBuilder();
-        for (String part : parts) {
-            if (part.isEmpty()) continue;
-            if (!out.isEmpty()) out.append(' ');
-            out.append(Character.toUpperCase(part.charAt(0))).append(part.substring(1));
-        }
-        return out.toString();
-    }
-
     private void finish() {
         try {
-            LocalDateTime now = LocalDateTime.now();
-            String timestamp = now.format(FILE_TS);
-
-            List<String> pageLines = buildPageLines();
-            int totalPages =
-                    pageLines.isEmpty()
-                            ? 0
-                            : (int) Math.ceil(pageLines.size() / (double) ContainerFinderManager.PAGE_SIZE);
-
             File reportsDir = new File(plugin.getDataFolder(), "reports");
             if (!reportsDir.exists() && !reportsDir.mkdirs()) {
                 throw new IOException("Could not create reports directory: " + reportsDir.getAbsolutePath());
             }
 
-            File textFile = new File(reportsDir, "container-scan-" + timestamp + ".txt");
-            File jsonFile = new File(reportsDir, "container-scan-" + timestamp + ".json");
+            String baseName = "container-scan-" + java.time.LocalDateTime.now()
+                    .format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss"));
 
-            ContainerScanCache cache =
-                    new ContainerScanCache(
-                            timestamp,
-                            world.getName(),
-                            radius,
-                            nearFloorOnly,
-                            totalContainers,
-                            chestCount,
-                            trappedChestCount,
-                            doubleChestCount,
-                            barrelCount,
-                            shulkerBoxCount,
-                            nonEmptyCount,
-                            distinctItemGroups.size(),
-                            topEntries(directTotals, directLabels, 10),
-                            topEntries(nestedTotals, nestedLabels, 10),
-                            chunks.size(),
-                            skippedUnloadedChunks,
-                            stoppedByCap,
-                            nonEmptyRecords,
-                            pageLines,
-                            totalPages,
-                            textFile,
-                            jsonFile);
+            File textFile = new File(reportsDir, baseName + ".txt");
+            File jsonFile = new File(reportsDir, baseName + ".json");
+
+            ContainerScanCache cache = processor.buildCache(textFile, jsonFile);
 
             ContainerReportWriter.writeTextReport(cache, textFile);
             ContainerReportWriter.writeJsonReport(cache, jsonFile);
@@ -526,35 +120,11 @@ public class ContainerSearchTask extends BukkitRunnable {
         }
     }
 
-    private List<String> buildPageLines() {
-        List<String> lines = new ArrayList<>();
-
-        for (ContainerRecord record : nonEmptyRecords) {
-            lines.add(record.toChatSummaryLine());
-
-            if (!record.getDirectCounts().isEmpty()) {
-                lines.add("§7  Direct:");
-                for (String line : formatGroupLines(record.getDirectCounts(), record.getDirectLabels())) {
-                    lines.add("§7    - §f" + line);
-                }
-            }
-
-            if (!record.getNestedCounts().isEmpty()) {
-                lines.add("§7  Nested shulker contents:");
-                for (String line : formatGroupLines(record.getNestedCounts(), record.getNestedLabels())) {
-                    lines.add("§7    - §d" + line);
-                }
-            }
-        }
-
-        return lines;
-    }
-
     private void sendFinalSummary(ContainerScanCache cache) {
         sender.sendMessage("§aContainer scan complete.");
         sender.sendMessage(
                 String.format(
-                        "§aFound §e%d §acontainers. §7(Chests: §e%d§7, Trapped: §e%d§7, Double: §e%d§7, Barrels: §e%d§7)",
+                        "§aFound §e%d §acontainers. §7(Chests: §e%d§7, Trapped: §e%d§7, Double: §e%d§7, Barrels: §e%d§7, Shulkers: §e%d§7)",
                         cache.getTotalContainers(),
                         cache.getChestCount(),
                         cache.getTrappedChestCount(),
@@ -603,51 +173,9 @@ public class ContainerSearchTask extends BukkitRunnable {
             sender.sendMessage("§7  None");
             return;
         }
+
         for (String entry : entries) {
             sender.sendMessage("§7  - §f" + entry);
-        }
-    }
-
-    private List<String> topEntries(
-            Map<String, Long> counts, Map<String, String> labels, int limit) {
-        List<Map.Entry<String, Long>> sorted = new ArrayList<>(counts.entrySet());
-        sorted.sort((a, b) -> Long.compare(b.getValue(), a.getValue()));
-
-        List<String> out = new ArrayList<>();
-        for (int i = 0; i < Math.min(limit, sorted.size()); i++) {
-            Map.Entry<String, Long> entry = sorted.get(i);
-            String label = labels.getOrDefault(entry.getKey(), entry.getKey());
-            out.add(label + " x" + entry.getValue());
-        }
-        return out;
-    }
-
-    private List<String> formatGroupLines(
-            Map<String, Long> counts, Map<String, String> labels) {
-        List<Map.Entry<String, Long>> entries = new ArrayList<>(counts.entrySet());
-        entries.sort((a, b) -> {
-            int cmp = Long.compare(b.getValue(), a.getValue());
-            if (cmp != 0) return cmp;
-            return labels.getOrDefault(a.getKey(), a.getKey())
-                    .compareToIgnoreCase(labels.getOrDefault(b.getKey(), b.getKey()));
-        });
-
-        List<String> lines = new ArrayList<>();
-        for (Map.Entry<String, Long> entry : entries) {
-            lines.add(labels.getOrDefault(entry.getKey(), entry.getKey()) + " x" + entry.getValue());
-        }
-        return lines;
-    }
-
-    private static final class ItemGroup {
-        private final String key;
-        private final String label;
-        private final int amount;
-
-        private ItemGroup(String key, String label, int amount) {
-            this.key = key;
-            this.label = label;
-            this.amount = amount;
         }
     }
 }
