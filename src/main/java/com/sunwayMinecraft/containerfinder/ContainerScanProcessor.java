@@ -1,7 +1,5 @@
 package com.sunwayMinecraft.containerfinder;
 
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -14,10 +12,6 @@ import org.bukkit.block.ShulkerBox;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.BlockStateMeta;
-import org.bukkit.inventory.meta.BookMeta;
-import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.util.BoundingBox;
 
 import java.io.File;
@@ -27,16 +21,6 @@ import java.util.*;
 
 /**
  * Performs the actual scanning and aggregation for container searches.
- *
- * <p>This class is responsible for:
- *
- * <ul>
- *   <li>Scanning chunk tile entities inside a bounding area
- *   <li>Finding supported storage blocks
- *   <li>Deduplicating double chests
- *   <li>Summarizing direct and nested shulker contents
- *   <li>Tracking counts and building the final scan cache
- * </ul>
  */
 public class ContainerScanProcessor {
     private static final DateTimeFormatter FILE_TS =
@@ -48,6 +32,7 @@ public class ContainerScanProcessor {
     private final boolean nearFloorOnly;
     private final int scannedChunks;
     private final int skippedUnloadedChunks;
+    private final ContainerItemAnalyzer itemAnalyzer;
 
     private final Set<String> seenDoubleChests = new HashSet<>();
     private final List<ContainerRecord> nonEmptyRecords = new ArrayList<>();
@@ -79,13 +64,9 @@ public class ContainerScanProcessor {
         this.nearFloorOnly = nearFloorOnly;
         this.scannedChunks = scannedChunks;
         this.skippedUnloadedChunks = skippedUnloadedChunks;
+        this.itemAnalyzer = new ContainerItemAnalyzer();
     }
 
-    /**
-     * Scans one loaded chunk for supported container block states.
-     *
-     * @param chunk the loaded chunk to scan
-     */
     public void scanChunk(Chunk chunk) {
         if (stoppedByCap) {
             return;
@@ -242,12 +223,12 @@ public class ContainerScanProcessor {
 
             nonEmpty = true;
 
-            ItemGroup directGroup = toItemGroup(item);
-            mergeCount(directCounts, directGroupLabels, directGroup);
-            mergeCount(directTotals, directLabels, directGroup);
-            distinctItemGroups.add("DIRECT:" + directGroup.key);
+            ContainerItemAnalyzer.ItemGroup directGroup = itemAnalyzer.toItemGroup(item);
+            itemAnalyzer.mergeCount(directCounts, directGroupLabels, directGroup);
+            itemAnalyzer.mergeCount(directTotals, directLabels, directGroup);
+            distinctItemGroups.add("DIRECT:" + directGroup.key());
 
-            extractNestedShulkerContents(item, nestedCounts, nestedGroupLabels);
+            itemAnalyzer.extractNestedShulkerContents(item, nestedCounts, nestedGroupLabels);
         }
 
         if (!nonEmpty) {
@@ -277,144 +258,6 @@ public class ContainerScanProcessor {
                         directGroupLabels,
                         nestedCounts,
                         nestedGroupLabels));
-    }
-
-    private void extractNestedShulkerContents(
-            ItemStack item,
-            Map<String, Long> nestedCounts,
-            Map<String, String> nestedGroupLabels) {
-        ItemMeta meta = item.getItemMeta();
-        if (!(meta instanceof BlockStateMeta blockStateMeta)) {
-            return;
-        }
-
-        if (!blockStateMeta.hasBlockState()) {
-            return;
-        }
-
-        BlockState state = blockStateMeta.getBlockState();
-        if (!(state instanceof ShulkerBox shulkerBox)) {
-            return;
-        }
-
-        for (ItemStack nested : shulkerBox.getInventory().getContents()) {
-            if (nested == null || nested.getType() == Material.AIR || nested.getAmount() <= 0) {
-                continue;
-            }
-
-            ItemGroup nestedGroup = toItemGroup(nested);
-            mergeCount(nestedCounts, nestedGroupLabels, nestedGroup);
-        }
-    }
-
-    private ItemGroup toItemGroup(ItemStack item) {
-        Material material = item.getType();
-        ItemMeta meta = item.getItemMeta();
-
-        List<String> parts = new ArrayList<>();
-        String baseLabel = prettifyEnum(material.name());
-
-        if (meta != null) {
-            String customName = extractDisplayName(meta);
-            if (customName != null && !customName.isBlank()) {
-                parts.add("Name=" + customName);
-            }
-
-            if (meta.hasEnchants()) {
-                List<String> enchants = new ArrayList<>();
-                meta.getEnchants()
-                        .forEach((enchant, level) -> enchants.add(enchant.getKey().getKey() + ":" + level));
-                Collections.sort(enchants);
-                parts.add("Enchants=" + String.join(",", enchants));
-            }
-
-            if (meta instanceof PotionMeta potionMeta) {
-                List<String> potionParts = new ArrayList<>();
-
-                if (potionMeta.hasBasePotionType() && potionMeta.getBasePotionType() != null) {
-                    potionParts.add("Base=" + potionMeta.getBasePotionType().name());
-                }
-
-                if (potionMeta.hasCustomEffects()) {
-                    List<String> effects = new ArrayList<>();
-                    potionMeta.getCustomEffects()
-                            .forEach(
-                                    effect ->
-                                            effects.add(
-                                                    effect.getType().getKey().getKey()
-                                                            + ":"
-                                                            + effect.getAmplifier()
-                                                            + ":"
-                                                            + effect.getDuration()));
-                    Collections.sort(effects);
-                    potionParts.add("Effects=" + String.join(",", effects));
-                }
-
-                if (!potionParts.isEmpty()) {
-                    parts.add("Potion=" + String.join("|", potionParts));
-                }
-            }
-
-            if (meta instanceof BookMeta bookMeta) {
-                List<String> bookParts = new ArrayList<>();
-
-                if (bookMeta.hasTitle() && bookMeta.getTitle() != null) {
-                    bookParts.add("Title=" + bookMeta.getTitle());
-                }
-                if (bookMeta.hasAuthor() && bookMeta.getAuthor() != null) {
-                    bookParts.add("Author=" + bookMeta.getAuthor());
-                }
-
-                if (!bookParts.isEmpty()) {
-                    parts.add("Book=" + String.join("|", bookParts));
-                }
-            }
-
-            List<Component> lore = meta.lore();
-            if (meta.hasLore() && lore != null && !lore.isEmpty()) {
-                List<String> loreLines = new ArrayList<>();
-                for (Component line : lore) {
-                    loreLines.add(PlainTextComponentSerializer.plainText().serialize(line));
-                }
-                parts.add("Lore=" + String.join(" / ", loreLines));
-            }
-
-            if (meta instanceof BlockStateMeta blockStateMeta && blockStateMeta.hasBlockState()) {
-                BlockState blockState = blockStateMeta.getBlockState();
-                if (blockState instanceof ShulkerBox shulkerBox && shulkerBox.getColor() != null) {
-                    parts.add("ShulkerColor=" + shulkerBox.getColor().name());
-                }
-            }
-        }
-
-        String key = material.name();
-        String label = baseLabel;
-
-        if (!parts.isEmpty()) {
-            key += "|" + String.join("|", parts);
-            label += " {" + String.join("; ", parts) + "}";
-        }
-
-        return new ItemGroup(key, label, item.getAmount());
-    }
-
-    private String extractDisplayName(ItemMeta meta) {
-        try {
-            Component component = meta.displayName();
-            if (component != null) {
-                return PlainTextComponentSerializer.plainText().serialize(component);
-            }
-        } catch (Throwable ignored) {
-            // safe fallback
-        }
-
-        return null;
-    }
-
-    private void mergeCount(
-            Map<String, Long> counts, Map<String, String> labels, ItemGroup group) {
-        counts.merge(group.key, (long) group.amount, Long::sum);
-        labels.putIfAbsent(group.key, group.label);
     }
 
     private boolean isInArea(Location location) {
@@ -540,17 +383,5 @@ public class ContainerScanProcessor {
             lines.add(labels.getOrDefault(entry.getKey(), entry.getKey()) + " x" + entry.getValue());
         }
         return lines;
-    }
-
-    private static final class ItemGroup {
-        private final String key;
-        private final String label;
-        private final int amount;
-
-        private ItemGroup(String key, String label, int amount) {
-            this.key = key;
-            this.label = label;
-            this.amount = amount;
-        }
     }
 }
