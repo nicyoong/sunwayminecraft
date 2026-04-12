@@ -58,6 +58,11 @@ public class CommandRegistrar {
         new CoinFlipCommands(
             init.getCoinFlipSystem(), init.getItemCoinFlipSystem(), init.getCoinFlipDatabase());
     registerCommand("cf", cfCmds);
+
+    // World travel
+    WorldTravelCommands worldTravelCmds = new WorldTravelCommands();
+    registerCommand("mining", worldTravelCmds);
+    registerCommand("living", worldTravelCmds);
   }
 
   private void registerCommand(String name, CommandExecutor executor) {
