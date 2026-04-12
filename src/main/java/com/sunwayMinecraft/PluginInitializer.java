@@ -4,6 +4,7 @@ import com.sunwayMinecraft.beacon.BeaconManager;
 import com.sunwayMinecraft.benches.BenchesConfigManager;
 import com.sunwayMinecraft.benches.RegionManager;
 import com.sunwayMinecraft.cathealer.HealingSystem;
+import com.sunwayMinecraft.containerfinder.ContainerFinderManager;
 import com.sunwayMinecraft.petfinder.PetFinderManager;
 import com.sunwayMinecraft.realtime.RealTimeManager;
 import com.sunwayMinecraft.coinflip.*;
@@ -30,6 +31,9 @@ public class PluginInitializer {
   // Cat healing
   // (no fields needed)
 
+  // Container finder
+  private ContainerFinderManager containerFinderManager;
+
   // Pet finder
   private PetFinderManager petFinderManager;
 
@@ -52,6 +56,7 @@ public class PluginInitializer {
     initBenchSystem();
     initSwitchSystem();
     initCatHealingSystem();
+    initContainerFinderSystem();
     initPetFinderSystem();
     initRealTimeSystem();
     initCoinFlipSystem();
@@ -86,6 +91,10 @@ public class PluginInitializer {
 
   private void initCatHealingSystem() {
     new HealingSystem(plugin).start();
+  }
+
+  private void initContainerFinderSystem() {
+    containerFinderManager = new ContainerFinderManager(plugin);
   }
 
   private void initPetFinderSystem() {
@@ -131,6 +140,10 @@ public class PluginInitializer {
 
   public SwitchConfigManager getSwitchConfigManager() {
     return switchConfigManager;
+  }
+
+  public ContainerFinderManager getContainerFinderManager() {
+    return containerFinderManager;
   }
 
   public PetFinderManager getPetFinderManager() {
