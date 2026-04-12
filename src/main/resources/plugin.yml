@@ -102,6 +102,16 @@ commands:
     description: "Coin flip game command"
     usage: "/cf <amount> <heads|tails> OR /cf item <amount> <heads|tails> OR /cf [mute|unmute|help]"
 
+  mining:
+    description: "Teleport to the mining world"
+    usage: "/mining"
+    permission: "sunway.world.mining"
+
+  living:
+    description: "Teleport to the living world"
+    usage: "/living"
+    permission: "sunway.world.living"
+
 permissions:
   sunwayminecraft.beacons.pause:
     description: "Allows the user to pause beacon color transitions."
@@ -176,3 +186,11 @@ permissions:
     default: op
     children:
       sunwayminecraft.switches.*: true
+
+  sunway.world.mining:
+    description: "Allows access to /mining"
+    default: true
+
+  sunway.world.living:
+    description: "Allows access to /living"
+    default: true
