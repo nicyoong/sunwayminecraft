@@ -5,6 +5,15 @@
 ---
 
 ## 🎮 For Players  
+
+### 🌍 Server World Design  
+SunwayMinecraft uses a **two-world survival structure**:
+
+- **Living World**: the permanent main world for building, housing, city life, and long-term survival
+- **Mining World**: a separate world intended for exploration and resource gathering
+
+This helps preserve the quality of the permanent world while still giving players room to gather materials freely.
+
 ### Features You Can Use  
 
 #### 🏮 Beacon Light Shows  
@@ -159,6 +168,39 @@
 - Combine with trading for resource exchanges  
 - Use mute feature during frequent plays  
 
+#### ⛏️ Mining World & Living World  
+*Two worlds with different purposes: one for renewable resources, one for permanent life*
+
+**What These Worlds Are**:  
+- **Living World**: The permanent world where long-term building, housing, city life, and daily survival happen  
+- **Mining World**: A separate resource world for gathering materials without permanently stripping the main world  
+
+**Commands**:  
+- `/mining` - Teleport to the Mining World  
+- `/living` - Teleport to the permanent Living World  
+
+**How It Works**:  
+1. Use `/living` when you want to return to the permanent main world  
+2. Use `/mining` when you want to gather resources in the separate mining world  
+3. The two worlds serve different gameplay purposes:  
+   - **Living World** = long-term building and settlement  
+   - **Mining World** = renewable exploration and extraction  
+
+**Why This Exists**:  
+- Keeps the permanent world cleaner and more livable  
+- Prevents the main survival world from becoming stripped and ugly over time  
+- Gives players a dedicated place to explore, dig, and gather materials  
+
+**Rules**:  
+- Do not treat the Mining World as permanent land for long-term builds  
+- Valuable or permanent builds belong in the Living World  
+- Resource gathering is encouraged in the Mining World  
+
+**Pro Tips**:  
+- Use `/living` before starting long building sessions  
+- Use `/mining` when you need wood, stone, ores, or open land to explore  
+- Store your important items and builds in the permanent world, not the resource world  
+
 ---
 
 ## 🛠 For Server Admins & Developers  
@@ -173,6 +215,7 @@
 | **Real-Time Sync**   | UTC/timezone calculations                    | `RealTimeManager`          |  
 | **Cat Healing**      | Passive healing via nearby tamed cats        | `HealingSystem`            |
 | **Coin Flip**        | Player item/money wager system               | `CoinFlipSystem`, `CoinFlipCommands` |
+| **World Travel**     | Player-facing travel between permanent and mining worlds | `WorldTravelCommands` |
 
 ### Configuration  
 *Handled via YAML files in `/plugins/SunwayMinecraft/`*:  
