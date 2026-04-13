@@ -60,7 +60,8 @@ public class CommandRegistrar {
     registerCommand("cf", cfCmds);
 
     // World travel
-    WorldTravelCommands worldTravelCmds = new WorldTravelCommands();
+    WorldTravelCommands worldTravelCmds =
+            new WorldTravelCommands(init.getWorldTravelManager());
     registerCommand("mining", worldTravelCmds);
     registerCommand("living", worldTravelCmds);
   }
