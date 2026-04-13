@@ -102,14 +102,14 @@ commands:
     description: "Coin flip game command"
     usage: "/cf <amount> <heads|tails> OR /cf item <amount> <heads|tails> OR /cf [mute|unmute|help]"
 
-  mining:
+  mineworld:
     description: "Teleport to the mining world"
-    usage: "/mining"
+    usage: "/mineworld"
     permission: "sunway.world.mining"
 
-  living:
+  lifeworld:
     description: "Teleport to the living world"
-    usage: "/living"
+    usage: "/lifeworld"
     permission: "sunway.world.living"
 
 permissions:
@@ -188,9 +188,9 @@ permissions:
       sunwayminecraft.switches.*: true
 
   sunway.world.mining:
-    description: "Allows access to /mining"
+    description: "Allows access to /mineworld"
     default: true
 
   sunway.world.living:
-    description: "Allows access to /living"
+    description: "Allows access to /lifeworld"
     default: true

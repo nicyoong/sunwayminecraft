@@ -26,18 +26,32 @@ public class WorldTravelCommands implements CommandExecutor {
     String commandName = command.getName().toLowerCase();
 
     switch (commandName) {
-      case "mining":
-        worldTravelManager.teleportToMining(player);
-        return true;
-
-      case "living":
-        worldTravelManager.teleportToLiving(player);
-        return true;
-
+      case "mineworld":
+        return handleMining(player);
+      case "lifeworld":
+        return handleLiving(player);
       default:
-        player.sendMessage(
-                Component.text("Unknown travel command.", NamedTextColor.RED));
-        return true;
+        return false;
     }
+  }
+
+  private boolean handleMining(Player player) {
+    if (worldTravelManager.isMiningWorld(player)) {
+      player.sendMessage(
+              Component.text("You are already in the Mining World.", NamedTextColor.YELLOW));
+      return true;
+    }
+
+    return worldTravelManager.teleportToMining(player);
+  }
+
+  private boolean handleLiving(Player player) {
+    if (worldTravelManager.isLivingWorld(player) && player.getRespawnLocation() == null) {
+      player.sendMessage(
+              Component.text("You are already in the Living World and have no personal spawn point set.", NamedTextColor.YELLOW));
+      return true;
+    }
+
+    return worldTravelManager.teleportToLiving(player);
   }
 }

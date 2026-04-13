@@ -62,8 +62,8 @@ public class CommandRegistrar {
     // World travel
     WorldTravelCommands worldTravelCmds =
             new WorldTravelCommands(init.getWorldTravelManager());
-    registerCommand("mining", worldTravelCmds);
-    registerCommand("living", worldTravelCmds);
+    registerCommand("mineworld", worldTravelCmds);
+    registerCommand("lifeworld", worldTravelCmds);
   }
 
   private void registerCommand(String name, CommandExecutor executor) {
