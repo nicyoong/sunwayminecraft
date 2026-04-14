@@ -14,14 +14,31 @@ public class WorldTravelManager {
     private static final String LIFE_WORLD_NAME = "world";
 
     private final JavaPlugin plugin;
+    private final WorldTravelConfigManager configManager;
+
     private MiningWorldState miningWorldState = MiningWorldState.OPEN;
 
     public WorldTravelManager(JavaPlugin plugin) {
         this.plugin = plugin;
+        this.configManager = new WorldTravelConfigManager(plugin);
+        loadState();
     }
 
     public JavaPlugin getPlugin() {
         return plugin;
+    }
+
+    public WorldTravelConfigManager getConfigManager() {
+        return configManager;
+    }
+
+    public void loadState() {
+        miningWorldState = configManager.loadMiningWorldState();
+        plugin.getLogger().info("Loaded Mining World state: " + miningWorldState);
+    }
+
+    public void saveState() {
+        configManager.saveMiningWorldState(miningWorldState);
     }
 
     public MiningWorldState getMiningWorldState() {
@@ -30,6 +47,7 @@ public class WorldTravelManager {
 
     public void setMiningWorldState(MiningWorldState miningWorldState) {
         this.miningWorldState = miningWorldState;
+        saveState();
     }
 
     public boolean isMiningOpen() {
@@ -108,6 +126,10 @@ public class WorldTravelManager {
         return true;
     }
 
+    public boolean teleportPlayerOutOfMining(Player player) {
+        return teleportToLifeWorld(player);
+    }
+
     public boolean isMiningWorld(Player player) {
         return player.getWorld().getName().equalsIgnoreCase(MINING_WORLD_NAME);
     }
@@ -116,9 +138,12 @@ public class WorldTravelManager {
         return player.getWorld().getName().equalsIgnoreCase(LIFE_WORLD_NAME);
     }
 
+    public World getMiningWorld() {
+        return Bukkit.getWorld(MINING_WORLD_NAME);
+    }
+
     public Component buildMiningInfoMessage() {
-        Component header =
-                Component.text("Mining World Information", NamedTextColor.GOLD);
+        Component header = Component.text("Mining World Information", NamedTextColor.GOLD);
 
         Component line1 =
                 Component.text("• ", NamedTextColor.DARK_GRAY)
