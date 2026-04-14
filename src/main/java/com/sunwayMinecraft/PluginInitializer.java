@@ -124,6 +124,7 @@ public class PluginInitializer {
 
   private void initWorldTravelSystem() {
     worldTravelManager = new WorldTravelManager(plugin);
+    worldTravelManager.loadState();
     miningWorldEvacuationManager = new MiningWorldEvacuationManager(plugin, worldTravelManager);
 
     plugin.getServer().getPluginManager()

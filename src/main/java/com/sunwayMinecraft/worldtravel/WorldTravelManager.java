@@ -21,7 +21,6 @@ public class WorldTravelManager {
     public WorldTravelManager(JavaPlugin plugin) {
         this.plugin = plugin;
         this.configManager = new WorldTravelConfigManager(plugin);
-        loadState();
     }
 
     public JavaPlugin getPlugin() {
