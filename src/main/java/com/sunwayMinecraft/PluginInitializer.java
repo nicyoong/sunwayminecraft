@@ -9,8 +9,7 @@ import com.sunwayMinecraft.petfinder.PetFinderManager;
 import com.sunwayMinecraft.realtime.RealTimeManager;
 import com.sunwayMinecraft.coinflip.*;
 import com.sunwayMinecraft.switches.*;
-import com.sunwayMinecraft.worldtravel.WorldTravelManager;
-import com.sunwayMinecraft.worldtravel.MiningWorldListener;
+import com.sunwayMinecraft.worldtravel.*;
 import com.sunwayMinecraft.utils.ConfigLoader;
 import net.milkbowl.vault.economy.Economy;
 import com.sunwayMinecraft.SunwayMinecraft;
@@ -49,6 +48,7 @@ public class PluginInitializer {
 
   // World travel
   private WorldTravelManager worldTravelManager;
+  private MiningWorldEvacuationManager miningWorldEvacuationManager;
 
   public PluginInitializer(SunwayMinecraft plugin) {
     this.plugin = plugin;
@@ -124,6 +124,8 @@ public class PluginInitializer {
 
   private void initWorldTravelSystem() {
     worldTravelManager = new WorldTravelManager(plugin);
+    miningWorldEvacuationManager = new MiningWorldEvacuationManager(plugin, worldTravelManager);
+
     plugin.getServer().getPluginManager()
             .registerEvents(new MiningWorldListener(worldTravelManager), plugin);
   }
@@ -180,5 +182,9 @@ public class PluginInitializer {
 
   public WorldTravelManager getWorldTravelManager() {
     return worldTravelManager;
+  }
+
+  public MiningWorldEvacuationManager getMiningWorldEvacuationManager() {
+    return miningWorldEvacuationManager;
   }
 }

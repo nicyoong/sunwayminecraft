@@ -132,6 +132,21 @@ commands:
     usage: /mininglock
     permission: sunway.worldtravel.admin
 
+  miningevacuate:
+    description: Start a Mining World evacuation countdown
+    usage: /miningevacuate <seconds>
+    permission: sunway.worldtravel.admin
+
+  miningevaccancel:
+    description: Cancel the active Mining World evacuation
+    usage: /miningevaccancel
+    permission: sunway.worldtravel.admin
+
+  miningstate:
+    description: Show the current Mining World state
+    usage: /miningstate
+    permission: sunway.worldtravel.admin
+
 permissions:
   sunwayminecraft.beacons.pause:
     description: "Allows the user to pause beacon color transitions."

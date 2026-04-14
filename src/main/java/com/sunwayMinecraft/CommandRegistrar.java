@@ -66,12 +66,17 @@ public class CommandRegistrar {
     registerCommand("lifeworld", worldTravelCmds);
     registerCommand("mininginfo", worldTravelCmds);
 
-    // Mining world admin state control
+    // Mining world admin controls
     MiningWorldAdminCommands miningAdminCmds =
-            new MiningWorldAdminCommands(init.getWorldTravelManager());
+            new MiningWorldAdminCommands(
+                    init.getWorldTravelManager(),
+                    init.getMiningWorldEvacuationManager());
     registerCommand("miningopen", miningAdminCmds);
     registerCommand("miningresetpending", miningAdminCmds);
     registerCommand("mininglock", miningAdminCmds);
+    registerCommand("miningevacuate", miningAdminCmds);
+    registerCommand("miningevaccancel", miningAdminCmds);
+    registerCommand("miningstate", miningAdminCmds);
   }
 
   private void registerCommand(String name, CommandExecutor executor) {
