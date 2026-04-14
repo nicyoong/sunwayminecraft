@@ -9,6 +9,7 @@ import com.sunwayMinecraft.petfinder.PetFinderManager;
 import com.sunwayMinecraft.realtime.RealTimeManager;
 import com.sunwayMinecraft.coinflip.*;
 import com.sunwayMinecraft.switches.*;
+import com.sunwayMinecraft.worldtravel.*;
 import com.sunwayMinecraft.utils.ConfigLoader;
 import net.milkbowl.vault.economy.Economy;
 import com.sunwayMinecraft.SunwayMinecraft;
@@ -45,6 +46,10 @@ public class PluginInitializer {
   private ItemCoinFlipSystem itemCoinFlipSystem;
   private CoinFlipDatabase coinFlipDatabase;
 
+  // World travel
+  private WorldTravelManager worldTravelManager;
+  private MiningWorldEvacuationManager miningWorldEvacuationManager;
+
   public PluginInitializer(SunwayMinecraft plugin) {
     this.plugin = plugin;
 
@@ -60,6 +65,7 @@ public class PluginInitializer {
     initPetFinderSystem();
     initRealTimeSystem();
     initCoinFlipSystem();
+    initWorldTravelSystem();
   }
 
   private void initBeaconSystem() {
@@ -116,6 +122,15 @@ public class PluginInitializer {
     itemCoinFlipSystem = new ItemCoinFlipSystem(coinFlipSystem, coinFlipDatabase);
   }
 
+  private void initWorldTravelSystem() {
+    worldTravelManager = new WorldTravelManager(plugin);
+    worldTravelManager.loadState();
+    miningWorldEvacuationManager = new MiningWorldEvacuationManager(plugin, worldTravelManager);
+
+    plugin.getServer().getPluginManager()
+            .registerEvents(new MiningWorldListener(worldTravelManager), plugin);
+  }
+
   private Economy getEconomy() {
     if (plugin.getServer().getPluginManager().getPlugin("Vault") == null) return null;
     return plugin.getServer().getServicesManager().getRegistration(Economy.class).getProvider();
@@ -164,5 +179,13 @@ public class PluginInitializer {
 
   public CoinFlipDatabase getCoinFlipDatabase() {
     return coinFlipDatabase;
+  }
+
+  public WorldTravelManager getWorldTravelManager() {
+    return worldTravelManager;
+  }
+
+  public MiningWorldEvacuationManager getMiningWorldEvacuationManager() {
+    return miningWorldEvacuationManager;
   }
 }

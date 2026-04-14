@@ -60,9 +60,23 @@ public class CommandRegistrar {
     registerCommand("cf", cfCmds);
 
     // World travel
-    WorldTravelCommands worldTravelCmds = new WorldTravelCommands();
-    registerCommand("mining", worldTravelCmds);
-    registerCommand("living", worldTravelCmds);
+    WorldTravelCommands worldTravelCmds =
+            new WorldTravelCommands(init.getWorldTravelManager());
+    registerCommand("mineworld", worldTravelCmds);
+    registerCommand("lifeworld", worldTravelCmds);
+    registerCommand("mininginfo", worldTravelCmds);
+
+    // Mining world admin controls
+    MiningWorldAdminCommands miningAdminCmds =
+            new MiningWorldAdminCommands(
+                    init.getWorldTravelManager(),
+                    init.getMiningWorldEvacuationManager());
+    registerCommand("miningopen", miningAdminCmds);
+    registerCommand("miningresetpending", miningAdminCmds);
+    registerCommand("mininglock", miningAdminCmds);
+    registerCommand("miningevacuate", miningAdminCmds);
+    registerCommand("miningevaccancel", miningAdminCmds);
+    registerCommand("miningstate", miningAdminCmds);
   }
 
   private void registerCommand(String name, CommandExecutor executor) {

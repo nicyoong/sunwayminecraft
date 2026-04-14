@@ -102,15 +102,50 @@ commands:
     description: "Coin flip game command"
     usage: "/cf <amount> <heads|tails> OR /cf item <amount> <heads|tails> OR /cf [mute|unmute|help]"
 
-  mining:
+  mineworld:
     description: "Teleport to the mining world"
-    usage: "/mining"
+    usage: "/mineworld"
     permission: "sunway.world.mining"
 
-  living:
+  lifeworld:
     description: "Teleport to the living world"
-    usage: "/living"
+    usage: "/lifeworld"
     permission: "sunway.world.living"
+
+  mininginfo:
+    description: Show information about the Mining World
+    usage: /mininginfo
+    permission: sunway.worldtravel.info
+
+  miningopen:
+    description: Set the Mining World state to OPEN
+    usage: /miningopen
+    permission: sunway.worldtravel.admin
+
+  miningresetpending:
+    description: Set the Mining World state to RESET_PENDING
+    usage: /miningresetpending
+    permission: sunway.worldtravel.admin
+
+  mininglock:
+    description: Set the Mining World state to LOCKED
+    usage: /mininglock
+    permission: sunway.worldtravel.admin
+
+  miningevacuate:
+    description: Start a Mining World evacuation countdown
+    usage: /miningevacuate <seconds>
+    permission: sunway.worldtravel.admin
+
+  miningevaccancel:
+    description: Cancel the active Mining World evacuation
+    usage: /miningevaccancel
+    permission: sunway.worldtravel.admin
+
+  miningstate:
+    description: Show the current Mining World state
+    usage: /miningstate
+    permission: sunway.worldtravel.admin
 
 permissions:
   sunwayminecraft.beacons.pause:
@@ -188,9 +223,25 @@ permissions:
       sunwayminecraft.switches.*: true
 
   sunway.world.mining:
-    description: "Allows access to /mining"
+    description: "Allows access to /mineworld"
     default: true
 
   sunway.world.living:
-    description: "Allows access to /living"
+    description: "Allows access to /lifeworld"
     default: true
+
+  sunway.worldtravel.mineworld:
+    description: Allows players to use /mineworld
+    default: true
+
+  sunway.worldtravel.lifeworld:
+    description: Allows players to use /lifeworld
+    default: true
+
+  sunway.worldtravel.info:
+    description: Allows players to use /mininginfo
+    default: true
+
+  sunway.worldtravel.admin:
+    description: Allows admins to control Mining World state
+    default: op
