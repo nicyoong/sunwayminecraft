@@ -18,24 +18,26 @@ public class WorldTravelCommands implements CommandExecutor {
 
   @Override
   public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    String commandName = command.getName().toLowerCase();
+
+    if (commandName.equals("mininginfo")) {
+      sender.sendMessage(worldTravelManager.buildMiningInfoMessage());
+      return true;
+    }
+
     if (!(sender instanceof Player player)) {
       sender.sendMessage("Only players can use this command.");
       return true;
     }
 
-    String commandName = command.getName().toLowerCase();
-
-    switch (commandName) {
-      case "mineworld":
-        return handleMining(player);
-      case "lifeworld":
-        return handleLiving(player);
-      default:
-        return false;
-    }
+    return switch (commandName) {
+      case "mineworld" -> handleMineWorld(player);
+      case "lifeworld" -> handleLifeWorld(player);
+      default -> false;
+    };
   }
 
-  private boolean handleMining(Player player) {
+  private boolean handleMineWorld(Player player) {
     if (worldTravelManager.isMiningWorld(player)) {
       player.sendMessage(
               Component.text("You are already in the Mining World.", NamedTextColor.YELLOW));
@@ -45,13 +47,7 @@ public class WorldTravelCommands implements CommandExecutor {
     return worldTravelManager.teleportToMining(player);
   }
 
-  private boolean handleLiving(Player player) {
-    if (worldTravelManager.isLivingWorld(player) && player.getRespawnLocation() == null) {
-      player.sendMessage(
-              Component.text("You are already in the Living World and have no personal spawn point set.", NamedTextColor.YELLOW));
-      return true;
-    }
-
-    return worldTravelManager.teleportToLiving(player);
+  private boolean handleLifeWorld(Player player) {
+    return worldTravelManager.teleportToLifeWorld(player);
   }
 }
