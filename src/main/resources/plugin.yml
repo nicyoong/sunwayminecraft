@@ -112,6 +112,26 @@ commands:
     usage: "/lifeworld"
     permission: "sunway.world.living"
 
+  mininginfo:
+    description: Show information about the Mining World
+    usage: /mininginfo
+    permission: sunway.worldtravel.info
+
+  miningopen:
+    description: Set the Mining World state to OPEN
+    usage: /miningopen
+    permission: sunway.worldtravel.admin
+
+  miningresetpending:
+    description: Set the Mining World state to RESET_PENDING
+    usage: /miningresetpending
+    permission: sunway.worldtravel.admin
+
+  mininglock:
+    description: Set the Mining World state to LOCKED
+    usage: /mininglock
+    permission: sunway.worldtravel.admin
+
 permissions:
   sunwayminecraft.beacons.pause:
     description: "Allows the user to pause beacon color transitions."
@@ -194,3 +214,19 @@ permissions:
   sunway.world.living:
     description: "Allows access to /lifeworld"
     default: true
+
+  sunway.worldtravel.mineworld:
+    description: Allows players to use /mineworld
+    default: true
+
+  sunway.worldtravel.lifeworld:
+    description: Allows players to use /lifeworld
+    default: true
+
+  sunway.worldtravel.info:
+    description: Allows players to use /mininginfo
+    default: true
+
+  sunway.worldtravel.admin:
+    description: Allows admins to control Mining World state
+    default: op

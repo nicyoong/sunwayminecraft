@@ -10,6 +10,7 @@ import com.sunwayMinecraft.realtime.RealTimeManager;
 import com.sunwayMinecraft.coinflip.*;
 import com.sunwayMinecraft.switches.*;
 import com.sunwayMinecraft.worldtravel.WorldTravelManager;
+import com.sunwayMinecraft.worldtravel.MiningWorldListener;
 import com.sunwayMinecraft.utils.ConfigLoader;
 import net.milkbowl.vault.economy.Economy;
 import com.sunwayMinecraft.SunwayMinecraft;
@@ -123,6 +124,8 @@ public class PluginInitializer {
 
   private void initWorldTravelSystem() {
     worldTravelManager = new WorldTravelManager(plugin);
+    plugin.getServer().getPluginManager()
+            .registerEvents(new MiningWorldListener(worldTravelManager), plugin);
   }
 
   private Economy getEconomy() {

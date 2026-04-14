@@ -64,6 +64,14 @@ public class CommandRegistrar {
             new WorldTravelCommands(init.getWorldTravelManager());
     registerCommand("mineworld", worldTravelCmds);
     registerCommand("lifeworld", worldTravelCmds);
+    registerCommand("mininginfo", worldTravelCmds);
+
+    // Mining world admin state control
+    MiningWorldAdminCommands miningAdminCmds =
+            new MiningWorldAdminCommands(init.getWorldTravelManager());
+    registerCommand("miningopen", miningAdminCmds);
+    registerCommand("miningresetpending", miningAdminCmds);
+    registerCommand("mininglock", miningAdminCmds);
   }
 
   private void registerCommand(String name, CommandExecutor executor) {
