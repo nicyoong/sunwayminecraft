@@ -58,3 +58,32 @@ public class YamlResidencyRepository implements ResidencyRepository {
             }
         }
     }
+
+    private Instant readInstant(ConfigurationSection s, String path) {
+        String val = s.getString(path);
+        return val == null || val.isBlank() ? null : Instant.parse(val);
+    }
+
+    @Override
+    public void save() {
+        yaml.set("tenancies", null);
+        for (UnitTenancyRecord rec : tenancies.values()) {
+            String p = "tenancies." + rec.getUnitId() + ".";
+            yaml.set(p + "lease-state", rec.getLeaseState().name());
+            yaml.set(p + "rent-state", rec.getRentState().name());
+            yaml.set(p + "tenant", rec.getTenantPlayerId() == null ? null : rec.getTenantPlayerId().toString());
+            yaml.set(p + "managers", rec.getManagerIds().stream().map(UUID::toString).collect(Collectors.toList()));
+            yaml.set(p + "lease-start", rec.getLeaseStart() == null ? null : rec.getLeaseStart().toString());
+            yaml.set(p + "lease-end", rec.getLeaseEnd() == null ? null : rec.getLeaseEnd().toString());
+            yaml.set(p + "grace-end", rec.getGraceEnd() == null ? null : rec.getGraceEnd().toString());
+            yaml.set(p + "deposit-amount", rec.getDepositAmount());
+            yaml.set(p + "rent-amount", rec.getRentAmount());
+            yaml.set(p + "billing-period", rec.getBillingPeriod() == null ? null : rec.getBillingPeriod().name());
+            yaml.set(p + "arrears-amount", rec.getArrearsAmount());
+            yaml.set(p + "last-payment-at", rec.getLastPaymentAt() == null ? null : rec.getLastPaymentAt().toString());
+            yaml.set(p + "next-due-at", rec.getNextDueAt() == null ? null : rec.getNextDueAt().toString());
+            yaml.set(p + "approval-required", rec.isApprovalRequired());
+        }
+        try { yaml.save(file); } catch (IOException e) { plugin.getLogger().severe("Failed to save residency data: " + e.getMessage()); }
+    }
+
