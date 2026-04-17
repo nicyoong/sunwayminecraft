@@ -21,3 +21,8 @@ public class ResidencyAdminCommands implements CommandExecutor {
 
     public ResidencyAdminCommands(ResidencyManager manager) { this.manager = manager; }
 
+    @Override
+    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        if (!sender.hasPermission("sunway.residency.admin")) { sender.sendMessage(Message.error("No permission.")); return true; }
+        if (args.length == 0) { sender.sendMessage(Message.error("/resadmin <reload|info|assign|terminate|repossess|escrow|addmanager> ...")); return true; }
+        switch (args[0].toLowerCase()) {
