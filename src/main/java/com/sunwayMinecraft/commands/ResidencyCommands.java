@@ -56,3 +56,11 @@ public class ResidencyCommands implements CommandExecutor {
             player.sendMessage(ok ? Message.ok("You rented " + unit.getDisplayName() + ".") : Message.error("You could not rent this unit. Check approval or funds."));
             return true;
         }
+        if (args[0].equalsIgnoreCase("pay")) {
+            if (args.length < 2) { player.sendMessage(Message.error("/residency pay <unitId>")); return true; }
+            UnitDefinition unit = manager.getUnit(args[1]);
+            if (unit == null) { player.sendMessage(Message.error("Unknown unit.")); return true; }
+            boolean ok = manager.getBillingService().payRent(unit, player);
+            player.sendMessage(ok ? Message.ok("Rent paid.") : Message.error("Rent payment failed."));
+            return true;
+        }
