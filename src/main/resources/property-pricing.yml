@@ -1,0 +1,21 @@
+pricing-profiles:
+  central_standard:
+    billing-period: "MONTHLY"
+    base-rent: 1500.0
+    deposit: 1000.0
+    late-fee-enabled: false
+    late-fee: 0.0
+
+  apartment_standard:
+    billing-period: "MONTHLY"
+    base-rent: 1500.0
+    deposit: 1000.0
+    late-fee-enabled: false
+    late-fee: 0.0
+
+  shoplot_prime:
+    billing-period: "MONTHLY"
+    base-rent: 5000.0
+    deposit: 3000.0
+    late-fee-enabled: true
+    late-fee: 500.0

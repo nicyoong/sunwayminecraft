@@ -59,6 +59,21 @@ public class CommandRegistrar {
             init.getCoinFlipSystem(), init.getItemCoinFlipSystem(), init.getCoinFlipDatabase());
     registerCommand("cf", cfCmds);
 
+    // Residency / Storefronts
+    if (init.getResidencyManager() != null) {
+      ResidencyCommands residencyCmds =
+          new ResidencyCommands(init.getResidencyManager());
+      registerCommand("residency", residencyCmds);
+
+      StorefrontCommands storefrontCmds =
+          new StorefrontCommands(init.getResidencyManager());
+      registerCommand("storefront", storefrontCmds);
+
+      ResidencyAdminCommands residencyAdminCmds =
+          new ResidencyAdminCommands(init.getResidencyManager());
+      registerCommand("resadmin", residencyAdminCmds);
+    }
+
     // World travel
     WorldTravelCommands worldTravelCmds =
             new WorldTravelCommands(init.getWorldTravelManager());

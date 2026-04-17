@@ -148,13 +148,20 @@ commands:
     permission: sunway.worldtravel.admin
 
   residency:
-    description: Sunway Residency commands
+    description: Residency commands for renting and managing city units
+    usage: /residency <list|view|rent|myunits|pay|guests>
+    permission: sunway.residency.use
 
   storefront:
-    description: Sunway Storefront commands
+    description: Storefront commands for city commercial units
+    usage: /storefront <list>
+    permission: sunway.storefront.use
+    aliases: [store, shops]
 
   resadmin:
-    description: Sunway Residency admin commands
+    description: Admin commands for residency and storefront management
+    usage: /resadmin <subcommand>
+    permission: sunway.residency.admin
 
 permissions:
   sunwayminecraft.beacons.pause:
@@ -255,14 +262,34 @@ permissions:
     description: Allows admins to control Mining World state
     default: op
 
+  sunway.residency.use:
+    description: Allows use of residency commands
+    default: true
+
+  sunway.residency.rent:
+    description: Allows renting listed units
+    default: true
+
+  sunway.residency.guest:
+    description: Allows managing guests for owned or rented units
+    default: true
+
+  sunway.storefront.use:
+    description: Allows use of storefront commands
+    default: true
+
+  sunway.storefront.manage:
+    description: Allows managing storefront state and settings
+    default: op
+
   sunway.residency.staff:
-    description: Allows staff to use staff commands for for Sunway Residency
+    description: Staff-level residency access
     default: op
 
   sunway.residency.admin:
-    description: Allows admins to access admin commands for Sunway Residency
+    description: Full admin access to residency and storefront systems
     default: op
 
   sunway.residency.override:
-    description: Allows admins to override settings for Sunway Residency
+    description: Allows bypassing residency access restrictions
     default: op
