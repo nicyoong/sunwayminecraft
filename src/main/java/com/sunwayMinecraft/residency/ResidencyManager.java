@@ -47,3 +47,23 @@ public class ResidencyManager {
         this.validationService = new RegionValidationService(plugin, districtsConfigManager, buildingsConfigManager, unitsConfigManager);
     }
 
+    public void initialize() {
+        districtsConfigManager.reload();
+        buildingsConfigManager.reload();
+        unitsConfigManager.reload();
+        pricingConfigManager.reload();
+        policyConfigManager.reload();
+        repository.load();
+        units.clear();
+        for (UnitDefinition unit : unitsConfigManager.getUnits()) {
+            units.put(unit.getId().toLowerCase(), unit);
+            UnitTenancyRecord tenancy = repository.getTenancy(unit.getId());
+            if (tenancy.getLeaseState() == LeaseState.VACANT && unit.getListingSettings().isVisible()) {
+                tenancy.setLeaseState(LeaseState.LISTED);
+                repository.saveTenancy(tenancy);
+            }
+        }
+        List<String> errors = validationService.validateAll();
+        for (String error : errors) plugin.getLogger().severe("[Residency] " + error);
+    }
+
