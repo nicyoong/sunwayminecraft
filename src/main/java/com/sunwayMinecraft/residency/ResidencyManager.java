@@ -67,3 +67,20 @@ public class ResidencyManager {
         for (String error : errors) plugin.getLogger().severe("[Residency] " + error);
     }
 
+    public JavaPlugin getPlugin() { return plugin; }
+    public ResidencyRepository getRepository() { return repository; }
+    public PremisesAccessService getAccessService() { return accessService; }
+    public DirectoryService getDirectoryService() { return directoryService; }
+    public BillingService getBillingService() { return billingService; }
+    public RepossessionService getRepossessionService() { return repossessionService; }
+    public Map<String, UnitDefinition> getUnits() { return units; }
+    public UnitDefinition getUnit(String id) { return units.get(id.toLowerCase()); }
+
+    public UnitDefinition getUnitAt(Location location) {
+        for (UnitDefinition unit : units.values()) {
+            if (unit.getPrimaryRegion().contains(location)) return unit;
+            for (Region3i region : unit.getLinkedRegions().values()) if (region.contains(location)) return unit;
+        }
+        return null;
+    }
+
