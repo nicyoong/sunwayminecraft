@@ -54,3 +54,33 @@ public class BillingService {
         return true;
     }
 
+    public void processDueRent() {
+        Instant now = Instant.now();
+        for (UnitTenancyRecord record : manager.getRepository().getAllTenancies()) {
+            if (record.getLeaseState() != LeaseState.ACTIVE && record.getLeaseState() != LeaseState.GRACE && record.getLeaseState() != LeaseState.ARREARS_RESTRICTED) continue;
+            if (record.getTenantPlayerId() == null || record.getNextDueAt() == null || now.isBefore(record.getNextDueAt())) continue;
+            OfflinePlayer tenant = manager.getPlugin().getServer().getOfflinePlayer(record.getTenantPlayerId());
+            if (economy != null && economy.has(tenant, record.getRentAmount())) {
+                economy.withdrawPlayer(tenant, record.getRentAmount());
+                record.setLastPaymentAt(now);
+                record.setNextDueAt(record.getBillingPeriod() == BillingPeriod.WEEKLY ? now.plus(7, ChronoUnit.DAYS) : now.plus(30, ChronoUnit.DAYS));
+                record.setLeaseState(LeaseState.ACTIVE);
+                record.setRentState(RentState.CURRENT);
+                record.setGraceEnd(null);
+            } else {
+                UnitDefinition unit = manager.getUnits().get(record.getUnitId().toLowerCase());
+                PolicyProfile policy = manager.getPolicyProfile(unit);
+                if (record.getLeaseState() == LeaseState.ACTIVE) {
+                    record.setLeaseState(LeaseState.GRACE);
+                    record.setRentState(RentState.IN_GRACE);
+                    record.setGraceEnd(now.plus(policy.getRentGraceDays(), ChronoUnit.DAYS));
+                    record.setArrearsAmount(record.getArrearsAmount() + record.getRentAmount());
+                } else if (record.getLeaseState() == LeaseState.GRACE && record.getGraceEnd() != null && !now.isBefore(record.getGraceEnd())) {
+                    record.setLeaseState(LeaseState.ARREARS_RESTRICTED);
+                    record.setRentState(RentState.IN_ARREARS);
+                }
+            }
+            manager.getRepository().saveTenancy(record);
+        }
+    }
+}
