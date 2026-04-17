@@ -30,3 +30,13 @@ public class ResidencyAdminCommands implements CommandExecutor {
                 manager.initialize();
                 sender.sendMessage(Message.ok("Residency configs reloaded."));
             }
+            case "info" -> {
+                if (args.length < 2) { sender.sendMessage(Message.error("/resadmin info <unitId>")); return true; }
+                UnitDefinition unit = manager.getUnit(args[1]);
+                if (unit == null) { sender.sendMessage(Message.error("Unknown unit.")); return true; }
+                UnitTenancyRecord record = manager.getRepository().getTenancy(unit.getId());
+                sender.sendMessage(Message.info(unit.getDisplayName() + " [" + unit.getId() + "]"));
+                sender.sendMessage(" District: " + unit.getDistrictId() + ", Building: " + unit.getBuildingId());
+                sender.sendMessage(" Lease state: " + record.getLeaseState() + ", Rent state: " + record.getRentState());
+                sender.sendMessage(" Tenant: " + (record.getTenantPlayerId() == null ? "none" : record.getTenantPlayerId()));
+            }
