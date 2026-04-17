@@ -1,0 +1,12 @@
+districts:
+  central_residency:
+    display-name: "Central Residency"
+    world: "world"
+    enabled: true
+    prestige-tier: 2
+    pricing-profile: "central_standard"
+    policy-profile: "residential_standard"
+    description: "Primary municipal housing district."
+    region:
+      min: { x: 100, y: 60, z: 200 }
+      max: { x: 250, y: 100, z: 400 }
