@@ -256,7 +256,7 @@ permissions:
     default: op
 
   sunway.residency.staff:
-    description: Staff commands for Sunway Residency
+    description: Allows staff to use staff commands for for Sunway Residency
     default: op
 
   sunway.residency.admin:
