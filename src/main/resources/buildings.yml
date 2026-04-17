@@ -1,0 +1,14 @@
+buildings:
+  orchid_apartments:
+    district: "central_residency"
+    display-name: "Orchid Apartments"
+    short-code: "OA"
+    building-type: "APARTMENT_BLOCK"
+    prestige-tier: 2
+    address-base: "Orchid Apartments"
+    world: "world"
+    listing-visibility: "PUBLIC"
+    primary-region:
+      min: { x: 120, y: 64, z: 220 }
+      max: { x: 160, y: 95, z: 260 }
+    linked-regions: {}
