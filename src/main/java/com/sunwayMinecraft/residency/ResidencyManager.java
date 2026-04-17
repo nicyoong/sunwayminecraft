@@ -101,3 +101,12 @@ public class ResidencyManager {
         return profile;
     }
 
+    public PolicyProfile getPolicyProfile(UnitDefinition unit) {
+        PolicyProfile profile = policyConfigManager.getProfile(unit.getPolicyProfileId());
+        if (profile == null) {
+            DistrictDefinition district = districtsConfigManager.getDistrict(unit.getDistrictId());
+            if (district != null) profile = policyConfigManager.getProfile(district.getPolicyProfileId());
+        }
+        return profile;
+    }
+}
