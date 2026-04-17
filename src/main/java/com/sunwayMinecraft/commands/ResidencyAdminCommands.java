@@ -74,3 +74,17 @@ public class ResidencyAdminCommands implements CommandExecutor {
                 EscrowRecord escrow = manager.getRepository().getEscrow(args[1]);
                 sender.sendMessage(escrow == null ? Message.warn("No escrow record.") : Message.info("Escrow: " + escrow.getStatus() + " reason=" + escrow.getReason()));
             }
+            case "addmanager" -> {
+                if (args.length < 3) { sender.sendMessage(Message.error("/resadmin addmanager <unitId> <player>")); return true; }
+                OfflinePlayer target = Bukkit.getOfflinePlayer(args[2]);
+                manager.getRepository().addRoleAssignment(new RoleAssignment(args[1], RoleType.MANAGER, target.getUniqueId(), null, Instant.now(), null, "admin grant"));
+                UnitTenancyRecord rec = manager.getRepository().getTenancy(args[1]);
+                rec.getManagerIds().add(target.getUniqueId());
+                manager.getRepository().saveTenancy(rec);
+                sender.sendMessage(Message.ok("Manager added."));
+            }
+            default -> sender.sendMessage(Message.error("Unknown subcommand."));
+        }
+        return true;
+    }
+}
