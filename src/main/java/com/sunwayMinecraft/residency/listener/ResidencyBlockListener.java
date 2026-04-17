@@ -19,3 +19,8 @@ import org.bukkit.event.player.PlayerBedEnterEvent;
 import org.bukkit.event.player.PlayerInteractAtEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 
+public class ResidencyBlockListener implements Listener {
+    private final ResidencyManager manager;
+
+    public ResidencyBlockListener(ResidencyManager manager) { this.manager = manager; }
+
