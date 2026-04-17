@@ -48,3 +48,13 @@ public class ResidencyAdminCommands implements CommandExecutor {
                 boolean ok = manager.getBillingService().startLease(unit, target, unit.getListingSettings().isApprovalRequired());
                 sender.sendMessage(ok ? Message.ok("Lease assigned.") : Message.error("Could not assign lease."));
             }
+            case "terminate" -> {
+                if (args.length < 2) { sender.sendMessage(Message.error("/resadmin terminate <unitId>")); return true; }
+                UnitTenancyRecord rec = manager.getRepository().getTenancy(args[1]);
+                rec.setLeaseState(LeaseState.REPOSSESSED);
+                rec.setLeaseEnd(Instant.now());
+                rec.setTenantPlayerId(null);
+                rec.getManagerIds().clear();
+                manager.getRepository().saveTenancy(rec);
+                sender.sendMessage(Message.ok("Lease terminated."));
+            }
