@@ -58,3 +58,14 @@ public class ResidencyAdminCommands implements CommandExecutor {
                 manager.getRepository().saveTenancy(rec);
                 sender.sendMessage(Message.ok("Lease terminated."));
             }
+            case "repossess" -> {
+                if (args.length < 2) { sender.sendMessage(Message.error("/resadmin repossess <unitId>")); return true; }
+                UnitTenancyRecord rec = manager.getRepository().getTenancy(args[1]);
+                rec.setLeaseState(LeaseState.ESCROW_OPEN);
+                rec.setLeaseEnd(Instant.now());
+                rec.setTenantPlayerId(null);
+                rec.getManagerIds().clear();
+                manager.getRepository().saveTenancy(rec);
+                manager.getRepository().saveEscrow(new EscrowRecord(args[1], Instant.now(), "Manual repossession", "OPEN"));
+                sender.sendMessage(Message.ok("Unit repossessed into escrow."));
+            }
