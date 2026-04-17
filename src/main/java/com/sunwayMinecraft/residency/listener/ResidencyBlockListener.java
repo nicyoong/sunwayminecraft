@@ -73,3 +73,9 @@ public class ResidencyBlockListener implements Listener {
         if (!decision.isAllowed()) { event.setCancelled(true); event.getPlayer().sendMessage(Message.error(decision.getDenialReason())); }
     }
 
+    private boolean isContainer(Material material) {
+        return material.name().contains("CHEST") || material.name().contains("BARREL") || material.name().contains("SHULKER_BOX")
+                || material.name().contains("FURNACE") || material.name().contains("HOPPER") || material.name().contains("DISPENSER")
+                || material.name().contains("DROPPER") || material.name().contains("BREWING_STAND");
+    }
+}
