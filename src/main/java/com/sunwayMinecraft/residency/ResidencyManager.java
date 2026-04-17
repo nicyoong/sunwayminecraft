@@ -92,3 +92,12 @@ public class ResidencyManager {
         return false;
     }
 
+    public PricingProfile getPricingProfile(UnitDefinition unit) {
+        PricingProfile profile = pricingConfigManager.getProfile(unit.getPricingProfileId());
+        if (profile == null) {
+            DistrictDefinition district = districtsConfigManager.getDistrict(unit.getDistrictId());
+            if (district != null) profile = pricingConfigManager.getProfile(district.getPricingProfileId());
+        }
+        return profile;
+    }
+
