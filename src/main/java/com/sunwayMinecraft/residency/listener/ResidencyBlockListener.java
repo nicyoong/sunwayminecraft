@@ -24,3 +24,10 @@ public class ResidencyBlockListener implements Listener {
 
     public ResidencyBlockListener(ResidencyManager manager) { this.manager = manager; }
 
+    @EventHandler(ignoreCancelled = true)
+    public void onBreak(BlockBreakEvent event) {
+        if (!manager.isManagedLocation(event.getBlock().getLocation())) return;
+        AccessDecision decision = manager.getAccessService().check(event.getPlayer(), event.getBlock().getLocation(), ActionType.BREAK_BLOCK);
+        if (!decision.isAllowed()) { event.setCancelled(true); event.getPlayer().sendMessage(Message.error(decision.getDenialReason())); }
+    }
+
