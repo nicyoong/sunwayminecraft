@@ -23,16 +23,22 @@ public class ResidencyManager {
     private final PricingConfigManager pricingConfigManager;
     private final PolicyConfigManager policyConfigManager;
     private final ResidencyRepository repository;
-    private final BillingService billingService;
-    private final PremisesAccessService accessService;
-    private final DirectoryService directoryService;
-    private final RepossessionService repossessionService;
+
+    private BillingService billingService;
+    private PremisesAccessService accessService;
+    private DirectoryService directoryService;
+    private RepossessionService repossessionService;
     private final RegionValidationService validationService;
+
     private final Map<String, UnitDefinition> units = new LinkedHashMap<>();
 
-    public ResidencyManager(JavaPlugin plugin, DistrictsConfigManager districtsConfigManager, BuildingsConfigManager buildingsConfigManager,
-                            UnitsConfigManager unitsConfigManager, PricingConfigManager pricingConfigManager, PolicyConfigManager policyConfigManager,
-                            ResidencyRepository repository, BillingService billingService) {
+    public ResidencyManager(JavaPlugin plugin,
+                            DistrictsConfigManager districtsConfigManager,
+                            BuildingsConfigManager buildingsConfigManager,
+                            UnitsConfigManager unitsConfigManager,
+                            PricingConfigManager pricingConfigManager,
+                            PolicyConfigManager policyConfigManager,
+                            ResidencyRepository repository) {
         this.plugin = plugin;
         this.districtsConfigManager = districtsConfigManager;
         this.buildingsConfigManager = buildingsConfigManager;
@@ -40,20 +46,29 @@ public class ResidencyManager {
         this.pricingConfigManager = pricingConfigManager;
         this.policyConfigManager = policyConfigManager;
         this.repository = repository;
+        this.validationService =
+                new RegionValidationService(plugin, districtsConfigManager, buildingsConfigManager, unitsConfigManager);
+    }
+
+    public void initializeServices(BillingService billingService) {
         this.billingService = billingService;
         this.accessService = new PremisesAccessService(this);
         this.directoryService = new DirectoryService(this);
         this.repossessionService = new RepossessionService(this);
-        this.validationService = new RegionValidationService(plugin, districtsConfigManager, buildingsConfigManager, unitsConfigManager);
     }
 
     public void initialize() {
+        if (billingService == null || accessService == null || directoryService == null || repossessionService == null) {
+            throw new IllegalStateException("ResidencyManager services must be initialized before initialize()");
+        }
+
         districtsConfigManager.reload();
         buildingsConfigManager.reload();
         unitsConfigManager.reload();
         pricingConfigManager.reload();
         policyConfigManager.reload();
         repository.load();
+
         units.clear();
         for (UnitDefinition unit : unitsConfigManager.getUnits()) {
             units.put(unit.getId().toLowerCase(), unit);
@@ -63,8 +78,11 @@ public class ResidencyManager {
                 repository.saveTenancy(tenancy);
             }
         }
+
         List<String> errors = validationService.validateAll();
-        for (String error : errors) plugin.getLogger().severe("[Residency] " + error);
+        for (String error : errors) {
+            plugin.getLogger().severe("[Residency] " + error);
+        }
     }
 
     public JavaPlugin getPlugin() { return plugin; }
@@ -74,12 +92,17 @@ public class ResidencyManager {
     public BillingService getBillingService() { return billingService; }
     public RepossessionService getRepossessionService() { return repossessionService; }
     public Map<String, UnitDefinition> getUnits() { return units; }
-    public UnitDefinition getUnit(String id) { return units.get(id.toLowerCase()); }
+
+    public UnitDefinition getUnit(String id) {
+        return units.get(id.toLowerCase());
+    }
 
     public UnitDefinition getUnitAt(Location location) {
         for (UnitDefinition unit : units.values()) {
             if (unit.getPrimaryRegion().contains(location)) return unit;
-            for (Region3i region : unit.getLinkedRegions().values()) if (region.contains(location)) return unit;
+            for (Region3i region : unit.getLinkedRegions().values()) {
+                if (region.contains(location)) return unit;
+            }
         }
         return null;
     }
@@ -96,7 +119,9 @@ public class ResidencyManager {
         PricingProfile profile = pricingConfigManager.getProfile(unit.getPricingProfileId());
         if (profile == null) {
             DistrictDefinition district = districtsConfigManager.getDistrict(unit.getDistrictId());
-            if (district != null) profile = pricingConfigManager.getProfile(district.getPricingProfileId());
+            if (district != null) {
+                profile = pricingConfigManager.getProfile(district.getPricingProfileId());
+            }
         }
         return profile;
     }
@@ -105,7 +130,9 @@ public class ResidencyManager {
         PolicyProfile profile = policyConfigManager.getProfile(unit.getPolicyProfileId());
         if (profile == null) {
             DistrictDefinition district = districtsConfigManager.getDistrict(unit.getDistrictId());
-            if (district != null) profile = policyConfigManager.getProfile(district.getPolicyProfileId());
+            if (district != null) {
+                profile = policyConfigManager.getProfile(district.getPolicyProfileId());
+            }
         }
         return profile;
     }
