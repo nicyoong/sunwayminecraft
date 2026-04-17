@@ -64,3 +64,12 @@ public class ResidencyBlockListener implements Listener {
         if (!decision.isAllowed()) { event.setCancelled(true); event.getPlayer().sendMessage(Message.error(decision.getDenialReason())); }
     }
 
+    @EventHandler(ignoreCancelled = true)
+    public void onInteractEntity(PlayerInteractAtEntityEvent event) {
+        if (!manager.isManagedLocation(event.getRightClicked().getLocation())) return;
+        ActionType type = event.getRightClicked().getType() == EntityType.ITEM_FRAME ? ActionType.MODIFY_ITEM_FRAME : ActionType.INTERACT_ENTITY;
+        if (event.getRightClicked() instanceof Tameable) type = ActionType.INTERACT_PET;
+        AccessDecision decision = manager.getAccessService().check(event.getPlayer(), event.getRightClicked().getLocation(), type);
+        if (!decision.isAllowed()) { event.setCancelled(true); event.getPlayer().sendMessage(Message.error(decision.getDenialReason())); }
+    }
+
