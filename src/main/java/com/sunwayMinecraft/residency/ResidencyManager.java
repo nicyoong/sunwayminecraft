@@ -84,3 +84,11 @@ public class ResidencyManager {
         return null;
     }
 
+    public boolean isManagedLocation(Location location) {
+        if (location == null) return false;
+        for (DistrictDefinition district : districtsConfigManager.getDistricts()) {
+            if (district.isEnabled() && district.getRegion().contains(location)) return true;
+        }
+        return false;
+    }
+
