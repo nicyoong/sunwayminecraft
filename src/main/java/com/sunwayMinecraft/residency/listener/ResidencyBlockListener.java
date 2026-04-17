@@ -50,3 +50,10 @@ public class ResidencyBlockListener implements Listener {
         if (!decision.isAllowed()) { event.setCancelled(true); event.getPlayer().sendMessage(Message.error(decision.getDenialReason())); }
     }
 
+    @EventHandler(ignoreCancelled = true)
+    public void onArmorStand(PlayerArmorStandManipulateEvent event) {
+        if (!manager.isManagedLocation(event.getRightClicked().getLocation())) return;
+        AccessDecision decision = manager.getAccessService().check(event.getPlayer(), event.getRightClicked().getLocation(), ActionType.MODIFY_ARMOR_STAND);
+        if (!decision.isAllowed()) { event.setCancelled(true); event.getPlayer().sendMessage(Message.error(decision.getDenialReason())); }
+    }
+
