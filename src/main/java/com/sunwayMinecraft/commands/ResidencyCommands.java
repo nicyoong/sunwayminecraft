@@ -12,3 +12,8 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+public class ResidencyCommands implements CommandExecutor {
+    private final ResidencyManager manager;
+
+    public ResidencyCommands(ResidencyManager manager) { this.manager = manager; }
+
