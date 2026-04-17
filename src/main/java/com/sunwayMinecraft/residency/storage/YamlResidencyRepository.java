@@ -87,3 +87,15 @@ public class YamlResidencyRepository implements ResidencyRepository {
         try { yaml.save(file); } catch (IOException e) { plugin.getLogger().severe("Failed to save residency data: " + e.getMessage()); }
     }
 
+    @Override public UnitTenancyRecord getTenancy(String unitId) { return tenancies.computeIfAbsent(unitId.toLowerCase(), UnitTenancyRecord::new); }
+    @Override public void saveTenancy(UnitTenancyRecord record) { tenancies.put(record.getUnitId().toLowerCase(), record); save(); }
+    @Override public Collection<UnitTenancyRecord> getAllTenancies() { return tenancies.values(); }
+    @Override public List<RoleAssignment> getRoleAssignments(String unitId) { return roles.computeIfAbsent(unitId.toLowerCase(), k -> new ArrayList<>()); }
+    @Override public void addRoleAssignment(RoleAssignment assignment) { getRoleAssignments(assignment.getUnitId()).add(assignment); save(); }
+    @Override public void removeRoleAssignments(String unitId, UUID playerId, RoleType roleType) { getRoleAssignments(unitId).removeIf(r -> r.getPlayerId().equals(playerId) && (roleType == null || r.getRoleType() == roleType)); save(); }
+    @Override public List<GuestAccessGrant> getGuestAccess(String unitId) { return guests.computeIfAbsent(unitId.toLowerCase(), k -> new ArrayList<>()); }
+    @Override public void addGuestAccess(GuestAccessGrant grant) { getGuestAccess(grant.getUnitId()).add(grant); save(); }
+    @Override public void purgeExpiredGuestAccess() { Instant now = Instant.now(); for (List<GuestAccessGrant> list : guests.values()) list.removeIf(g -> !g.isActive(now)); save(); }
+    @Override public EscrowRecord getEscrow(String unitId) { return escrows.get(unitId.toLowerCase()); }
+    @Override public void saveEscrow(EscrowRecord record) { escrows.put(record.getUnitId().toLowerCase(), record); save(); }
+}
