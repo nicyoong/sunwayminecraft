@@ -38,3 +38,19 @@ public class BillingService {
         return true;
     }
 
+    public boolean payRent(UnitDefinition unit, OfflinePlayer tenant) {
+        UnitTenancyRecord record = manager.getRepository().getTenancy(unit.getId());
+        if (record.getTenantPlayerId() == null || !record.getTenantPlayerId().equals(tenant.getUniqueId())) return false;
+        if (economy == null || !economy.has(tenant, record.getRentAmount())) return false;
+        economy.withdrawPlayer(tenant, record.getRentAmount());
+        Instant now = Instant.now();
+        record.setLastPaymentAt(now);
+        record.setNextDueAt(record.getBillingPeriod() == BillingPeriod.WEEKLY ? now.plus(7, ChronoUnit.DAYS) : now.plus(30, ChronoUnit.DAYS));
+        record.setArrearsAmount(0.0);
+        record.setRentState(RentState.CURRENT);
+        record.setLeaseState(LeaseState.ACTIVE);
+        record.setGraceEnd(null);
+        manager.getRepository().saveTenancy(record);
+        return true;
+    }
+
