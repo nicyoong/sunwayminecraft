@@ -74,3 +74,23 @@ public class ResidencyCommands implements CommandExecutor {
             }
             return true;
         }
+        if (args[0].equalsIgnoreCase("guest")) {
+            if (args.length < 3) { player.sendMessage(Message.error("/residency guest <unitId> <player> [hours]")); return true; }
+            UnitDefinition unit = manager.getUnit(args[1]);
+            if (unit == null) { player.sendMessage(Message.error("Unknown unit.")); return true; }
+            UnitTenancyRecord record = manager.getRepository().getTenancy(unit.getId());
+            if (!player.getUniqueId().equals(record.getTenantPlayerId()) && !record.getManagerIds().contains(player.getUniqueId())) {
+                player.sendMessage(Message.error("You do not manage this unit.")); return true;
+            }
+            OfflinePlayer target = Bukkit.getOfflinePlayer(args[2]);
+            long hours = args.length >= 4 ? Long.parseLong(args[3]) : 24L;
+            manager.getRepository().addGuestAccess(new com.sunwayMinecraft.residency.domain.GuestAccessGrant(
+                    unit.getId(), target.getUniqueId(), com.sunwayMinecraft.residency.domain.GrantType.GUEST,
+                    java.time.Instant.now(), java.time.Instant.now().plusSeconds(hours * 3600L), player.getUniqueId()));
+            player.sendMessage(Message.ok("Guest access granted."));
+            return true;
+        }
+        player.sendMessage(Message.error("Unknown subcommand."));
+        return true;
+    }
+}
