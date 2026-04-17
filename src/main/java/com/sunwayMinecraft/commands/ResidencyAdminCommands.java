@@ -40,3 +40,11 @@ public class ResidencyAdminCommands implements CommandExecutor {
                 sender.sendMessage(" Lease state: " + record.getLeaseState() + ", Rent state: " + record.getRentState());
                 sender.sendMessage(" Tenant: " + (record.getTenantPlayerId() == null ? "none" : record.getTenantPlayerId()));
             }
+            case "assign" -> {
+                if (args.length < 3) { sender.sendMessage(Message.error("/resadmin assign <unitId> <player>")); return true; }
+                UnitDefinition unit = manager.getUnit(args[1]);
+                if (unit == null) { sender.sendMessage(Message.error("Unknown unit.")); return true; }
+                OfflinePlayer target = Bukkit.getOfflinePlayer(args[2]);
+                boolean ok = manager.getBillingService().startLease(unit, target, unit.getListingSettings().isApprovalRequired());
+                sender.sendMessage(ok ? Message.ok("Lease assigned.") : Message.error("Could not assign lease."));
+            }
