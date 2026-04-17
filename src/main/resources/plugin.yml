@@ -147,6 +147,15 @@ commands:
     usage: /miningstate
     permission: sunway.worldtravel.admin
 
+  residency:
+    description: Sunway Residency commands
+
+  storefront:
+    description: Sunway Storefront commands
+
+  resadmin:
+    description: Sunway Residency admin commands
+
 permissions:
   sunwayminecraft.beacons.pause:
     description: "Allows the user to pause beacon color transitions."
@@ -244,4 +253,16 @@ permissions:
 
   sunway.worldtravel.admin:
     description: Allows admins to control Mining World state
+    default: op
+
+  sunway.residency.staff:
+    description: Allows staff to use staff commands for for Sunway Residency
+    default: op
+
+  sunway.residency.admin:
+    description: Allows admins to access admin commands for Sunway Residency
+    default: op
+
+  sunway.residency.override:
+    description: Allows admins to override settings for Sunway Residency
     default: op
