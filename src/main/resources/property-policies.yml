@@ -1,0 +1,16 @@
+policy-profiles:
+  residential_standard:
+    default-role-preset: "RESIDENTIAL"
+    rent-grace-days: 7
+    repossession-enabled: true
+    auto-restrict-on-arrears: true
+    allow-public-container-access: false
+    allow-public-interaction: false
+
+  commercial_standard:
+    default-role-preset: "COMMERCIAL"
+    rent-grace-days: 3
+    repossession-enabled: true
+    auto-restrict-on-arrears: true
+    allow-public-container-access: false
+    allow-public-interaction: true
