@@ -201,6 +201,97 @@ This helps preserve the quality of the permanent world while still giving player
 - Use `/mining` when you need wood, stone, ores, or open land to explore  
 - Store your important items and builds in the permanent world, not the resource world  
 
+#### 🏠 Residency & Storefronts  
+*Rent homes, run businesses, and live inside the city as part of normal survival progression*
+
+**What This System Is**:  
+- A city property system for **Residency** and **Storefronts** inside staff-managed municipal zones  
+- Designed for the **spawn city** and future registered municipal districts  
+- Separate from ordinary wilderness survival and land claiming  
+- Built for both **housing** and **commercial life** from the start  
+
+**What Players Can Do**:  
+- Rent registered city units such as:  
+  - Apartments  
+  - Houses or townhouses  
+  - Shoplots  
+  - Offices  
+  - Market stalls  
+  - Mixed-use units  
+- Browse available properties through the public listing system  
+- Move into residential units as part of everyday progression  
+- Rent commercial units and use them as public-facing storefronts  
+- Manage approved guests for your unit  
+- Pay rent and keep your city space active  
+
+**How It Works**:  
+1. **Browse Listings**: Use `/residency list` or `/storefront list` to view available city units  
+2. **View Details**: Check the unit type, district, rent, deposit, and listing conditions  
+3. **Rent a Unit**:  
+   - Standard units can be rented directly  
+   - Premium or prestige units may require approval  
+4. **Move In or Operate**:  
+   - Residential units become your city home  
+   - Commercial units become your public business space  
+5. **Manage Access**: Add guests or approved helpers where allowed  
+6. **Keep Up Payments**: Pay your rent on time to avoid restrictions or repossession  
+
+**Residency Features**:  
+- Units can be **residential**, **commercial**, or **mixed-use**  
+- Buildings can contain multiple separate units  
+- Some units include linked side areas such as storage rooms or back sections  
+- Every unit belongs to a registered district in the city  
+- Rent and deposit values can differ by location, type, and prestige  
+
+**Storefront Features**:  
+- Commercial units can allow **selective public access**  
+- Shops can be open to visitors without exposing everything inside  
+- Public interaction can be allowed in chosen areas while private areas stay restricted  
+- Storefronts are intended to support visible city life, not just storage or landholding  
+
+**Access Rules**:  
+- Your permission level depends on your role in the unit  
+- Roles may include:  
+  - Tenant  
+  - Manager  
+  - Guest  
+  - Staff override  
+- Residential units are usually more private  
+- Commercial units may allow partial public access  
+- Event access and guest access can be granted without giving full control  
+
+**Rent and Repossession Rules**:  
+- Some units require a **deposit** plus recurring rent  
+- Missing payment does not instantly destroy your lease  
+- The system uses a progression like:  
+  - Warning  
+  - Grace period  
+  - Restricted access / arrears  
+  - Repossession  
+- If a unit is repossessed, contents are protected through controlled recovery handling rather than being left open to grief  
+
+**Important Notes**:  
+- This is a **city system**, not a wilderness claiming system  
+- The city is managed separately from ordinary survival claims  
+- Public city life is meant to feel more structured than the open survival world  
+- Not every city unit is permanent ownership - many are meant to be rented and actively used  
+
+**Commands**:  
+- `/residency list` - View rentable city units  
+- `/residency view <unit>` - View details for a specific unit  
+- `/residency rent <unit>` - Rent an available unit  
+- `/residency myunits` - View your current rented units  
+- `/residency pay <unit>` - Pay rent for a unit  
+- `/residency guests <unit>` - Manage guest access where allowed  
+- `/storefront list` - View available commercial units  
+
+**Pro Tips**:  
+- Use residential units to anchor yourself in the city instead of treating spawn as a pass-through area  
+- Mixed-use units are useful if you want both city housing and a public-facing presence  
+- Keep rent paid before grace periods become a problem  
+- Premium locations may be more expensive, but they also matter more socially  
+- If you want city visibility, storefronts are one of the best ways to establish your presence  
+
 ---
 
 ## 🛠 For Server Admins & Developers  
@@ -216,12 +307,19 @@ This helps preserve the quality of the permanent world while still giving player
 | **Cat Healing**      | Passive healing via nearby tamed cats        | `HealingSystem`            |
 | **Coin Flip**        | Player item/money wager system               | `CoinFlipSystem`, `CoinFlipCommands` |
 | **World Travel**     | Player-facing travel between permanent and mining worlds | `WorldTravelCommands` |
+| **Residency & Storefronts** | Municipal premises engine for rentable housing and commercial city units | `ResidencyManager`, `ResidencyBootstrap`, `PremisesAccessService`, `BillingService` |
 
 ### Configuration  
 *Handled via YAML files in `/plugins/SunwayMinecraft/`*:  
 - `benches.yml` - Bench locations, owners, regions  
 - `switches.yml` - Light activation rules/conditions  
 - `lights.yml` - Light source configurations  
+- `districts.yml` - Municipal district definitions and district regions  
+- `buildings.yml` - Registered city buildings and parent structures  
+- `units.yml` - Individual rentable units, unit regions, linked subregions, and listing settings  
+- `property-pricing.yml` - Default rent, deposit, and billing profile settings  
+- `property-policies.yml` - Lease policy, grace-period, and public-access defaults  
+- `residency-settings.yml` - General settings for the Residency and Storefronts system  
 
 **Reload safely with**:  
 - `/reloadsunwayconfig` - Main settings  
