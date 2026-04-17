@@ -69,3 +69,8 @@ public class ResidencyAdminCommands implements CommandExecutor {
                 manager.getRepository().saveEscrow(new EscrowRecord(args[1], Instant.now(), "Manual repossession", "OPEN"));
                 sender.sendMessage(Message.ok("Unit repossessed into escrow."));
             }
+            case "escrow" -> {
+                if (args.length < 2) { sender.sendMessage(Message.error("/resadmin escrow <unitId>")); return true; }
+                EscrowRecord escrow = manager.getRepository().getEscrow(args[1]);
+                sender.sendMessage(escrow == null ? Message.warn("No escrow record.") : Message.info("Escrow: " + escrow.getStatus() + " reason=" + escrow.getReason()));
+            }
