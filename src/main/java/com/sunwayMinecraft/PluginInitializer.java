@@ -7,6 +7,8 @@ import com.sunwayMinecraft.cathealer.HealingSystem;
 import com.sunwayMinecraft.containerfinder.ContainerFinderManager;
 import com.sunwayMinecraft.petfinder.PetFinderManager;
 import com.sunwayMinecraft.realtime.RealTimeManager;
+import com.sunwayMinecraft.residency.ResidencyBootstrap;
+import com.sunwayMinecraft.residency.ResidencyManager;
 import com.sunwayMinecraft.coinflip.*;
 import com.sunwayMinecraft.switches.*;
 import com.sunwayMinecraft.worldtravel.*;
@@ -41,6 +43,9 @@ public class PluginInitializer {
   // Real time
   private RealTimeManager realTimeManager;
 
+  // Residency
+  private ResidencyManager residencyManager;
+
   // Coin flip
   private CoinFlipSystem coinFlipSystem;
   private ItemCoinFlipSystem itemCoinFlipSystem;
@@ -64,6 +69,7 @@ public class PluginInitializer {
     initContainerFinderSystem();
     initPetFinderSystem();
     initRealTimeSystem();
+    initResidencySystem();
     initCoinFlipSystem();
     initWorldTravelSystem();
   }
@@ -109,6 +115,11 @@ public class PluginInitializer {
 
   private void initRealTimeSystem() {
     realTimeManager = new RealTimeManager();
+  }
+
+  private void initResidencySystem() {
+    Economy econ = getEconomy();
+    residencyManager = new ResidencyBootstrap(plugin, econ).initialize();
   }
 
   private void initCoinFlipSystem() {
@@ -167,6 +178,10 @@ public class PluginInitializer {
 
   public RealTimeManager getRealTimeManager() {
     return realTimeManager;
+  }
+
+  public ResidencyManager getResidencyManager() {
+    return residencyManager;
   }
 
   public CoinFlipSystem getCoinFlipSystem() {
