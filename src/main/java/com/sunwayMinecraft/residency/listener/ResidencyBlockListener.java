@@ -31,3 +31,10 @@ public class ResidencyBlockListener implements Listener {
         if (!decision.isAllowed()) { event.setCancelled(true); event.getPlayer().sendMessage(Message.error(decision.getDenialReason())); }
     }
 
+    @EventHandler(ignoreCancelled = true)
+    public void onPlace(BlockPlaceEvent event) {
+        if (!manager.isManagedLocation(event.getBlock().getLocation())) return;
+        AccessDecision decision = manager.getAccessService().check(event.getPlayer(), event.getBlock().getLocation(), ActionType.PLACE_BLOCK);
+        if (!decision.isAllowed()) { event.setCancelled(true); event.getPlayer().sendMessage(Message.error(decision.getDenialReason())); }
+    }
+
