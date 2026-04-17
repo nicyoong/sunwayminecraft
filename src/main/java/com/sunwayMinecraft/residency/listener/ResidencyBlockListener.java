@@ -57,3 +57,10 @@ public class ResidencyBlockListener implements Listener {
         if (!decision.isAllowed()) { event.setCancelled(true); event.getPlayer().sendMessage(Message.error(decision.getDenialReason())); }
     }
 
+    @EventHandler(ignoreCancelled = true)
+    public void onBed(PlayerBedEnterEvent event) {
+        if (!manager.isManagedLocation(event.getBed().getLocation())) return;
+        AccessDecision decision = manager.getAccessService().check(event.getPlayer(), event.getBed().getLocation(), ActionType.USE_BED);
+        if (!decision.isAllowed()) { event.setCancelled(true); event.getPlayer().sendMessage(Message.error(decision.getDenialReason())); }
+    }
+
