@@ -64,3 +64,13 @@ public class ResidencyCommands implements CommandExecutor {
             player.sendMessage(ok ? Message.ok("Rent paid.") : Message.error("Rent payment failed."));
             return true;
         }
+        if (args[0].equalsIgnoreCase("myunits")) {
+            player.sendMessage(Message.info("Your units:"));
+            for (UnitDefinition unit : manager.getUnits().values()) {
+                UnitTenancyRecord record = manager.getRepository().getTenancy(unit.getId());
+                if (player.getUniqueId().equals(record.getTenantPlayerId()) || record.getManagerIds().contains(player.getUniqueId())) {
+                    player.sendMessage(" - " + unit.getDisplayName() + " [" + unit.getId() + "] " + record.getLeaseState());
+                }
+            }
+            return true;
+        }
