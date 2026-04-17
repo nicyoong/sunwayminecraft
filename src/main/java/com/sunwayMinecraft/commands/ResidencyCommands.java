@@ -44,3 +44,15 @@ public class ResidencyCommands implements CommandExecutor {
             player.sendMessage(" State: " + record.getLeaseState());
             return true;
         }
+        if (args[0].equalsIgnoreCase("rent")) {
+            if (args.length < 2) { player.sendMessage(Message.error("/residency rent <unitId>")); return true; }
+            UnitDefinition unit = manager.getUnit(args[1]);
+            if (unit == null) { player.sendMessage(Message.error("Unknown unit.")); return true; }
+            UnitTenancyRecord record = manager.getRepository().getTenancy(unit.getId());
+            if (!(record.getLeaseState() == LeaseState.VACANT || record.getLeaseState() == LeaseState.LISTED)) {
+                player.sendMessage(Message.error("This unit is not available.")); return true;
+            }
+            boolean ok = manager.getBillingService().startLease(unit, player, unit.getListingSettings().isApprovalRequired());
+            player.sendMessage(ok ? Message.ok("You rented " + unit.getDisplayName() + ".") : Message.error("You could not rent this unit. Check approval or funds."));
+            return true;
+        }
