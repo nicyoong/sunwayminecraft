@@ -38,3 +38,15 @@ public class ResidencyBlockListener implements Listener {
         if (!decision.isAllowed()) { event.setCancelled(true); event.getPlayer().sendMessage(Message.error(decision.getDenialReason())); }
     }
 
+    @EventHandler(ignoreCancelled = true)
+    public void onInteract(PlayerInteractEvent event) {
+        Block block = event.getClickedBlock();
+        if (block == null || !manager.isManagedLocation(block.getLocation())) return;
+        if (event.getAction() != Action.RIGHT_CLICK_BLOCK && event.getAction() != Action.PHYSICAL) return;
+        ActionType type = ActionType.USE_BUTTON_OR_LEVER;
+        if (block.getBlockData() instanceof Openable) type = ActionType.OPEN_DOOR;
+        else if (isContainer(block.getType())) type = ActionType.USE_CONTAINER;
+        AccessDecision decision = manager.getAccessService().check(event.getPlayer(), block.getLocation(), type);
+        if (!decision.isAllowed()) { event.setCancelled(true); event.getPlayer().sendMessage(Message.error(decision.getDenialReason())); }
+    }
+
