@@ -16,3 +16,8 @@ import org.bukkit.command.CommandSender;
 
 import java.time.Instant;
 
+public class ResidencyAdminCommands implements CommandExecutor {
+    private final ResidencyManager manager;
+
+    public ResidencyAdminCommands(ResidencyManager manager) { this.manager = manager; }
+
