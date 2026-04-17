@@ -26,3 +26,7 @@ public class ResidencyAdminCommands implements CommandExecutor {
         if (!sender.hasPermission("sunway.residency.admin")) { sender.sendMessage(Message.error("No permission.")); return true; }
         if (args.length == 0) { sender.sendMessage(Message.error("/resadmin <reload|info|assign|terminate|repossess|escrow|addmanager> ...")); return true; }
         switch (args[0].toLowerCase()) {
+            case "reload" -> {
+                manager.initialize();
+                sender.sendMessage(Message.ok("Residency configs reloaded."));
+            }
