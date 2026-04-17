@@ -1,0 +1,62 @@
+units:
+  orchid_3a:
+    district: "central_residency"
+    building: "orchid_apartments"
+    display-name: "Unit 3A"
+    unit-code: "3A"
+    unit-type: "APARTMENT"
+    mode: "RESIDENTIAL"
+    prestige-tier: 2
+    address-line: "Orchid Apartments, Unit 3A"
+    floor-label: "3"
+    pricing-profile: "apartment_standard"
+    policy-profile: "residential_standard"
+    capacity: 2
+    flags:
+      public-entry: false
+      allow-guests: true
+      allow-event-access: true
+      escrow-on-repossession: true
+      public-interaction: false
+      public-container-access: false
+    listing:
+      visible: true
+      approval-required: false
+      tags: ["apartment", "central"]
+    world: "world"
+    primary-region:
+      min: { x: 125, y: 75, z: 225 }
+      max: { x: 132, y: 81, z: 232 }
+    linked-regions:
+      storage:
+        min: { x: 126, y: 82, z: 226 }
+        max: { x: 127, y: 83, z: 227 }
+
+  orchard_shoplot:
+    district: "central_residency"
+    display-name: "Orchard Shoplot"
+    unit-code: "G-01"
+    unit-type: "SHOPLOT"
+    mode: "COMMERCIAL"
+    prestige-tier: 3
+    address-line: "Orchard Row, G-01"
+    floor-label: "G"
+    pricing-profile: "shoplot_prime"
+    policy-profile: "commercial_standard"
+    capacity: 4
+    flags:
+      public-entry: true
+      allow-guests: true
+      allow-event-access: true
+      escrow-on-repossession: true
+      public-interaction: true
+      public-container-access: false
+    listing:
+      visible: true
+      approval-required: true
+      tags: ["shop", "prime"]
+    world: "world"
+    primary-region:
+      min: { x: 170, y: 64, z: 220 }
+      max: { x: 178, y: 71, z: 228 }
+    linked-regions: {}
