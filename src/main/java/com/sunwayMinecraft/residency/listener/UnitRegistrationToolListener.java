@@ -23,7 +23,7 @@ public class UnitRegistrationToolListener implements Listener {
         Player player = event.getPlayer();
         if (!player.hasPermission("sunway.residency.admin")) return;
         if (event.getHand() != EquipmentSlot.HAND) return;
-        if (!AdminSelectionManager.isWand(player.getInventory().getItemInMainHand())) return;
+        if (!selectionManager.isWand(player.getInventory().getItemInMainHand())) return;
 
         Block clicked = event.getClickedBlock();
         if (clicked == null) return;

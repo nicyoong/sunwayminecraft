@@ -62,15 +62,17 @@ public class CommandRegistrar {
     // Residency / Storefronts
     if (init.getResidencyManager() != null) {
       ResidencyCommands residencyCmds =
-          new ResidencyCommands(init.getResidencyManager());
+              new ResidencyCommands(init.getResidencyManager());
       registerCommand("residency", residencyCmds);
 
       StorefrontCommands storefrontCmds =
-          new StorefrontCommands(init.getResidencyManager());
+              new StorefrontCommands(init.getResidencyManager());
       registerCommand("storefront", storefrontCmds);
 
       ResidencyAdminCommands residencyAdminCmds =
-          new ResidencyAdminCommands(init.getResidencyManager());
+              new ResidencyAdminCommands(
+                      init.getResidencyManager(),
+                      init.getResidencySelectionManager());
       registerCommand("resadmin", residencyAdminCmds);
     }
 

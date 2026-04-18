@@ -153,7 +153,7 @@ public class ResidencyAdminCommands implements TabExecutor {
                     return true;
                 }
 
-                player.getInventory().addItem(AdminSelectionManager.createWandItem());
+                player.getInventory().addItem(selectionManager.createWandItem());
                 player.sendMessage(Message.ok("You received the Residency iron shovel wand."));
                 player.sendMessage(Message.info("Left-click a block for pos1, right-click for pos2."));
                 return true;
