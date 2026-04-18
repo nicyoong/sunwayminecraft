@@ -1,15 +1,30 @@
 package com.sunwayMinecraft.residency.admin;
 
+import net.kyori.adventure.text.Component;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.plugin.java.JavaPlugin;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 public class AdminSelectionManager {
-    private static final String WAND_NAME = "§bResidency Unit Wand";
+    private static final String WAND_ID = "residency_unit_wand";
+
+    private final JavaPlugin plugin;
+    private final NamespacedKey wandKey;
     private final Map<UUID, SelectionSession> sessions = new HashMap<>();
+
+    public AdminSelectionManager(JavaPlugin plugin) {
+        this.plugin = plugin;
+        this.wandKey = new NamespacedKey(plugin, WAND_ID);
+    }
 
     public SelectionSession getSession(UUID uuid) {
         return sessions.computeIfAbsent(uuid, k -> new SelectionSession());
@@ -27,24 +42,33 @@ public class AdminSelectionManager {
         sessions.remove(uuid);
     }
 
-    public static ItemStack createWandItem() {
+    public ItemStack createWandItem() {
         ItemStack item = new ItemStack(Material.IRON_SHOVEL);
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
-            meta.setDisplayName(WAND_NAME);
-            meta.setLore(List.of(
-                    "Left-click block: set pos1",
-                    "Right-click block: set pos2",
-                    "Used for /resadmin createunit"
+            meta.displayName(Component.text("Residency Unit Wand"));
+            meta.lore(List.of(
+                    Component.text("Left-click block: set pos1"),
+                    Component.text("Right-click block: set pos2"),
+                    Component.text("Used for /resadmin createunit")
             ));
+            meta.getPersistentDataContainer().set(wandKey, PersistentDataType.STRING, WAND_ID);
             item.setItemMeta(meta);
         }
         return item;
     }
 
-    public static boolean isWand(ItemStack item) {
-        if (item == null || item.getType() != Material.IRON_SHOVEL || !item.hasItemMeta()) return false;
+    public boolean isWand(ItemStack item) {
+        if (item == null || item.getType() != Material.IRON_SHOVEL || !item.hasItemMeta()) {
+            return false;
+        }
+
         ItemMeta meta = item.getItemMeta();
-        return meta != null && WAND_NAME.equals(meta.getDisplayName());
+        if (meta == null) {
+            return false;
+        }
+
+        String value = meta.getPersistentDataContainer().get(wandKey, PersistentDataType.STRING);
+        return WAND_ID.equals(value);
     }
 }
