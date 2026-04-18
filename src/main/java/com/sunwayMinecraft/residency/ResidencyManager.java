@@ -6,14 +6,17 @@ import com.sunwayMinecraft.residency.domain.*;
 import com.sunwayMinecraft.residency.leasing.BillingService;
 import com.sunwayMinecraft.residency.leasing.RepossessionService;
 import com.sunwayMinecraft.residency.listing.DirectoryService;
-import com.sunwayMinecraft.residency.region.*;
+import com.sunwayMinecraft.residency.region.Region3i;
+import com.sunwayMinecraft.residency.region.RegionValidationService;
 import com.sunwayMinecraft.residency.storage.ResidencyRepository;
 import org.bukkit.Location;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 public class ResidencyManager {
     private final JavaPlugin plugin;
@@ -85,6 +88,17 @@ public class ResidencyManager {
         }
     }
 
+    public GuestAccessGrant createGuestGrant(String unitId, UUID target, long hours, UUID grantedBy) {
+        return new GuestAccessGrant(
+                unitId,
+                target,
+                GrantType.GUEST,
+                Instant.now(),
+                Instant.now().plusSeconds(hours * 3600L),
+                grantedBy
+        );
+    }
+
     public JavaPlugin getPlugin() { return plugin; }
     public ResidencyRepository getRepository() { return repository; }
     public PremisesAccessService getAccessService() { return accessService; }
@@ -92,6 +106,11 @@ public class ResidencyManager {
     public BillingService getBillingService() { return billingService; }
     public RepossessionService getRepossessionService() { return repossessionService; }
     public Map<String, UnitDefinition> getUnits() { return units; }
+    public DistrictsConfigManager getDistrictsConfigManager() { return districtsConfigManager; }
+    public BuildingsConfigManager getBuildingsConfigManager() { return buildingsConfigManager; }
+    public UnitsConfigManager getUnitsConfigManager() { return unitsConfigManager; }
+    public PricingConfigManager getPricingConfigManager() { return pricingConfigManager; }
+    public PolicyConfigManager getPolicyConfigManager() { return policyConfigManager; }
 
     public UnitDefinition getUnit(String id) {
         return units.get(id.toLowerCase());
