@@ -95,3 +95,7 @@ public class DistrictsConfigManager {
         }
     }
 
+    public Collection<DistrictDefinition> getDistricts() {
+        return Collections.unmodifiableCollection(districts.values());
+    }
+
