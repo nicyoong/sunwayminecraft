@@ -1,5 +1,5 @@
 name: SunwayMinecraft
-version: '1.5-SNAPSHOT'
+version: '1.6-SNAPSHOT'
 main: com.sunwayMinecraft.SunwayMinecraft
 api-version: '1.21'
 softdepend: [Vault, Essentials, GriefPrevention]
