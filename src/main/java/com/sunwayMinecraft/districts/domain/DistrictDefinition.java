@@ -61,3 +61,25 @@ public class DistrictDefinition {
         this.signatureArea = signatureArea;
     }
 
+    public String getId() { return id; }
+    public String getDisplayName() { return displayName; }
+    public String getShortName() { return shortName; }
+    public String getWorld() { return world; }
+    public Region3i getRegion() { return region; }
+    public boolean isEnabled() { return enabled; }
+    public DistrictType getDistrictType() { return districtType; }
+    public int getPrestigeTier() { return prestigeTier; }
+    public String getPublicSummary() { return publicSummary; }
+    public List<String> getTags() { return Collections.unmodifiableList(tags); }
+    public boolean isPublicVisible() { return publicVisible; }
+    public int getListingPriority() { return listingPriority; }
+    public boolean isStorefrontPriority() { return storefrontPriority; }
+    public boolean isResidencyPriority() { return residencyPriority; }
+    public ApprovalBias getRecommendedApprovalBias() { return recommendedApprovalBias; }
+    public boolean isAllowPublicEvents() { return allowPublicEvents; }
+    public boolean isSignatureArea() { return signatureArea; }
+
+    public String getDisplayShortNameOrName() {
+        return shortName != null && !shortName.isBlank() ? shortName : displayName;
+    }
+}
