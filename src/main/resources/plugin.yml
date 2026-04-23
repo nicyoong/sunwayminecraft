@@ -163,6 +163,16 @@ commands:
     usage: /resadmin <subcommand>
     permission: sunway.residency.admin
 
+  district:
+    description: Show district information
+    usage: /district [list|info <id>]
+    permission: sunway.districts.use
+
+  districtadmin:
+    description: Admin commands for district management
+    usage: /districtadmin <list|info|at|validate|reload>
+    permission: sunway.districts.admin
+
 permissions:
   sunwayminecraft.beacons.pause:
     description: "Allows the user to pause beacon color transitions."
@@ -292,4 +302,12 @@ permissions:
 
   sunway.residency.override:
     description: Allows bypassing residency access restrictions
+    default: op
+
+  sunway.districts.use:
+    description: Allows players to view district information
+    default: true
+
+  sunway.districts.admin:
+    description: Allows admins to manage and validate districts
     default: op
