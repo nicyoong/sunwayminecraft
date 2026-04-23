@@ -22,3 +22,35 @@ public class DistrictManager {
         this.validationService = new DistrictValidationService(plugin, configManager);
     }
 
+    public void initialize() {
+        reload();
+    }
+
+    public void reload() {
+        configManager.reload();
+        List<String> errors = validationService.validateAll();
+        if (errors.isEmpty()) {
+            plugin.getLogger().info("[Districts] Loaded " + configManager.getDistricts().size() + " district(s).");
+        } else {
+            for (String error : errors) {
+                plugin.getLogger().severe("[Districts] " + error);
+            }
+        }
+    }
+
+    public DistrictDefinition getDistrict(String id) {
+        return configManager.getDistrict(id);
+    }
+
+    public List<DistrictDefinition> getPublicDistricts() {
+        return configManager.getPublicDistricts();
+    }
+
+    public DistrictDefinition getDistrictAt(Location location) {
+        return resolver.resolve(location);
+    }
+
+    public List<String> validate() {
+        return validationService.validateAll();
+    }
+}
