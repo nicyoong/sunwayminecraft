@@ -10,6 +10,8 @@ import com.sunwayMinecraft.realtime.RealTimeManager;
 import com.sunwayMinecraft.residency.admin.AdminSelectionManager;
 import com.sunwayMinecraft.residency.ResidencyBootstrap;
 import com.sunwayMinecraft.residency.ResidencyManager;
+import com.sunwayMinecraft.districts.DistrictBootstrap;
+import com.sunwayMinecraft.districts.DistrictManager;
 import com.sunwayMinecraft.coinflip.*;
 import com.sunwayMinecraft.switches.*;
 import com.sunwayMinecraft.worldtravel.*;
@@ -48,6 +50,9 @@ public class PluginInitializer {
   private ResidencyManager residencyManager;
   private AdminSelectionManager residencySelectionManager;
 
+  // Districts
+  private DistrictManager districtManager;
+
   // Coin flip
   private CoinFlipSystem coinFlipSystem;
   private ItemCoinFlipSystem itemCoinFlipSystem;
@@ -72,6 +77,7 @@ public class PluginInitializer {
     initPetFinderSystem();
     initRealTimeSystem();
     initResidencySystem();
+    initDistrictSystem();
     initCoinFlipSystem();
     initWorldTravelSystem();
   }
@@ -123,6 +129,10 @@ public class PluginInitializer {
     residencySelectionManager = new AdminSelectionManager(plugin);
     Economy econ = getEconomy();
     residencyManager = new ResidencyBootstrap(plugin, econ, residencySelectionManager).initialize();
+  }
+
+  private void initDistrictSystem() {
+    districtManager = new DistrictBootstrap(plugin).initialize();
   }
 
   private void initCoinFlipSystem() {
@@ -189,6 +199,10 @@ public class PluginInitializer {
 
   public AdminSelectionManager getResidencySelectionManager() {
     return residencySelectionManager;
+  }
+
+  public DistrictManager getDistrictManager() {
+    return districtManager;
   }
 
   public CoinFlipSystem getCoinFlipSystem() {
