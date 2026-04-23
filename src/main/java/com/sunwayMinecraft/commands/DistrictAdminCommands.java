@@ -3,7 +3,8 @@ package com.sunwayMinecraft.commands;
 import com.sunwayMinecraft.districts.DistrictManager;
 import com.sunwayMinecraft.districts.domain.DistrictDefinition;
 import com.sunwayMinecraft.districts.util.DistrictFormatter;
-import org.bukkit.ChatColor;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -25,40 +26,45 @@ public class DistrictAdminCommands implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!sender.hasPermission("sunway.districts.admin")) {
-            sender.sendMessage(ChatColor.RED + "You do not have permission to use this command.");
+            sender.sendMessage(Component.text("You do not have permission to use this command.", NamedTextColor.RED));
             return true;
         }
 
         if (args.length == 0) {
-            sender.sendMessage(ChatColor.RED + "Usage: /districtadmin <list|info|at|validate|reload>");
+            sender.sendMessage(Component.text("Usage: /districtadmin <list|info|at|validate|reload>", NamedTextColor.RED));
             return true;
         }
 
         switch (args[0].toLowerCase()) {
             case "list" -> {
-                sender.sendMessage(ChatColor.GOLD + "All Districts:");
+                sender.sendMessage(Component.text("All Districts:", NamedTextColor.GOLD));
                 List<DistrictDefinition> all = new ArrayList<>(districtManager.getPublicDistricts());
                 all.sort(Comparator.comparing(DistrictDefinition::getId, String.CASE_INSENSITIVE_ORDER));
                 for (DistrictDefinition district : all) {
-                    sender.sendMessage(ChatColor.YELLOW + "- " + ChatColor.WHITE + district.getId()
-                        + ChatColor.GRAY + " (" + DistrictFormatter.compactLine(district) + ")");
+                    sender.sendMessage(
+                            Component.text("- ", NamedTextColor.YELLOW)
+                                    .append(Component.text(district.getId(), NamedTextColor.WHITE))
+                                    .append(Component.text(" (", NamedTextColor.GRAY))
+                                    .append(Component.text(DistrictFormatter.compactLine(district), NamedTextColor.GRAY))
+                                    .append(Component.text(")", NamedTextColor.GRAY))
+                    );
                 }
             }
             case "info" -> {
                 if (args.length < 2) {
-                    sender.sendMessage(ChatColor.RED + "Usage: /districtadmin info <id>");
+                    sender.sendMessage(Component.text("Usage: /districtadmin info <id>", NamedTextColor.RED));
                     return true;
                 }
                 districtCommands.sendAdminDistrictInfo(sender, args[1]);
             }
             case "at" -> {
                 if (!(sender instanceof Player player)) {
-                    sender.sendMessage(ChatColor.RED + "Only players can use /districtadmin at.");
+                    sender.sendMessage(Component.text("Only players can use /districtadmin at.", NamedTextColor.RED));
                     return true;
                 }
                 DistrictDefinition district = districtManager.getDistrictAt(player.getLocation());
                 if (district == null) {
-                    sender.sendMessage(ChatColor.YELLOW + "No district found at your current location.");
+                    sender.sendMessage(Component.text("No district found at your current location.", NamedTextColor.YELLOW));
                 } else {
                     districtCommands.sendAdminDistrictInfo(sender, district.getId());
                 }
@@ -66,19 +72,24 @@ public class DistrictAdminCommands implements CommandExecutor {
             case "validate" -> {
                 List<String> errors = districtManager.validate();
                 if (errors.isEmpty()) {
-                    sender.sendMessage(ChatColor.GREEN + "District validation passed.");
+                    sender.sendMessage(Component.text("District validation passed.", NamedTextColor.GREEN));
                 } else {
-                    sender.sendMessage(ChatColor.RED + "District validation found " + errors.size() + " issue(s):");
+                    sender.sendMessage(
+                            Component.text("District validation found " + errors.size() + " issue(s):", NamedTextColor.RED)
+                    );
                     for (String error : errors) {
-                        sender.sendMessage(ChatColor.GRAY + "- " + error);
+                        sender.sendMessage(
+                                Component.text("- ", NamedTextColor.GRAY)
+                                        .append(Component.text(error, NamedTextColor.GRAY))
+                        );
                     }
                 }
             }
             case "reload" -> {
                 districtManager.reload();
-                sender.sendMessage(ChatColor.GREEN + "District configuration reloaded.");
+                sender.sendMessage(Component.text("District configuration reloaded.", NamedTextColor.GREEN));
             }
-            default -> sender.sendMessage(ChatColor.RED + "Unknown subcommand.");
+            default -> sender.sendMessage(Component.text("Unknown subcommand.", NamedTextColor.RED));
         }
 
         return true;
