@@ -111,3 +111,36 @@ public class DistrictsConfigManager {
         return list;
     }
 
+    public DistrictDefinition getDistrict(String id) {
+        if (id == null) return null;
+        return districts.get(id.toLowerCase(Locale.ROOT));
+    }
+
+    public YamlConfiguration getConfig() {
+        return config;
+    }
+
+    private Region3i readRegion(String world, ConfigurationSection section) {
+        if (section == null) {
+            throw new IllegalArgumentException("Missing region section");
+        }
+        ConfigurationSection min = section.getConfigurationSection("min");
+        ConfigurationSection max = section.getConfigurationSection("max");
+        if (min == null || max == null) {
+            throw new IllegalArgumentException("Region must have min and max");
+        }
+        return new Region3i(
+            world,
+            min.getInt("x"),
+            min.getInt("y"),
+            min.getInt("z"),
+            max.getInt("x"),
+            max.getInt("y"),
+            max.getInt("z")
+        );
+    }
+
+    private String blankToNull(String value) {
+        return value == null || value.isBlank() ? null : value;
+    }
+}
