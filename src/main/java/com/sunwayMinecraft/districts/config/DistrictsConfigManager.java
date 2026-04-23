@@ -85,3 +85,13 @@ public class DistrictsConfigManager {
         }
     }
 
+    private void ensureDefaultFile() {
+        if (!plugin.getDataFolder().exists()) {
+            plugin.getDataFolder().mkdirs();
+        }
+        File file = new File(plugin.getDataFolder(), FILE_NAME);
+        if (!file.exists()) {
+            plugin.saveResource(FILE_NAME, false);
+        }
+    }
+
