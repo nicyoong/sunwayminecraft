@@ -99,3 +99,15 @@ public class DistrictsConfigManager {
         return Collections.unmodifiableCollection(districts.values());
     }
 
+    public List<DistrictDefinition> getPublicDistricts() {
+        List<DistrictDefinition> list = new ArrayList<>();
+        for (DistrictDefinition district : districts.values()) {
+            if (district.isEnabled() && district.isPublicVisible()) {
+                list.add(district);
+            }
+        }
+        list.sort(Comparator.comparingInt(DistrictDefinition::getListingPriority).reversed()
+            .thenComparing(DistrictDefinition::getDisplayName, String.CASE_INSENSITIVE_ORDER));
+        return list;
+    }
+
