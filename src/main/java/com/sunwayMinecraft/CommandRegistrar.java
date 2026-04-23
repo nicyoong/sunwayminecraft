@@ -76,6 +76,17 @@ public class CommandRegistrar {
       registerCommand("resadmin", residencyAdminCmds);
     }
 
+    // Districts / Zoning
+    if (init.getDistrictManager() != null) {
+      DistrictCommands districtCmds =
+              new DistrictCommands(init.getDistrictManager());
+      registerCommand("district", districtCmds);
+
+      DistrictAdminCommands districtAdminCmds =
+              new DistrictAdminCommands(init.getDistrictManager());
+      registerCommand("districtadmin", districtAdminCmds);
+    }
+
     // World travel
     WorldTravelCommands worldTravelCmds =
             new WorldTravelCommands(init.getWorldTravelManager());
