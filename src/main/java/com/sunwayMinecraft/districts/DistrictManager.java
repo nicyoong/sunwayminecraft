@@ -7,6 +7,7 @@ import com.sunwayMinecraft.districts.region.DistrictValidationService;
 import org.bukkit.Location;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class DistrictManager {
@@ -46,11 +47,19 @@ public class DistrictManager {
         return configManager.getPublicDistricts();
     }
 
+    public List<DistrictDefinition> getAllDistricts() {
+        return new ArrayList<>(configManager.getDistricts());
+    }
+
     public DistrictDefinition getDistrictAt(Location location) {
         return resolver.resolve(location);
     }
 
     public List<String> validate() {
         return validationService.validateAll();
+    }
+
+    public List<String> validateDistricts() {
+        return validate();
     }
 }
