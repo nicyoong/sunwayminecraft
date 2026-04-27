@@ -65,6 +65,7 @@ public class DistrictDefinition {
     public String getDisplayName() { return displayName; }
     public String getShortName() { return shortName; }
     public String getWorld() { return world; }
+    public String getWorldName() { return world; }
     public Region3i getRegion() { return region; }
     public boolean isEnabled() { return enabled; }
     public DistrictType getDistrictType() { return districtType; }
