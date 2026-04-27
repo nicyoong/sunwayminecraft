@@ -3,16 +3,20 @@ package com.sunwayMinecraft.commands;
 import com.sunwayMinecraft.districts.DistrictManager;
 import com.sunwayMinecraft.districts.domain.DistrictDefinition;
 import com.sunwayMinecraft.districts.util.DistrictFormatter;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
+import org.bukkit.Location;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
-public class DistrictCommands implements CommandExecutor {
+public class DistrictCommands implements CommandExecutor, TabCompleter {
+
     private final DistrictManager districtManager;
 
     public DistrictCommands(DistrictManager districtManager) {
@@ -21,168 +25,134 @@ public class DistrictCommands implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (args.length == 0) {
-            if (!(sender instanceof Player player)) {
-                sender.sendMessage(Component.text("Console must use /district list or /district info <id>.", NamedTextColor.RED));
-                return true;
-            }
-            sendCurrentDistrict(player);
+        if (!sender.hasPermission("sunway.district.use")) {
+            sender.sendMessage("§cYou do not have permission to use district commands.");
             return true;
         }
 
-        String sub = args[0].toLowerCase();
-        switch (sub) {
-            case "list" -> sendPublicDistrictList(sender);
-            case "info" -> {
-                if (args.length < 2) {
-                    sender.sendMessage(Component.text("Usage: /district info <id>", NamedTextColor.RED));
-                    return true;
-                }
-                sendDistrictInfo(sender, args[1], false);
-            }
-            default -> {
-                if (sender instanceof Player player) {
-                    sendCurrentDistrict(player);
-                } else {
-                    sender.sendMessage(Component.text("Unknown subcommand.", NamedTextColor.RED));
-                }
-            }
+        if (args.length == 0) {
+            return handleCurrentDistrict(sender);
         }
+
+        String sub = args[0].toLowerCase(Locale.ROOT);
+
+        switch (sub) {
+            case "list":
+                return handleList(sender);
+
+            case "info":
+                return handleInfo(sender, args);
+
+            default:
+                sender.sendMessage("§cUnknown subcommand.");
+                sender.sendMessage("§7Usage: /district [list|info <districtId>]");
+                return true;
+        }
+    }
+
+    private boolean handleCurrentDistrict(CommandSender sender) {
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage("§cOnly players can use /district without arguments.");
+            sender.sendMessage("§7Use /district list or /district info <districtId> instead.");
+            return true;
+        }
+
+        Location location = player.getLocation();
+        DistrictDefinition district = districtManager.getDistrictAt(location);
+
+        if (district == null || !district.isPublicVisible()) {
+            player.sendMessage("§7You are not currently inside a public district.");
+            return true;
+        }
+
+        sendPublicDistrictInfo(player, district);
         return true;
     }
 
-    private void sendCurrentDistrict(Player player) {
-        DistrictDefinition district = districtManager.getDistrictAt(player.getLocation());
-        if (district == null) {
-            player.sendMessage(Component.text("You are not in a registered district.", NamedTextColor.YELLOW));
-            return;
+    private boolean handleList(CommandSender sender) {
+        List<DistrictDefinition> districts = districtManager.getPublicDistricts();
+
+        if (districts.isEmpty()) {
+            sender.sendMessage("§7There are no public districts available.");
+            return true;
         }
 
-        player.sendMessage(
-                Component.text("District: ", NamedTextColor.GOLD)
-                        .append(Component.text(district.getDisplayName(), NamedTextColor.YELLOW))
-        );
+        sender.sendMessage("§6Public Districts:");
+        for (DistrictDefinition district : districts) {
+            String line = "§e- " + district.getDisplayName()
+                    + " §7(" + DistrictFormatter.formatDistrictType(district.getDistrictType())
+                    + ", " + DistrictFormatter.formatPrestigeLabel(district.getPrestigeTier()) + "§7)";
+            sender.sendMessage(line);
 
-        player.sendMessage(
-                Component.text(
-                        DistrictFormatter.prestigeLabel(district.getPrestigeTier())
-                                + " " + DistrictFormatter.typeLabel(district.getDistrictType()),
-                        NamedTextColor.GRAY
-                )
-        );
+            if (!district.getTags().isEmpty()) {
+                sender.sendMessage("  §8Tags: §7" + String.join(", ", district.getTags()));
+            }
+        }
 
-        player.sendMessage(
-                Component.text(DistrictFormatter.safeSummary(district), NamedTextColor.GRAY)
-        );
+        return true;
+    }
+
+    private boolean handleInfo(CommandSender sender, String[] args) {
+        if (args.length < 2) {
+            sender.sendMessage("§cUsage: /district info <districtId>");
+            return true;
+        }
+
+        DistrictDefinition district = districtManager.getDistrict(args[1]);
+        if (district == null || !district.isPublicVisible()) {
+            sender.sendMessage("§cDistrict not found.");
+            return true;
+        }
+
+        sendPublicDistrictInfo(sender, district);
+        return true;
+    }
+
+    private void sendPublicDistrictInfo(CommandSender sender, DistrictDefinition district) {
+        sender.sendMessage("§6District: §e" + district.getDisplayName());
+
+        if (district.getShortName() != null && !district.getShortName().isBlank()) {
+            sender.sendMessage("§7Short Name: §f" + district.getShortName());
+        }
+
+        sender.sendMessage("§7Type: §f" + DistrictFormatter.formatDistrictType(district.getDistrictType()));
+        sender.sendMessage("§7Prestige: §f" + DistrictFormatter.formatPrestigeLabel(district.getPrestigeTier()));
+        sender.sendMessage("§7Summary: §f" + district.getPublicSummary());
 
         if (!district.getTags().isEmpty()) {
-            player.sendMessage(
-                    Component.text("Tags: ", NamedTextColor.DARK_GRAY)
-                            .append(Component.text(DistrictFormatter.formatTags(district), NamedTextColor.GRAY))
-            );
+            sender.sendMessage("§7Tags: §f" + String.join(", ", district.getTags()));
         }
     }
 
-    private void sendPublicDistrictList(CommandSender sender) {
-        List<DistrictDefinition> districts = districtManager.getPublicDistricts();
-        if (districts.isEmpty()) {
-            sender.sendMessage(Component.text("No public districts are currently listed.", NamedTextColor.YELLOW));
-            return;
+    @Override
+    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+        if (!sender.hasPermission("sunway.district.use")) {
+            return Collections.emptyList();
         }
 
-        sender.sendMessage(Component.text("Public Districts:", NamedTextColor.GOLD));
-        for (DistrictDefinition district : districts) {
-            sender.sendMessage(
-                    Component.text("- ", NamedTextColor.YELLOW)
-                            .append(Component.text(DistrictFormatter.compactLine(district), NamedTextColor.WHITE))
-            );
+        if (args.length == 1) {
+            return filterPrefix(args[0], List.of("list", "info"));
         }
+
+        if (args.length == 2 && args[0].equalsIgnoreCase("info")) {
+            List<String> districtIds = new ArrayList<>();
+            for (DistrictDefinition district : districtManager.getPublicDistricts()) {
+                districtIds.add(district.getId());
+            }
+            return filterPrefix(args[1], districtIds);
+        }
+
+        return Collections.emptyList();
     }
 
-    private void sendDistrictInfo(CommandSender sender, String id, boolean adminView) {
-        DistrictDefinition district = districtManager.getDistrict(id);
-        if (district == null || (!adminView && !district.isPublicVisible())) {
-            sender.sendMessage(Component.text("District not found.", NamedTextColor.RED));
-            return;
+    private List<String> filterPrefix(String input, List<String> options) {
+        String lower = input.toLowerCase(Locale.ROOT);
+        List<String> matches = new ArrayList<>();
+        for (String option : options) {
+            if (option.toLowerCase(Locale.ROOT).startsWith(lower)) {
+                matches.add(option);
+            }
         }
-
-        sender.sendMessage(
-                Component.text("District: ", NamedTextColor.GOLD)
-                        .append(Component.text(district.getDisplayName(), NamedTextColor.YELLOW))
-        );
-
-        if (district.getShortName() != null) {
-            sender.sendMessage(
-                    Component.text("Short Name: ", NamedTextColor.GRAY)
-                            .append(Component.text(district.getShortName(), NamedTextColor.WHITE))
-            );
-        }
-
-        sender.sendMessage(
-                Component.text("Type: ", NamedTextColor.GRAY)
-                        .append(Component.text(DistrictFormatter.typeLabel(district.getDistrictType()), NamedTextColor.WHITE))
-        );
-
-        sender.sendMessage(
-                Component.text("Prestige: ", NamedTextColor.GRAY)
-                        .append(Component.text(DistrictFormatter.prestigeLabel(district.getPrestigeTier()), NamedTextColor.WHITE))
-        );
-
-        sender.sendMessage(
-                Component.text("Summary: ", NamedTextColor.GRAY)
-                        .append(Component.text(DistrictFormatter.safeSummary(district), NamedTextColor.WHITE))
-        );
-
-        sender.sendMessage(
-                Component.text("Tags: ", NamedTextColor.GRAY)
-                        .append(Component.text(DistrictFormatter.formatTags(district), NamedTextColor.WHITE))
-        );
-
-        if (adminView) {
-            sender.sendMessage(
-                    Component.text("ID: ", NamedTextColor.DARK_GRAY)
-                            .append(Component.text(district.getId(), NamedTextColor.GRAY))
-            );
-            sender.sendMessage(
-                    Component.text("World: ", NamedTextColor.DARK_GRAY)
-                            .append(Component.text(district.getWorld(), NamedTextColor.GRAY))
-            );
-            sender.sendMessage(
-                    Component.text("Public Visible: ", NamedTextColor.DARK_GRAY)
-                            .append(Component.text(String.valueOf(district.isPublicVisible()), NamedTextColor.GRAY))
-            );
-            sender.sendMessage(
-                    Component.text("Listing Priority: ", NamedTextColor.DARK_GRAY)
-                            .append(Component.text(String.valueOf(district.getListingPriority()), NamedTextColor.GRAY))
-            );
-            sender.sendMessage(
-                    Component.text("Storefront Priority: ", NamedTextColor.DARK_GRAY)
-                            .append(Component.text(String.valueOf(district.isStorefrontPriority()), NamedTextColor.GRAY))
-            );
-            sender.sendMessage(
-                    Component.text("Residency Priority: ", NamedTextColor.DARK_GRAY)
-                            .append(Component.text(String.valueOf(district.isResidencyPriority()), NamedTextColor.GRAY))
-            );
-            sender.sendMessage(
-                    Component.text("Approval Bias: ", NamedTextColor.DARK_GRAY)
-                            .append(Component.text(String.valueOf(district.getRecommendedApprovalBias()), NamedTextColor.GRAY))
-            );
-            sender.sendMessage(
-                    Component.text("Allow Public Events: ", NamedTextColor.DARK_GRAY)
-                            .append(Component.text(String.valueOf(district.isAllowPublicEvents()), NamedTextColor.GRAY))
-            );
-            sender.sendMessage(
-                    Component.text("Signature Area: ", NamedTextColor.DARK_GRAY)
-                            .append(Component.text(String.valueOf(district.isSignatureArea()), NamedTextColor.GRAY))
-            );
-            sender.sendMessage(
-                    Component.text("Region: ", NamedTextColor.DARK_GRAY)
-                            .append(Component.text(String.valueOf(district.getRegion()), NamedTextColor.GRAY))
-            );
-        }
-    }
-
-    public void sendAdminDistrictInfo(CommandSender sender, String id) {
-        sendDistrictInfo(sender, id, true);
+        return matches;
     }
 }
