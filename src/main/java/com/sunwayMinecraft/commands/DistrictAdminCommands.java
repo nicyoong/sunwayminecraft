@@ -3,6 +3,8 @@ package com.sunwayMinecraft.commands;
 import com.sunwayMinecraft.districts.DistrictManager;
 import com.sunwayMinecraft.districts.domain.DistrictDefinition;
 import com.sunwayMinecraft.districts.util.DistrictFormatter;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Location;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -26,7 +28,7 @@ public class DistrictAdminCommands implements CommandExecutor, TabCompleter {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!sender.hasPermission("sunway.district.admin")) {
-            sender.sendMessage("§cYou do not have permission to use district admin commands.");
+            sender.sendMessage(Component.text("You do not have permission to use district admin commands.", NamedTextColor.RED));
             return true;
         }
 
@@ -40,50 +42,52 @@ public class DistrictAdminCommands implements CommandExecutor, TabCompleter {
         switch (sub) {
             case "list":
                 return handleList(sender);
-
             case "info":
                 return handleInfo(sender, args);
-
             case "at":
                 return handleAt(sender);
-
             case "validate":
                 return handleValidate(sender);
-
             case "reload":
                 return handleReload(sender);
-
             default:
-                sender.sendMessage("§cUnknown subcommand.");
+                sender.sendMessage(Component.text("Unknown subcommand.", NamedTextColor.RED));
                 sendUsage(sender);
                 return true;
         }
     }
 
     private void sendUsage(CommandSender sender) {
-        sender.sendMessage("§6District Admin Commands:");
-        sender.sendMessage("§e/districtadmin list");
-        sender.sendMessage("§e/districtadmin info <districtId>");
-        sender.sendMessage("§e/districtadmin at");
-        sender.sendMessage("§e/districtadmin validate");
-        sender.sendMessage("§e/districtadmin reload");
+        sender.sendMessage(Component.text("District Admin Commands:", NamedTextColor.GOLD));
+        sender.sendMessage(Component.text("/districtadmin list", NamedTextColor.YELLOW));
+        sender.sendMessage(Component.text("/districtadmin info <districtId>", NamedTextColor.YELLOW));
+        sender.sendMessage(Component.text("/districtadmin at", NamedTextColor.YELLOW));
+        sender.sendMessage(Component.text("/districtadmin validate", NamedTextColor.YELLOW));
+        sender.sendMessage(Component.text("/districtadmin reload", NamedTextColor.YELLOW));
     }
 
     private boolean handleList(CommandSender sender) {
         List<DistrictDefinition> districts = districtManager.getAllDistricts();
 
         if (districts.isEmpty()) {
-            sender.sendMessage("§7No districts are loaded.");
+            sender.sendMessage(Component.text("No districts are loaded.", NamedTextColor.GRAY));
             return true;
         }
 
-        sender.sendMessage("§6All Districts:");
+        sender.sendMessage(Component.text("All Districts:", NamedTextColor.GOLD));
+
         for (DistrictDefinition district : districts) {
-            String line = "§e- " + district.getId()
-                    + " §7-> §f" + district.getDisplayName()
-                    + " §7(" + DistrictFormatter.formatDistrictType(district.getDistrictType())
-                    + ", " + DistrictFormatter.formatPrestigeLabel(district.getPrestigeTier()) + "§7)";
-            sender.sendMessage(line);
+            sender.sendMessage(
+                    Component.text("- ", NamedTextColor.YELLOW)
+                            .append(Component.text(district.getId(), NamedTextColor.YELLOW))
+                            .append(Component.text(" -> ", NamedTextColor.GRAY))
+                            .append(Component.text(district.getDisplayName(), NamedTextColor.WHITE))
+                            .append(Component.text(" (", NamedTextColor.GRAY))
+                            .append(Component.text(DistrictFormatter.formatDistrictType(district.getDistrictType()), NamedTextColor.WHITE))
+                            .append(Component.text(", ", NamedTextColor.GRAY))
+                            .append(Component.text(DistrictFormatter.formatPrestigeLabel(district.getPrestigeTier()), NamedTextColor.WHITE))
+                            .append(Component.text(")", NamedTextColor.GRAY))
+            );
         }
 
         return true;
@@ -91,49 +95,117 @@ public class DistrictAdminCommands implements CommandExecutor, TabCompleter {
 
     private boolean handleInfo(CommandSender sender, String[] args) {
         if (args.length < 2) {
-            sender.sendMessage("§cUsage: /districtadmin info <districtId>");
+            sender.sendMessage(
+                    Component.text("Usage: ", NamedTextColor.RED)
+                            .append(Component.text("/districtadmin info <districtId>", NamedTextColor.YELLOW))
+            );
             return true;
         }
 
         DistrictDefinition district = districtManager.getDistrict(args[1]);
         if (district == null) {
-            sender.sendMessage("§cDistrict not found.");
+            sender.sendMessage(Component.text("District not found.", NamedTextColor.RED));
             return true;
         }
 
-        sender.sendMessage("§6District Admin Info: §e" + district.getDisplayName());
-        sender.sendMessage("§7ID: §f" + district.getId());
+        sender.sendMessage(
+                Component.text("District Admin Info: ", NamedTextColor.GOLD)
+                        .append(Component.text(district.getDisplayName(), NamedTextColor.YELLOW))
+        );
+
+        sender.sendMessage(
+                Component.text("ID: ", NamedTextColor.GRAY)
+                        .append(Component.text(district.getId(), NamedTextColor.WHITE))
+        );
 
         if (district.getShortName() != null && !district.getShortName().isBlank()) {
-            sender.sendMessage("§7Short Name: §f" + district.getShortName());
+            sender.sendMessage(
+                    Component.text("Short Name: ", NamedTextColor.GRAY)
+                            .append(Component.text(district.getShortName(), NamedTextColor.WHITE))
+            );
         }
 
-        sender.sendMessage("§7World: §f" + district.getWorldName());
-        sender.sendMessage("§7Enabled: §f" + district.isEnabled());
-        sender.sendMessage("§7Public Visible: §f" + district.isPublicVisible());
-        sender.sendMessage("§7Type: §f" + DistrictFormatter.formatDistrictType(district.getDistrictType()));
-        sender.sendMessage("§7Prestige Tier: §f" + district.getPrestigeTier()
-                + " §7(" + DistrictFormatter.formatPrestigeLabel(district.getPrestigeTier()) + "§7)");
-        sender.sendMessage("§7Public Summary: §f" + district.getPublicSummary());
+        sender.sendMessage(
+                Component.text("World: ", NamedTextColor.GRAY)
+                        .append(Component.text(district.getWorldName(), NamedTextColor.WHITE))
+        );
+
+        sender.sendMessage(
+                Component.text("Enabled: ", NamedTextColor.GRAY)
+                        .append(Component.text(String.valueOf(district.isEnabled()), NamedTextColor.WHITE))
+        );
+
+        sender.sendMessage(
+                Component.text("Public Visible: ", NamedTextColor.GRAY)
+                        .append(Component.text(String.valueOf(district.isPublicVisible()), NamedTextColor.WHITE))
+        );
+
+        sender.sendMessage(
+                Component.text("Type: ", NamedTextColor.GRAY)
+                        .append(Component.text(DistrictFormatter.formatDistrictType(district.getDistrictType()), NamedTextColor.WHITE))
+        );
+
+        sender.sendMessage(
+                Component.text("Prestige Tier: ", NamedTextColor.GRAY)
+                        .append(Component.text(String.valueOf(district.getPrestigeTier()), NamedTextColor.WHITE))
+                        .append(Component.text(" (", NamedTextColor.GRAY))
+                        .append(Component.text(DistrictFormatter.formatPrestigeLabel(district.getPrestigeTier()), NamedTextColor.WHITE))
+                        .append(Component.text(")", NamedTextColor.GRAY))
+        );
+
+        sender.sendMessage(
+                Component.text("Public Summary: ", NamedTextColor.GRAY)
+                        .append(Component.text(district.getPublicSummary(), NamedTextColor.WHITE))
+        );
 
         if (!district.getTags().isEmpty()) {
-            sender.sendMessage("§7Tags: §f" + String.join(", ", district.getTags()));
+            sender.sendMessage(
+                    Component.text("Tags: ", NamedTextColor.GRAY)
+                            .append(Component.text(String.join(", ", district.getTags()), NamedTextColor.WHITE))
+            );
         }
 
-        sender.sendMessage("§7Listing Priority: §f" + district.getListingPriority());
-        sender.sendMessage("§7Storefront Priority: §f" + district.isStorefrontPriority());
-        sender.sendMessage("§7Residency Priority: §f" + district.isResidencyPriority());
-        sender.sendMessage("§7Approval Bias: §f" + district.getRecommendedApprovalBias().name());
-        sender.sendMessage("§7Allow Public Events: §f" + district.isAllowPublicEvents());
-        sender.sendMessage("§7Signature Area: §f" + district.isSignatureArea());
-        sender.sendMessage("§7Region: §f" + formatRegion(district));
+        sender.sendMessage(
+                Component.text("Listing Priority: ", NamedTextColor.GRAY)
+                        .append(Component.text(String.valueOf(district.getListingPriority()), NamedTextColor.WHITE))
+        );
+
+        sender.sendMessage(
+                Component.text("Storefront Priority: ", NamedTextColor.GRAY)
+                        .append(Component.text(String.valueOf(district.isStorefrontPriority()), NamedTextColor.WHITE))
+        );
+
+        sender.sendMessage(
+                Component.text("Residency Priority: ", NamedTextColor.GRAY)
+                        .append(Component.text(String.valueOf(district.isResidencyPriority()), NamedTextColor.WHITE))
+        );
+
+        sender.sendMessage(
+                Component.text("Approval Bias: ", NamedTextColor.GRAY)
+                        .append(Component.text(district.getRecommendedApprovalBias().name(), NamedTextColor.WHITE))
+        );
+
+        sender.sendMessage(
+                Component.text("Allow Public Events: ", NamedTextColor.GRAY)
+                        .append(Component.text(String.valueOf(district.isAllowPublicEvents()), NamedTextColor.WHITE))
+        );
+
+        sender.sendMessage(
+                Component.text("Signature Area: ", NamedTextColor.GRAY)
+                        .append(Component.text(String.valueOf(district.isSignatureArea()), NamedTextColor.WHITE))
+        );
+
+        sender.sendMessage(
+                Component.text("Region: ", NamedTextColor.GRAY)
+                        .append(Component.text(formatRegion(district), NamedTextColor.WHITE))
+        );
 
         return true;
     }
 
     private boolean handleAt(CommandSender sender) {
         if (!(sender instanceof Player player)) {
-            sender.sendMessage("§cOnly players can use /districtadmin at.");
+            sender.sendMessage(Component.text("Only players can use /districtadmin at.", NamedTextColor.RED));
             return true;
         }
 
@@ -141,16 +213,36 @@ public class DistrictAdminCommands implements CommandExecutor, TabCompleter {
         DistrictDefinition district = districtManager.getDistrictAt(location);
 
         if (district == null) {
-            sender.sendMessage("§7No district found at your current location.");
+            sender.sendMessage(Component.text("No district found at your current location.", NamedTextColor.GRAY));
             return true;
         }
 
-        sender.sendMessage("§6Current District:");
-        sender.sendMessage("§7ID: §f" + district.getId());
-        sender.sendMessage("§7Name: §f" + district.getDisplayName());
-        sender.sendMessage("§7Type: §f" + DistrictFormatter.formatDistrictType(district.getDistrictType()));
-        sender.sendMessage("§7Prestige: §f" + DistrictFormatter.formatPrestigeLabel(district.getPrestigeTier()));
-        sender.sendMessage("§7Region: §f" + formatRegion(district));
+        sender.sendMessage(Component.text("Current District:", NamedTextColor.GOLD));
+
+        sender.sendMessage(
+                Component.text("ID: ", NamedTextColor.GRAY)
+                        .append(Component.text(district.getId(), NamedTextColor.WHITE))
+        );
+
+        sender.sendMessage(
+                Component.text("Name: ", NamedTextColor.GRAY)
+                        .append(Component.text(district.getDisplayName(), NamedTextColor.WHITE))
+        );
+
+        sender.sendMessage(
+                Component.text("Type: ", NamedTextColor.GRAY)
+                        .append(Component.text(DistrictFormatter.formatDistrictType(district.getDistrictType()), NamedTextColor.WHITE))
+        );
+
+        sender.sendMessage(
+                Component.text("Prestige: ", NamedTextColor.GRAY)
+                        .append(Component.text(DistrictFormatter.formatPrestigeLabel(district.getPrestigeTier()), NamedTextColor.WHITE))
+        );
+
+        sender.sendMessage(
+                Component.text("Region: ", NamedTextColor.GRAY)
+                        .append(Component.text(formatRegion(district), NamedTextColor.WHITE))
+        );
 
         return true;
     }
@@ -159,20 +251,29 @@ public class DistrictAdminCommands implements CommandExecutor, TabCompleter {
         List<String> errors = districtManager.validateDistricts();
 
         if (errors.isEmpty()) {
-            sender.sendMessage("§aDistrict validation passed with no errors.");
+            sender.sendMessage(Component.text("District validation passed with no errors.", NamedTextColor.GREEN));
             return true;
         }
 
-        sender.sendMessage("§cDistrict validation found " + errors.size() + " error(s):");
+        sender.sendMessage(
+                Component.text("District validation found ", NamedTextColor.RED)
+                        .append(Component.text(String.valueOf(errors.size()), NamedTextColor.WHITE))
+                        .append(Component.text(" error(s):", NamedTextColor.RED))
+        );
+
         for (String error : errors) {
-            sender.sendMessage("§7- §c" + error);
+            sender.sendMessage(
+                    Component.text("- ", NamedTextColor.GRAY)
+                            .append(Component.text(error, NamedTextColor.RED))
+            );
         }
+
         return true;
     }
 
     private boolean handleReload(CommandSender sender) {
         districtManager.reload();
-        sender.sendMessage("§aDistricts configuration reloaded.");
+        sender.sendMessage(Component.text("Districts configuration reloaded.", NamedTextColor.GREEN));
         return true;
     }
 
