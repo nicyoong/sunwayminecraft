@@ -41,7 +41,6 @@ public class CoinFlipSystem {
     }
     database.updateStats(stats);
 
-    if (won) econ.depositPlayer(player, amount * 2);
     sendMoneyResult(player, won, amount);
   }
 
