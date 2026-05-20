@@ -1,0 +1,25 @@
+endpoints:
+  city_depot:
+    name: "City Depot"
+    type: DEPOT
+    world: "world"
+    x: 100.5
+    y: 64.0
+    z: 100.5
+    radius: 5.0
+  town_hall:
+    name: "Town Hall"
+    type: DROPOFF
+    world: "world"
+    x: 150.0
+    y: 70.0
+    z: 200.0
+    radius: 3.0
+  lamp_plaza:
+    name: "Plaza Lamp"
+    type: MAINTENANCE_POINT
+    world: "world"
+    x: 120.0
+    y: 65.0
+    z: 110.0
+    radius: 2.0
