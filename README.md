@@ -16,6 +16,38 @@ This helps preserve the quality of the permanent world while still giving player
 
 ### Features You Can Use  
 
+#### 📜 City Contracts
+*Take on specialized tasks issued by the city for monetary rewards*
+
+**How It Works**:
+1. **Find Work**: Use `/contracts board` to view available tasks from the city.
+2. **Review Details**: Use `/contracts info <id>` to check requirements, rewards, and objectives.
+3. **Accept**: Use `/contracts accept <id>` to start the contract.
+4. **Complete**: 
+   - **Hauling**: Gather the required materials and use `/contracts complete <id>` at the designated depot.
+   - **Courier/Survey**: Travel to the destination endpoint or target asset.
+   - **Maintenance**: Visit the target asset and perform the required interaction.
+5. **Get Paid**: Successful completion instantly grants a fixed monetary reward.
+
+**Rules**:
+- **Cooldowns**: Abandoning or failing a contract applies a cooldown period before it can be taken again.
+- **Limits**: Players can hold a limited number of active contracts at once (default: 3).
+- **Inventory**: Hauling contracts consume materials from your inventory upon completion.
+- **Timing**: Complete tasks before their expiration time to avoid failure.
+
+**Commands**:
+- `/contracts board` - View available city contracts
+- `/contracts info <id>` - View contract details and rewards
+- `/contracts accept <id>` - Accept a new contract
+- `/contracts active` - View your currently active contracts
+- `/contracts complete <id>` - Turn in a completed contract
+- `/contracts abandon <id>` - Drop a contract (applies cooldown)
+
+**Pro Tips**:
+- Use contracts to earn extra money while exploring or gathering resources.
+- Hauling contracts are a great way to profit from excess materials like stone or wood.
+- Check `/contracts active` frequently to track your remaining time.
+
 #### 🏮 Beacon Light Shows  
 *Color-changing rooftop beacons across the server*
 
@@ -308,6 +340,7 @@ This helps preserve the quality of the permanent world while still giving player
 | **Coin Flip**        | Player item/money wager system               | `CoinFlipSystem`, `CoinFlipCommands` |
 | **World Travel**     | Player-facing travel between permanent and mining worlds | `WorldTravelCommands` |
 | **Residency & Storefronts** | Municipal premises engine for rentable housing and commercial city units | `ResidencyManager`, `ResidencyBootstrap`, `PremisesAccessService`, `BillingService` |
+| **City Contracts**   | Managed task system for procurement and logistics | `ContractsManager`, `ContractsCommands`, `ContractVerificationService` |
 
 ### Configuration  
 *Handled via YAML files in `/plugins/SunwayMinecraft/`*:  
@@ -320,11 +353,15 @@ This helps preserve the quality of the permanent world while still giving player
 - `property-pricing.yml` - Default rent, deposit, and billing profile settings  
 - `property-policies.yml` - Lease policy, grace-period, and public-access defaults  
 - `residency-settings.yml` - General settings for the Residency and Storefronts system  
+- `contracts.yml` - Definitions for all available City Contracts  
+- `contract-endpoints.yml` - Registered locations for pickup, dropoff, and task points  
+- `contract-settings.yml` - Global module settings for City Contracts  
 
 **Reload safely with**:  
 - `/reloadsunwayconfig` - Main settings  
 - `/reloadsunwaybenches` - Bench data  
 - `/reloadsunwayswitches` - Light systems  
+- `/contractadmin reload` - Contract configurations  
 
 ### Developer Notes  
 #### Architecture  
