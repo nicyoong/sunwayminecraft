@@ -173,7 +173,25 @@ commands:
     usage: /districtadmin <list|info|at|validate|reload>
     permission: sunway.districts.admin
 
+  contracts:
+    description: City Contracts system commands
+    usage: /contracts <subcommand>
+    permission: sunway.contracts.use
+
+  contractadmin:
+    description: Admin commands for City Contracts
+    usage: /contractadmin <subcommand>
+    permission: sunway.contracts.admin
+
 permissions:
+  sunway.contracts.use:
+    description: Allows players to use the City Contracts board and accept contracts.
+    default: true
+
+  sunway.contracts.admin:
+    description: Allows admins to manage City Contracts.
+    default: op
+
   sunwayminecraft.beacons.pause:
     description: "Allows the user to pause beacon color transitions."
     default: op
