@@ -35,13 +35,15 @@ repositories {
 
 dependencies {
     // Use JUnit 5 for testing
-    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.5'
-    testImplementation 'org.mockito:mockito-core:5.5.0'
-    testImplementation 'org.mockito:mockito-inline:5.2.0'
-    testImplementation ("io.papermc.paper:paper-api:1.21.5-R0.1-SNAPSHOT")
-    testImplementation 'com.github.MockBukkit:MockBukkit:v1.21-SNAPSHOT'
+    testImplementation platform('org.junit:junit-bom:5.10.5')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    testImplementation 'org.mockito:mockito-core:5.14.2'
+    testImplementation ("io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT")
+    testImplementation 'org.mockbukkit.mockbukkit:mockbukkit-v1.21:4.110.0'
+    testImplementation ("com.github.MilkBowl:VaultAPI:1.7.1")
 
-    // 1.21.5 Paper API
+    // 1.21 Paper API
     compileOnly("io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT")
 
     // Bukkit API (match your server version)
@@ -59,6 +61,11 @@ dependencies {
 
 test {
     useJUnitPlatform()
+    testLogging {
+        events "passed", "skipped", "failed"
+        exceptionFormat "full"
+        showStandardStreams = true
+    }
 }
 
 def targetJavaVersion = 21

@@ -6,3 +6,5 @@
 *.log
 /bin
 /docs/admin
+*.env
+/.gemini
