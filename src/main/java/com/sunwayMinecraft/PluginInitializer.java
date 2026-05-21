@@ -173,8 +173,11 @@ public class PluginInitializer {
 
   private void initContractsSystem() {
     ContractConfigManager contractConfig = new ContractConfigManager(plugin);
+    contractConfig.load();
     EndpointConfigManager endpointConfig = new EndpointConfigManager(plugin);
+    endpointConfig.load();
     SettingsConfigManager settingsConfig = new SettingsConfigManager(plugin);
+    settingsConfig.load();
     ContractPersistenceService persistence = new ContractPersistenceService(plugin);
     
     Economy econ = getEconomy();
@@ -184,7 +187,9 @@ public class PluginInitializer {
 
   private void initEventsSystem() {
     EventConfigManager eventConfig = new EventConfigManager(plugin);
+    eventConfig.load();
     EventSettingsManager eventSettings = new EventSettingsManager(plugin);
+    eventSettings.load();
     EventPersistenceService persistence = new EventPersistenceService(plugin);
     
     cityEventsManager = new CityEventsManager(plugin, eventConfig, eventSettings, persistence);

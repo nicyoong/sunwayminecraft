@@ -27,7 +27,6 @@ public class EventConfigManager {
         if (!configFile.exists()) {
             plugin.saveResource("city-events.yml", false);
         }
-        load();
     }
 
     public void load() {

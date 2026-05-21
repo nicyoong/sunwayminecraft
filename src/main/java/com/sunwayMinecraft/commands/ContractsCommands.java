@@ -73,9 +73,10 @@ public class ContractsCommands implements CommandExecutor, TabCompleter {
                 .append(Component.text(def.name(), NamedTextColor.YELLOW));
             
             if (eventModifierService != null) {
-                eventModifierService.getPrimaryEventForCategory(def.category()).ifPresent(event -> {
+                var eventOpt = eventModifierService.getPrimaryEventForCategory(def.category());
+                if (eventOpt.isPresent()) {
                     msg = msg.append(Component.text(" [BOOSTED]", NamedTextColor.AQUA, TextDecoration.BOLD));
-                });
+                }
             }
 
             msg = msg.append(Component.text(" (ID: " + def.id() + ")", NamedTextColor.DARK_GRAY));
