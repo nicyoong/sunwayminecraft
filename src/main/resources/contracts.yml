@@ -1,0 +1,33 @@
+contracts:
+  hauling_stone:
+    category: HAULING
+    name: "City Construction: Stone"
+    description: "The city needs stone for new infrastructure."
+    reward_money: 500.0
+    duration_minutes: 120
+    cooldown_minutes: 60
+    start_endpoint: city_depot
+    end_endpoint: city_depot
+    objective_description: "Turn in 64 Stone to the City Depot."
+    required_materials:
+      STONE: 64
+  courier_documents:
+    category: COURIER
+    name: "Urgent Documents"
+    description: "Deliver these documents to the Town Hall."
+    reward_money: 200.0
+    duration_minutes: 30
+    cooldown_minutes: 15
+    start_endpoint: city_depot
+    end_endpoint: town_hall
+    objective_description: "Reach the Town Hall."
+  maintenance_lamp:
+    category: MAINTENANCE
+    name: "Street Lamp Repair"
+    description: "A street lamp near the plaza needs fixing."
+    reward_money: 300.0
+    duration_minutes: 60
+    cooldown_minutes: 30
+    start_endpoint: city_depot
+    end_endpoint: lamp_plaza
+    objective_description: "Interact with the lamp at the plaza."

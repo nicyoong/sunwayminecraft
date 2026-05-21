@@ -105,6 +105,15 @@ public class CommandRegistrar {
     registerCommand("miningevacuate", miningAdminCmds);
     registerCommand("miningevaccancel", miningAdminCmds);
     registerCommand("miningstate", miningAdminCmds);
+
+    // City Contracts
+    ContractsCommands contractsCmds = new ContractsCommands(init.getContractsManager(), init.getContractVerificationService());
+    registerCommand("contracts", contractsCmds);
+    plugin.getCommand("contracts").setTabCompleter(contractsCmds);
+
+    ContractAdminCommands contractAdminCmds = new ContractAdminCommands(init.getContractsManager());
+    registerCommand("contractadmin", contractAdminCmds);
+    plugin.getCommand("contractadmin").setTabCompleter(contractAdminCmds);
   }
 
   private void registerCommand(String name, CommandExecutor executor) {

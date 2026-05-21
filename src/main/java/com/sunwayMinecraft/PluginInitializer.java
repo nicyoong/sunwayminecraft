@@ -15,6 +15,9 @@ import com.sunwayMinecraft.districts.DistrictManager;
 import com.sunwayMinecraft.coinflip.*;
 import com.sunwayMinecraft.switches.*;
 import com.sunwayMinecraft.worldtravel.*;
+import com.sunwayMinecraft.contracts.config.*;
+import com.sunwayMinecraft.contracts.persistence.ContractPersistenceService;
+import com.sunwayMinecraft.contracts.service.*;
 import com.sunwayMinecraft.utils.ConfigLoader;
 import net.milkbowl.vault.economy.Economy;
 import com.sunwayMinecraft.SunwayMinecraft;
@@ -62,6 +65,10 @@ public class PluginInitializer {
   private WorldTravelManager worldTravelManager;
   private MiningWorldEvacuationManager miningWorldEvacuationManager;
 
+  // City Contracts
+  private ContractsManager contractsManager;
+  private ContractVerificationService contractVerificationService;
+
   public PluginInitializer(SunwayMinecraft plugin) {
     this.plugin = plugin;
 
@@ -80,6 +87,7 @@ public class PluginInitializer {
     initDistrictSystem();
     initCoinFlipSystem();
     initWorldTravelSystem();
+    initContractsSystem();
   }
 
   private void initBeaconSystem() {
@@ -155,6 +163,17 @@ public class PluginInitializer {
             .registerEvents(new MiningWorldListener(worldTravelManager), plugin);
   }
 
+  private void initContractsSystem() {
+    ContractConfigManager contractConfig = new ContractConfigManager(plugin);
+    EndpointConfigManager endpointConfig = new EndpointConfigManager(plugin);
+    SettingsConfigManager settingsConfig = new SettingsConfigManager(plugin);
+    ContractPersistenceService persistence = new ContractPersistenceService(plugin);
+    
+    Economy econ = getEconomy();
+    contractsManager = new ContractsManager(plugin, contractConfig, endpointConfig, settingsConfig, persistence, econ);
+    contractVerificationService = new ContractVerificationService(contractsManager);
+  }
+
   private Economy getEconomy() {
     if (plugin.getServer().getPluginManager().getPlugin("Vault") == null) return null;
     return plugin.getServer().getServicesManager().getRegistration(Economy.class).getProvider();
@@ -223,5 +242,13 @@ public class PluginInitializer {
 
   public MiningWorldEvacuationManager getMiningWorldEvacuationManager() {
     return miningWorldEvacuationManager;
+  }
+
+  public ContractsManager getContractsManager() {
+    return contractsManager;
+  }
+
+  public ContractVerificationService getContractVerificationService() {
+    return contractVerificationService;
   }
 }
