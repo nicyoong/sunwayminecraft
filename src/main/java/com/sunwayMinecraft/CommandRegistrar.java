@@ -108,12 +108,22 @@ public class CommandRegistrar {
 
     // City Contracts
     ContractsCommands contractsCmds = new ContractsCommands(init.getContractsManager(), init.getContractVerificationService());
+    contractsCmds.setEventModifierService(init.getEventModifierService());
     registerCommand("contracts", contractsCmds);
     plugin.getCommand("contracts").setTabCompleter(contractsCmds);
 
     ContractAdminCommands contractAdminCmds = new ContractAdminCommands(init.getContractsManager());
     registerCommand("contractadmin", contractAdminCmds);
     plugin.getCommand("contractadmin").setTabCompleter(contractAdminCmds);
+
+    // City Events
+    EventsCommands eventsCmds = new EventsCommands(init.getCityEventsManager());
+    registerCommand("events", eventsCmds);
+    plugin.getCommand("events").setTabCompleter(eventsCmds);
+
+    EventAdminCommands eventAdminCmds = new EventAdminCommands(init.getCityEventsManager());
+    registerCommand("eventadmin", eventAdminCmds);
+    plugin.getCommand("eventadmin").setTabCompleter(eventAdminCmds);
   }
 
   private void registerCommand(String name, CommandExecutor executor) {
