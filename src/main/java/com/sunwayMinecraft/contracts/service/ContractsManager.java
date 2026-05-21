@@ -5,6 +5,7 @@ import com.sunwayMinecraft.contracts.config.EndpointConfigManager;
 import com.sunwayMinecraft.contracts.config.SettingsConfigManager;
 import com.sunwayMinecraft.contracts.domain.*;
 import com.sunwayMinecraft.contracts.persistence.ContractPersistenceService;
+import com.sunwayMinecraft.events.service.EventModifierService;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -21,6 +22,7 @@ public class ContractsManager {
     private final SettingsConfigManager settingsConfig;
     private final ContractPersistenceService persistence;
     private final Economy economy;
+    private EventModifierService eventModifierService;
 
     public ContractsManager(JavaPlugin plugin, ContractConfigManager contractConfig, 
                             EndpointConfigManager endpointConfig, SettingsConfigManager settingsConfig,
@@ -31,6 +33,10 @@ public class ContractsManager {
         this.settingsConfig = settingsConfig;
         this.persistence = persistence;
         this.economy = economy;
+    }
+
+    public void setEventModifierService(EventModifierService eventModifierService) {
+        this.eventModifierService = eventModifierService;
     }
 
     public boolean acceptContract(Player player, String contractId) {
@@ -57,8 +63,13 @@ public class ContractsManager {
         ContractDefinition def = contractConfig.getContract(ac.getContractId());
         if (def == null) return false;
 
+        double reward = def.rewardMoney();
+        if (eventModifierService != null) {
+            reward *= eventModifierService.getRewardMultiplier(def.category());
+        }
+
         // Payout
-        economy.depositPlayer(player, def.rewardMoney());
+        economy.depositPlayer(player, reward);
         
         persistence.getPlayerContracts(player.getUniqueId()).remove(ac);
         persistence.save();

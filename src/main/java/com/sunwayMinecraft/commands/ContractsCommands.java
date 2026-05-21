@@ -5,8 +5,11 @@ import com.sunwayMinecraft.contracts.domain.ContractDefinition;
 import com.sunwayMinecraft.contracts.domain.ContractEndpoint;
 import com.sunwayMinecraft.contracts.service.ContractsManager;
 import com.sunwayMinecraft.contracts.service.ContractVerificationService;
+import com.sunwayMinecraft.events.domain.CityEventDefinition;
+import com.sunwayMinecraft.events.service.EventModifierService;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -25,10 +28,15 @@ import java.util.stream.Collectors;
 public class ContractsCommands implements CommandExecutor, TabCompleter {
     private final ContractsManager manager;
     private final ContractVerificationService verificationService;
+    private EventModifierService eventModifierService;
 
     public ContractsCommands(ContractsManager manager, ContractVerificationService verificationService) {
         this.manager = manager;
         this.verificationService = verificationService;
+    }
+
+    public void setEventModifierService(EventModifierService eventModifierService) {
+        this.eventModifierService = eventModifierService;
     }
 
     @Override
@@ -61,9 +69,17 @@ public class ContractsCommands implements CommandExecutor, TabCompleter {
     private void showBoard(Player player) {
         player.sendMessage(Component.text("=== City Contracts Board ===", NamedTextColor.GOLD));
         manager.getContractConfig().getContracts().values().forEach(def -> {
-            player.sendMessage(Component.text("- ", NamedTextColor.GRAY)
-                .append(Component.text(def.name(), NamedTextColor.YELLOW))
-                .append(Component.text(" (ID: " + def.id() + ")", NamedTextColor.DARK_GRAY)));
+            Component msg = Component.text("- ", NamedTextColor.GRAY)
+                .append(Component.text(def.name(), NamedTextColor.YELLOW));
+            
+            if (eventModifierService != null) {
+                eventModifierService.getPrimaryEventForCategory(def.category()).ifPresent(event -> {
+                    msg = msg.append(Component.text(" [BOOSTED]", NamedTextColor.AQUA, TextDecoration.BOLD));
+                });
+            }
+
+            msg = msg.append(Component.text(" (ID: " + def.id() + ")", NamedTextColor.DARK_GRAY));
+            player.sendMessage(msg);
         });
         player.sendMessage(Component.text("Use /contracts info <id> for details.", NamedTextColor.GRAY));
     }
@@ -113,7 +129,25 @@ public class ContractsCommands implements CommandExecutor, TabCompleter {
         }
         player.sendMessage(Component.text("=== Contract: " + def.name() + " ===", NamedTextColor.GOLD));
         player.sendMessage(Component.text("Description: ", NamedTextColor.YELLOW).append(Component.text(def.description(), NamedTextColor.WHITE)));
-        player.sendMessage(Component.text("Reward: ", NamedTextColor.YELLOW).append(Component.text("$" + def.rewardMoney(), NamedTextColor.GREEN)));
+        
+        double reward = def.rewardMoney();
+        Component rewardVal = Component.text("$" + reward, NamedTextColor.GREEN);
+        
+        if (eventModifierService != null) {
+            final double finalReward = reward;
+            eventModifierService.getPrimaryEventForCategory(def.category()).ifPresentOrElse(event -> {
+                double boostedReward = finalReward * event.rewardMultiplier();
+                player.sendMessage(Component.text("Reward: ", NamedTextColor.YELLOW)
+                    .append(Component.text("$" + boostedReward, NamedTextColor.GREEN))
+                    .append(Component.text(" [EVENT BOOST]", NamedTextColor.AQUA, TextDecoration.BOLD))
+                    .append(Component.text(" (Base: $" + finalReward + " from " + event.name() + ")", NamedTextColor.GRAY)));
+            }, () -> {
+                player.sendMessage(Component.text("Reward: ", NamedTextColor.YELLOW).append(rewardVal));
+            });
+        } else {
+            player.sendMessage(Component.text("Reward: ", NamedTextColor.YELLOW).append(rewardVal));
+        }
+
         player.sendMessage(Component.text("Objective: ", NamedTextColor.YELLOW).append(Component.text(def.objectiveDescription(), NamedTextColor.WHITE)));
     }
 
