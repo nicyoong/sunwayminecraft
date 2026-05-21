@@ -18,6 +18,9 @@ import com.sunwayMinecraft.worldtravel.*;
 import com.sunwayMinecraft.contracts.config.*;
 import com.sunwayMinecraft.contracts.persistence.ContractPersistenceService;
 import com.sunwayMinecraft.contracts.service.*;
+import com.sunwayMinecraft.events.config.*;
+import com.sunwayMinecraft.events.persistence.EventPersistenceService;
+import com.sunwayMinecraft.events.service.*;
 import com.sunwayMinecraft.utils.ConfigLoader;
 import net.milkbowl.vault.economy.Economy;
 import com.sunwayMinecraft.SunwayMinecraft;
@@ -69,6 +72,10 @@ public class PluginInitializer {
   private ContractsManager contractsManager;
   private ContractVerificationService contractVerificationService;
 
+  // City Events
+  private CityEventsManager cityEventsManager;
+  private EventModifierService eventModifierService;
+
   public PluginInitializer(SunwayMinecraft plugin) {
     this.plugin = plugin;
 
@@ -88,6 +95,7 @@ public class PluginInitializer {
     initCoinFlipSystem();
     initWorldTravelSystem();
     initContractsSystem();
+    initEventsSystem();
   }
 
   private void initBeaconSystem() {
@@ -165,13 +173,34 @@ public class PluginInitializer {
 
   private void initContractsSystem() {
     ContractConfigManager contractConfig = new ContractConfigManager(plugin);
+    contractConfig.load();
     EndpointConfigManager endpointConfig = new EndpointConfigManager(plugin);
+    endpointConfig.load();
     SettingsConfigManager settingsConfig = new SettingsConfigManager(plugin);
+    settingsConfig.load();
     ContractPersistenceService persistence = new ContractPersistenceService(plugin);
     
     Economy econ = getEconomy();
     contractsManager = new ContractsManager(plugin, contractConfig, endpointConfig, settingsConfig, persistence, econ);
     contractVerificationService = new ContractVerificationService(contractsManager);
+  }
+
+  private void initEventsSystem() {
+    EventConfigManager eventConfig = new EventConfigManager(plugin);
+    eventConfig.load();
+    EventSettingsManager eventSettings = new EventSettingsManager(plugin);
+    eventSettings.load();
+    EventPersistenceService persistence = new EventPersistenceService(plugin);
+    
+    cityEventsManager = new CityEventsManager(plugin, eventConfig, eventSettings, persistence);
+    cityEventsManager.initialize();
+    
+    eventModifierService = new EventModifierService(cityEventsManager);
+    
+    // Inject into contracts
+    if (contractsManager != null) {
+        contractsManager.setEventModifierService(eventModifierService);
+    }
   }
 
   private Economy getEconomy() {
@@ -250,5 +279,13 @@ public class PluginInitializer {
 
   public ContractVerificationService getContractVerificationService() {
     return contractVerificationService;
+  }
+
+  public CityEventsManager getCityEventsManager() {
+    return cityEventsManager;
+  }
+
+  public EventModifierService getEventModifierService() {
+    return eventModifierService;
   }
 }

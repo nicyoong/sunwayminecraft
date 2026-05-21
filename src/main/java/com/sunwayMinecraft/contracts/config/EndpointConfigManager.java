@@ -23,7 +23,6 @@ public class EndpointConfigManager {
         if (!configFile.exists()) {
             plugin.saveResource("contract-endpoints.yml", false);
         }
-        load();
     }
 
     public void load() {
