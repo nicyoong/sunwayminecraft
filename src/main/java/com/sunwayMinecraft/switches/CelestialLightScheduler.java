@@ -62,7 +62,7 @@ public class CelestialLightScheduler extends BukkitRunnable {
    */
   @Override
   public void run() {
-    World world = Bukkit.getWorld("world"); // Use your world name
+    World world = Bukkit.getWorld(worldName);
     if (world == null) return;
 
     long currentTime = world.getTime();
