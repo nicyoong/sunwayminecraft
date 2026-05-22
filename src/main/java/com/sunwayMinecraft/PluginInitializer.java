@@ -28,6 +28,7 @@ import com.sunwayMinecraft.utils.ConfigLoader;
 import net.milkbowl.vault.economy.Economy;
 import com.sunwayMinecraft.SunwayMinecraft;
 
+@SuppressWarnings("this-escape")
 public class PluginInitializer {
 
   private final SunwayMinecraft plugin;

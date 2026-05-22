@@ -68,19 +68,20 @@ public class ContractsCommands implements CommandExecutor, TabCompleter {
 
     private void showBoard(Player player) {
         player.sendMessage(Component.text("=== City Contracts Board ===", NamedTextColor.GOLD, TextDecoration.BOLD));
-        manager.getContractConfig().getContracts().values().forEach(def -> {
+        for (ContractDefinition def : manager.getContractConfig().getContracts().values()) {
             Component msg = Component.text("- ", NamedTextColor.GRAY)
                 .append(Component.text(def.name(), NamedTextColor.YELLOW));
             
             if (eventModifierService != null) {
-                eventModifierService.getPrimaryEventForCategory(def.category()).ifPresent(event -> {
-                    msg = msg.append(Component.text(" [BOOSTED: " + event.name() + "]", NamedTextColor.AQUA, TextDecoration.BOLD));
-                });
+                var eventOpt = eventModifierService.getPrimaryEventForCategory(def.category());
+                if (eventOpt.isPresent()) {
+                    msg = msg.append(Component.text(" [BOOSTED: " + eventOpt.get().name() + "]", NamedTextColor.AQUA, TextDecoration.BOLD));
+                }
             }
 
             msg = msg.append(Component.text(" (ID: " + def.id() + ")", NamedTextColor.DARK_GRAY));
             player.sendMessage(msg);
-        });
+        }
         player.sendMessage(Component.text("Use /contracts info <id> for details.", NamedTextColor.GRAY));
     }
 
@@ -108,7 +109,7 @@ public class ContractsCommands implements CommandExecutor, TabCompleter {
             return;
         }
         player.sendMessage(Component.text("=== Your Active Contracts ===", NamedTextColor.GOLD, TextDecoration.BOLD));
-        active.forEach(ac -> {
+        for (ActiveContract ac : active) {
             ContractDefinition def = manager.getContractConfig().getContract(ac.getContractId());
             long minsLeft = Duration.between(Instant.now(), ac.getExpiryTime()).toMinutes();
             Component msg = Component.text("- ", NamedTextColor.GRAY)
@@ -116,12 +117,13 @@ public class ContractsCommands implements CommandExecutor, TabCompleter {
                 .append(Component.text(" (" + Math.max(0, minsLeft) + "m left)", NamedTextColor.GRAY));
             
             if (def != null && eventModifierService != null) {
-                eventModifierService.getPrimaryEventForCategory(def.category()).ifPresent(event -> {
+                var eventOpt = eventModifierService.getPrimaryEventForCategory(def.category());
+                if (eventOpt.isPresent()) {
                     msg = msg.append(Component.text(" [BOOSTED]", NamedTextColor.AQUA, TextDecoration.BOLD));
-                });
+                }
             }
             player.sendMessage(msg);
-        });
+        }
         player.sendMessage(Component.text("Use /contracts progress [id] for more details.", NamedTextColor.GRAY));
     }
 
