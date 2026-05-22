@@ -129,6 +129,11 @@ public class CommandRegistrar {
     CityCommands cityCmds = new CityCommands(init.getCityOverviewService());
     registerCommand("city", cityCmds);
     plugin.getCommand("city").setTabCompleter(cityCmds);
+
+    // City Admin
+    CityAdminCommands cityAdminCmds = new CityAdminCommands(init.getCityMetricsManager(), init.getCityValidationService());
+    registerCommand("cityadmin", cityAdminCmds);
+    plugin.getCommand("cityadmin").setTabCompleter(cityAdminCmds);
   }
 
   private void registerCommand(String name, CommandExecutor executor) {
