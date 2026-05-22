@@ -1,5 +1,7 @@
 package com.sunwayMinecraft.events.service;
 
+import com.sunwayMinecraft.city.metrics.CityMetricKeys;
+import com.sunwayMinecraft.city.metrics.CityMetricsManager;
 import com.sunwayMinecraft.events.config.EventConfigManager;
 import com.sunwayMinecraft.events.config.EventSettingsManager;
 import com.sunwayMinecraft.events.domain.ActiveCityEvent;
@@ -22,6 +24,7 @@ public class CityEventsManager {
     private final EventSettingsManager settingsManager;
     private final EventPersistenceService persistence;
     private final List<ActiveCityEvent> activeEvents = new ArrayList<>();
+    private CityMetricsManager metricsManager;
 
     public CityEventsManager(JavaPlugin plugin, EventConfigManager configManager, 
                              EventSettingsManager settingsManager, EventPersistenceService persistence) {
@@ -36,11 +39,18 @@ public class CityEventsManager {
         startCleanupTask();
     }
 
+    public void setMetricsManager(CityMetricsManager metricsManager) {
+        this.metricsManager = metricsManager;
+    }
+
     private void startCleanupTask() {
         Bukkit.getScheduler().runTaskTimer(plugin, () -> {
             boolean changed = activeEvents.removeIf(ac -> {
                 if (ac.isExpired()) {
                     announceEnd(ac);
+                    if (metricsManager != null) {
+                        metricsManager.increment(CityMetricKeys.EVENTS_ENDED);
+                    }
                     return true;
                 }
                 return false;
@@ -61,6 +71,16 @@ public class CityEventsManager {
         activeEvents.add(ac);
         persistence.save(activeEvents);
         announceStart(ac);
+
+        if (metricsManager != null) {
+            metricsManager.increment(CityMetricKeys.EVENTS_STARTED);
+            if (mode == ActiveCityEvent.TriggerMode.ADMIN) {
+                metricsManager.increment(CityMetricKeys.EVENTS_ADMIN_TRIGGERED);
+            } else if (mode == ActiveCityEvent.TriggerMode.SCHEDULED) {
+                metricsManager.increment(CityMetricKeys.EVENTS_SCHEDULED);
+            }
+        }
+
         return true;
     }
 
@@ -73,6 +93,9 @@ public class CityEventsManager {
             activeEvents.remove(ac.get());
             persistence.save(activeEvents);
             announceEnd(ac.get());
+            if (metricsManager != null) {
+                metricsManager.increment(CityMetricKeys.EVENTS_ENDED);
+            }
             return true;
         }
         return false;

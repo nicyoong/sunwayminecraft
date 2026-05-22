@@ -15,6 +15,7 @@ import com.sunwayMinecraft.districts.DistrictManager;
 import com.sunwayMinecraft.coinflip.*;
 import com.sunwayMinecraft.switches.*;
 import com.sunwayMinecraft.worldtravel.*;
+import com.sunwayMinecraft.city.metrics.CityMetricsManager;
 import com.sunwayMinecraft.contracts.config.*;
 import com.sunwayMinecraft.contracts.persistence.ContractPersistenceService;
 import com.sunwayMinecraft.contracts.service.*;
@@ -76,6 +77,9 @@ public class PluginInitializer {
   private CityEventsManager cityEventsManager;
   private EventModifierService eventModifierService;
 
+  // City Metrics
+  private CityMetricsManager cityMetricsManager;
+
   public PluginInitializer(SunwayMinecraft plugin) {
     this.plugin = plugin;
 
@@ -96,6 +100,16 @@ public class PluginInitializer {
     initWorldTravelSystem();
     initContractsSystem();
     initEventsSystem();
+    initMetricsSystem();
+  }
+
+  private void initMetricsSystem() {
+    cityMetricsManager = new CityMetricsManager(plugin);
+    cityMetricsManager.initialize();
+
+    if (cityEventsManager != null) {
+      cityEventsManager.setMetricsManager(cityMetricsManager);
+    }
   }
 
   private void initBeaconSystem() {
@@ -200,6 +214,7 @@ public class PluginInitializer {
     // Inject into contracts
     if (contractsManager != null) {
         contractsManager.setEventModifierService(eventModifierService);
+        contractsManager.setMetricsManager(cityMetricsManager);
     }
   }
 
@@ -287,5 +302,9 @@ public class PluginInitializer {
 
   public EventModifierService getEventModifierService() {
     return eventModifierService;
+  }
+
+  public CityMetricsManager getCityMetricsManager() {
+    return cityMetricsManager;
   }
 }

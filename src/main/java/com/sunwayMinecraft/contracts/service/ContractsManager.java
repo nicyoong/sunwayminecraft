@@ -1,5 +1,7 @@
 package com.sunwayMinecraft.contracts.service;
 
+import com.sunwayMinecraft.city.metrics.CityMetricKeys;
+import com.sunwayMinecraft.city.metrics.CityMetricsManager;
 import com.sunwayMinecraft.contracts.config.ContractConfigManager;
 import com.sunwayMinecraft.contracts.config.EndpointConfigManager;
 import com.sunwayMinecraft.contracts.config.SettingsConfigManager;
@@ -23,6 +25,7 @@ public class ContractsManager {
     private final ContractPersistenceService persistence;
     private final Economy economy;
     private EventModifierService eventModifierService;
+    private CityMetricsManager metricsManager;
 
     public ContractsManager(JavaPlugin plugin, ContractConfigManager contractConfig, 
                             EndpointConfigManager endpointConfig, SettingsConfigManager settingsConfig,
@@ -37,6 +40,10 @@ public class ContractsManager {
 
     public void setEventModifierService(EventModifierService eventModifierService) {
         this.eventModifierService = eventModifierService;
+    }
+
+    public void setMetricsManager(CityMetricsManager metricsManager) {
+        this.metricsManager = metricsManager;
     }
 
     public boolean acceptContract(Player player, String contractId) {
@@ -56,6 +63,11 @@ public class ContractsManager {
         ActiveContract newContract = new ActiveContract(uuid, contractId, Instant.now(), expiry);
         active.add(newContract);
         persistence.save();
+        
+        if (metricsManager != null) {
+            metricsManager.increment(CityMetricKeys.CONTRACTS_ACCEPTED);
+        }
+        
         return true;
     }
 
@@ -64,8 +76,11 @@ public class ContractsManager {
         if (def == null) return false;
 
         double reward = def.rewardMoney();
+        boolean boosted = false;
         if (eventModifierService != null) {
-            reward *= eventModifierService.getRewardMultiplier(def.category());
+            double multiplier = eventModifierService.getRewardMultiplier(def.category());
+            reward *= multiplier;
+            boosted = multiplier > 1.0;
         }
 
         // Payout
@@ -73,6 +88,15 @@ public class ContractsManager {
         
         persistence.getPlayerContracts(player.getUniqueId()).remove(ac);
         persistence.save();
+
+        if (metricsManager != null) {
+            metricsManager.increment(CityMetricKeys.CONTRACTS_COMPLETED);
+            metricsManager.increment(CityMetricKeys.CONTRACTS_PAYOUTS_TOTAL, reward);
+            if (boosted) {
+                metricsManager.increment(CityMetricKeys.CONTRACTS_EVENT_BOOSTED_COMPLETIONS);
+            }
+        }
+        
         return true;
     }
 
@@ -86,10 +110,17 @@ public class ContractsManager {
         
         persistence.getPlayerContracts(player.getUniqueId()).remove(ac);
         persistence.save();
+
+        if (metricsManager != null) {
+            metricsManager.increment(CityMetricKeys.CONTRACTS_ABANDONED);
+        }
     }
 
     public void failContract(Player player, ActiveContract ac) {
         abandonContract(player, ac); // Same logic for V1: no payout, apply cooldown
+        if (metricsManager != null) {
+            metricsManager.increment(CityMetricKeys.CONTRACTS_FAILED);
+        }
     }
 
     public void cleanupExpiredContracts() {
