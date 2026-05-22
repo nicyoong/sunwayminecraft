@@ -193,7 +193,17 @@ commands:
     usage: /eventadmin <subcommand>
     permission: sunway.events.admin
 
+  city:
+    description: Shows the city overview and new player guide
+    usage: /city <status|guide|help>
+    permission: sunway.city.use
+    aliases: [sunway]
+
 permissions:
+  sunway.city.use:
+    description: Allows players to use the City overview command.
+    default: true
+
   sunway.contracts.use:
     description: Allows players to use the City Contracts board and accept contracts.
     default: true

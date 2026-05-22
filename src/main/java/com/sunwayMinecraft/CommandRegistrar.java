@@ -124,6 +124,11 @@ public class CommandRegistrar {
     EventAdminCommands eventAdminCmds = new EventAdminCommands(init.getCityEventsManager());
     registerCommand("eventadmin", eventAdminCmds);
     plugin.getCommand("eventadmin").setTabCompleter(eventAdminCmds);
+
+    // City Overview
+    CityCommands cityCmds = new CityCommands(init.getCityOverviewService());
+    registerCommand("city", cityCmds);
+    plugin.getCommand("city").setTabCompleter(cityCmds);
   }
 
   private void registerCommand(String name, CommandExecutor executor) {

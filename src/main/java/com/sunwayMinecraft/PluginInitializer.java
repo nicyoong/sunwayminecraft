@@ -15,6 +15,7 @@ import com.sunwayMinecraft.districts.DistrictManager;
 import com.sunwayMinecraft.coinflip.*;
 import com.sunwayMinecraft.switches.*;
 import com.sunwayMinecraft.worldtravel.*;
+import com.sunwayMinecraft.city.CityOverviewService;
 import com.sunwayMinecraft.city.metrics.CityMetricsManager;
 import com.sunwayMinecraft.contracts.config.*;
 import com.sunwayMinecraft.contracts.persistence.ContractPersistenceService;
@@ -80,6 +81,9 @@ public class PluginInitializer {
   // City Metrics
   private CityMetricsManager cityMetricsManager;
 
+  // City Integration
+  private CityOverviewService cityOverviewService;
+
   public PluginInitializer(SunwayMinecraft plugin) {
     this.plugin = plugin;
 
@@ -101,6 +105,11 @@ public class PluginInitializer {
     initContractsSystem();
     initEventsSystem();
     initMetricsSystem();
+    initCityIntegration();
+  }
+
+  private void initCityIntegration() {
+    cityOverviewService = new CityOverviewService(this);
   }
 
   private void initMetricsSystem() {
@@ -306,5 +315,9 @@ public class PluginInitializer {
 
   public CityMetricsManager getCityMetricsManager() {
     return cityMetricsManager;
+  }
+
+  public CityOverviewService getCityOverviewService() {
+    return cityOverviewService;
   }
 }
