@@ -104,9 +104,9 @@ public class PluginInitializer {
     initDistrictSystem();
     initCoinFlipSystem();
     initWorldTravelSystem();
+    initMetricsSystem();
     initContractsSystem();
     initEventsSystem();
-    initMetricsSystem();
     initCityIntegration();
   }
 
@@ -118,10 +118,6 @@ public class PluginInitializer {
   private void initMetricsSystem() {
     cityMetricsManager = new CityMetricsManager(plugin);
     cityMetricsManager.initialize();
-
-    if (cityEventsManager != null) {
-      cityEventsManager.setMetricsManager(cityMetricsManager);
-    }
   }
 
   private void initBeaconSystem() {
@@ -220,6 +216,8 @@ public class PluginInitializer {
     
     cityEventsManager = new CityEventsManager(plugin, eventConfig, eventSettings, persistence);
     cityEventsManager.initialize();
+    
+    cityEventsManager.setMetricsManager(cityMetricsManager);
     
     eventModifierService = new EventModifierService(cityEventsManager);
     

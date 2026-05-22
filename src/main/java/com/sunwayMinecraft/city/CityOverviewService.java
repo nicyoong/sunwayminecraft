@@ -46,7 +46,7 @@ public class CityOverviewService {
 
     public String getDistrictName(Player player) {
         if (init.getDistrictManager() == null) return "unavailable";
-        Optional<DistrictDefinition> dist = init.getDistrictManager().getDistrictAt(player.getLocation());
+        Optional<DistrictDefinition> dist = Optional.ofNullable(init.getDistrictManager().getDistrictAt(player.getLocation()));
         return dist.map(DistrictDefinition::name).orElse("None");
     }
 
