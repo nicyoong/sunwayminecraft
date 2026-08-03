@@ -17,6 +17,7 @@ import org.mockbukkit.mockbukkit.ServerMock;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.time.Instant;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -110,5 +111,25 @@ public class CityEventsManagerTest {
         assertTrue(stopped);
         assertFalse(manager.isEventActive(eventId));
         verify(persistence, times(2)).save(anyList()); // once on start, once on stop
+    }
+
+    @Test
+    public void testUnknownAndMissingActiveEventOperationsFailWithoutStateChange() {
+        assertFalse(manager.startEvent("missing", 60, ActiveCityEvent.TriggerMode.ADMIN));
+        assertFalse(manager.stopEvent("missing"));
+        assertTrue(manager.getActiveEvents().isEmpty());
+        verify(persistence, never()).save(anyList());
+    }
+
+    @Test
+    public void testScheduledCleanupRemovesExpiredEventsAndPersistsTheChange() {
+        ActiveCityEvent expired = new ActiveCityEvent("expired", Instant.now().minusSeconds(120),
+                Instant.now().minusSeconds(1), ActiveCityEvent.TriggerMode.SCHEDULED);
+        manager.getActiveEvents().add(expired);
+
+        server.getScheduler().performTicks(1200L);
+
+        assertTrue(manager.getActiveEvents().isEmpty());
+        verify(persistence).save(anyList());
     }
 }

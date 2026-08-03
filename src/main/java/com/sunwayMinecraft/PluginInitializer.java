@@ -15,6 +15,9 @@ import com.sunwayMinecraft.districts.DistrictManager;
 import com.sunwayMinecraft.coinflip.*;
 import com.sunwayMinecraft.switches.*;
 import com.sunwayMinecraft.worldtravel.*;
+import com.sunwayMinecraft.city.CityOverviewService;
+import com.sunwayMinecraft.city.CityValidationService;
+import com.sunwayMinecraft.city.metrics.CityMetricsManager;
 import com.sunwayMinecraft.contracts.config.*;
 import com.sunwayMinecraft.contracts.persistence.ContractPersistenceService;
 import com.sunwayMinecraft.contracts.service.*;
@@ -25,6 +28,7 @@ import com.sunwayMinecraft.utils.ConfigLoader;
 import net.milkbowl.vault.economy.Economy;
 import com.sunwayMinecraft.SunwayMinecraft;
 
+@SuppressWarnings("this-escape")
 public class PluginInitializer {
 
   private final SunwayMinecraft plugin;
@@ -76,6 +80,13 @@ public class PluginInitializer {
   private CityEventsManager cityEventsManager;
   private EventModifierService eventModifierService;
 
+  // City Metrics
+  private CityMetricsManager cityMetricsManager;
+
+  // City Integration
+  private CityOverviewService cityOverviewService;
+  private CityValidationService cityValidationService;
+
   public PluginInitializer(SunwayMinecraft plugin) {
     this.plugin = plugin;
 
@@ -94,8 +105,20 @@ public class PluginInitializer {
     initDistrictSystem();
     initCoinFlipSystem();
     initWorldTravelSystem();
+    initMetricsSystem();
     initContractsSystem();
     initEventsSystem();
+    initCityIntegration();
+  }
+
+  private void initCityIntegration() {
+    cityOverviewService = new CityOverviewService(this);
+    cityValidationService = new CityValidationService(this);
+  }
+
+  private void initMetricsSystem() {
+    cityMetricsManager = new CityMetricsManager(plugin);
+    cityMetricsManager.initialize();
   }
 
   private void initBeaconSystem() {
@@ -195,11 +218,14 @@ public class PluginInitializer {
     cityEventsManager = new CityEventsManager(plugin, eventConfig, eventSettings, persistence);
     cityEventsManager.initialize();
     
+    cityEventsManager.setMetricsManager(cityMetricsManager);
+    
     eventModifierService = new EventModifierService(cityEventsManager);
     
     // Inject into contracts
     if (contractsManager != null) {
         contractsManager.setEventModifierService(eventModifierService);
+        contractsManager.setMetricsManager(cityMetricsManager);
     }
   }
 
@@ -287,5 +313,17 @@ public class PluginInitializer {
 
   public EventModifierService getEventModifierService() {
     return eventModifierService;
+  }
+
+  public CityMetricsManager getCityMetricsManager() {
+    return cityMetricsManager;
+  }
+
+  public CityOverviewService getCityOverviewService() {
+    return cityOverviewService;
+  }
+
+  public CityValidationService getCityValidationService() {
+    return cityValidationService;
   }
 }

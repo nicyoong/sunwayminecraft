@@ -20,6 +20,8 @@ import org.mockbukkit.mockbukkit.ServerMock;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -72,6 +74,29 @@ public class ContractsManagerTest {
         
         assertTrue(accepted);
         verify(persistence).save();
+        assertEquals(1, persistence.getPlayerContracts(player.getUniqueId()).size());
+    }
+
+    @Test
+    public void testAcceptContractRejectsUnknownContractLimitAndActiveCooldown() {
+        Player player = server.addPlayer();
+        when(persistence.getPlayerContracts(player.getUniqueId())).thenReturn(new ArrayList<>());
+        when(persistence.getPlayerCooldowns(player.getUniqueId())).thenReturn(new HashMap<>());
+
+        assertFalse(manager.acceptContract(player, "missing"));
+
+        ContractDefinition definition = new ContractDefinition("test", ContractCategory.COURIER, "Name", "Desc",
+                10, 60, 30, "start", "end", Collections.emptyMap(), "Obj");
+        when(contractConfig.getContract("test")).thenReturn(definition);
+        when(settingsConfig.getMaxActiveContracts()).thenReturn(0);
+        assertFalse(manager.acceptContract(player, "test"));
+
+        when(settingsConfig.getMaxActiveContracts()).thenReturn(3);
+        Map<String, Instant> cooldowns = new HashMap<>();
+        cooldowns.put("test", Instant.now().plusSeconds(60));
+        when(persistence.getPlayerCooldowns(player.getUniqueId())).thenReturn(cooldowns);
+        assertFalse(manager.acceptContract(player, "test"));
+        verify(persistence, never()).save();
     }
 
     @Test
@@ -96,6 +121,17 @@ public class ContractsManagerTest {
         assertTrue(completed);
         verify(economy).depositPlayer(player, 150.0); // 100 * 1.5
         verify(persistence).save();
+    }
+
+    @Test
+    public void testCompleteContractRejectsMissingDefinitionWithoutPayingOrPersisting() {
+        Player player = server.addPlayer();
+        ActiveContract active = new ActiveContract(player.getUniqueId(), "missing", Instant.now(), Instant.now().plusSeconds(60));
+
+        assertFalse(manager.completeContract(player, active));
+
+        verify(economy, never()).depositPlayer(any(Player.class), anyDouble());
+        verify(persistence, never()).save();
     }
 
     @Test
