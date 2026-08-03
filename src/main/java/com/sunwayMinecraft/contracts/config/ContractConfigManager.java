@@ -25,7 +25,6 @@ public class ContractConfigManager {
         if (!configFile.exists()) {
             plugin.saveResource("contracts.yml", false);
         }
-        load();
     }
 
     public void load() {

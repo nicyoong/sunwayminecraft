@@ -18,7 +18,6 @@ public class SettingsConfigManager {
         if (!configFile.exists()) {
             plugin.saveResource("contract-settings.yml", false);
         }
-        load();
     }
 
     public void load() {

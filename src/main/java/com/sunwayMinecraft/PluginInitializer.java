@@ -15,14 +15,21 @@ import com.sunwayMinecraft.districts.DistrictManager;
 import com.sunwayMinecraft.coinflip.*;
 import com.sunwayMinecraft.switches.*;
 import com.sunwayMinecraft.worldtravel.*;
+import com.sunwayMinecraft.city.CityOverviewService;
+import com.sunwayMinecraft.city.CityValidationService;
+import com.sunwayMinecraft.city.metrics.CityMetricsManager;
 import com.sunwayMinecraft.contracts.config.*;
 import com.sunwayMinecraft.contracts.persistence.ContractPersistenceService;
 import com.sunwayMinecraft.contracts.service.*;
 import com.sunwayMinecraft.contracts.listener.ContractObjectiveListener;
+import com.sunwayMinecraft.events.config.*;
+import com.sunwayMinecraft.events.persistence.EventPersistenceService;
+import com.sunwayMinecraft.events.service.*;
 import com.sunwayMinecraft.utils.ConfigLoader;
 import net.milkbowl.vault.economy.Economy;
 import com.sunwayMinecraft.SunwayMinecraft;
 
+@SuppressWarnings("this-escape")
 public class PluginInitializer {
 
   private final SunwayMinecraft plugin;
@@ -70,6 +77,17 @@ public class PluginInitializer {
   private ContractsManager contractsManager;
   private ContractVerificationService contractVerificationService;
 
+  // City Events
+  private CityEventsManager cityEventsManager;
+  private EventModifierService eventModifierService;
+
+  // City Metrics
+  private CityMetricsManager cityMetricsManager;
+
+  // City Integration
+  private CityOverviewService cityOverviewService;
+  private CityValidationService cityValidationService;
+
   public PluginInitializer(SunwayMinecraft plugin) {
     this.plugin = plugin;
 
@@ -88,7 +106,20 @@ public class PluginInitializer {
     initDistrictSystem();
     initCoinFlipSystem();
     initWorldTravelSystem();
+    initMetricsSystem();
     initContractsSystem();
+    initEventsSystem();
+    initCityIntegration();
+  }
+
+  private void initCityIntegration() {
+    cityOverviewService = new CityOverviewService(this);
+    cityValidationService = new CityValidationService(this);
+  }
+
+  private void initMetricsSystem() {
+    cityMetricsManager = new CityMetricsManager(plugin);
+    cityMetricsManager.initialize();
   }
 
   private void initBeaconSystem() {
@@ -166,8 +197,11 @@ public class PluginInitializer {
 
   private void initContractsSystem() {
     ContractConfigManager contractConfig = new ContractConfigManager(plugin);
+    contractConfig.load();
     EndpointConfigManager endpointConfig = new EndpointConfigManager(plugin);
+    endpointConfig.load();
     SettingsConfigManager settingsConfig = new SettingsConfigManager(plugin);
+    settingsConfig.load();
     ContractPersistenceService persistence = new ContractPersistenceService(plugin);
     
     Economy econ = getEconomy();
@@ -176,6 +210,27 @@ public class PluginInitializer {
     plugin.getServer().getPluginManager().registerEvents(
         new ContractObjectiveListener(new ContractObjectiveService(contractsManager)), plugin);
     plugin.getServer().getScheduler().runTaskTimer(plugin, contractsManager::cleanupExpiredContracts, 20L, 1200L);
+  }
+
+  private void initEventsSystem() {
+    EventConfigManager eventConfig = new EventConfigManager(plugin);
+    eventConfig.load();
+    EventSettingsManager eventSettings = new EventSettingsManager(plugin);
+    eventSettings.load();
+    EventPersistenceService persistence = new EventPersistenceService(plugin);
+    
+    cityEventsManager = new CityEventsManager(plugin, eventConfig, eventSettings, persistence);
+    cityEventsManager.initialize();
+    
+    cityEventsManager.setMetricsManager(cityMetricsManager);
+    
+    eventModifierService = new EventModifierService(cityEventsManager);
+    
+    // Inject into contracts
+    if (contractsManager != null) {
+        contractsManager.setEventModifierService(eventModifierService);
+        contractsManager.setMetricsManager(cityMetricsManager);
+    }
   }
 
   private Economy getEconomy() {
@@ -254,5 +309,25 @@ public class PluginInitializer {
 
   public ContractVerificationService getContractVerificationService() {
     return contractVerificationService;
+  }
+
+  public CityEventsManager getCityEventsManager() {
+    return cityEventsManager;
+  }
+
+  public EventModifierService getEventModifierService() {
+    return eventModifierService;
+  }
+
+  public CityMetricsManager getCityMetricsManager() {
+    return cityMetricsManager;
+  }
+
+  public CityOverviewService getCityOverviewService() {
+    return cityOverviewService;
+  }
+
+  public CityValidationService getCityValidationService() {
+    return cityValidationService;
   }
 }

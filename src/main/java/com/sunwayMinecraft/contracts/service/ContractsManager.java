@@ -1,10 +1,13 @@
 package com.sunwayMinecraft.contracts.service;
 
+import com.sunwayMinecraft.city.metrics.CityMetricKeys;
+import com.sunwayMinecraft.city.metrics.CityMetricsManager;
 import com.sunwayMinecraft.contracts.config.ContractConfigManager;
 import com.sunwayMinecraft.contracts.config.EndpointConfigManager;
 import com.sunwayMinecraft.contracts.config.SettingsConfigManager;
 import com.sunwayMinecraft.contracts.domain.*;
 import com.sunwayMinecraft.contracts.persistence.ContractPersistenceService;
+import com.sunwayMinecraft.events.service.EventModifierService;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -22,6 +25,8 @@ public class ContractsManager {
     private final SettingsConfigManager settingsConfig;
     private final ContractPersistenceService persistence;
     private final Economy economy;
+    private EventModifierService eventModifierService;
+    private CityMetricsManager metricsManager;
 
     public ContractsManager(JavaPlugin plugin, ContractConfigManager contractConfig, 
                             EndpointConfigManager endpointConfig, SettingsConfigManager settingsConfig,
@@ -32,6 +37,14 @@ public class ContractsManager {
         this.settingsConfig = settingsConfig;
         this.persistence = persistence;
         this.economy = economy;
+    }
+
+    public void setEventModifierService(EventModifierService eventModifierService) {
+        this.eventModifierService = eventModifierService;
+    }
+
+    public void setMetricsManager(CityMetricsManager metricsManager) {
+        this.metricsManager = metricsManager;
     }
 
     public boolean acceptContract(Player player, String contractId) {
@@ -52,6 +65,11 @@ public class ContractsManager {
         ActiveContract newContract = new ActiveContract(uuid, contractId, Instant.now(), expiry);
         active.add(newContract);
         persistence.save();
+        
+        if (metricsManager != null) {
+            metricsManager.increment(CityMetricKeys.CONTRACTS_ACCEPTED);
+        }
+        
         return true;
     }
 
@@ -65,11 +83,28 @@ public class ContractsManager {
         ContractDefinition def = contractConfig.getContract(ac.getContractId());
         if (def == null || economy == null) return false;
 
+        double reward = def.rewardMoney();
+        boolean boosted = false;
+        if (eventModifierService != null) {
+            double multiplier = eventModifierService.getRewardMultiplier(def.category());
+            reward *= multiplier;
+            boosted = multiplier > 1.0;
+        }
+
         // Payout
-        economy.depositPlayer(player, def.rewardMoney());
+        economy.depositPlayer(player, reward);
         
         persistence.getPlayerContracts(player.getUniqueId()).remove(ac);
         persistence.save();
+
+        if (metricsManager != null) {
+            metricsManager.increment(CityMetricKeys.CONTRACTS_COMPLETED);
+            metricsManager.increment(CityMetricKeys.CONTRACTS_PAYOUTS_TOTAL, reward);
+            if (boosted) {
+                metricsManager.increment(CityMetricKeys.CONTRACTS_EVENT_BOOSTED_COMPLETIONS);
+            }
+        }
+        
         return true;
     }
 
@@ -83,10 +118,17 @@ public class ContractsManager {
         
         persistence.getPlayerContracts(player.getUniqueId()).remove(ac);
         persistence.save();
+
+        if (metricsManager != null) {
+            metricsManager.increment(CityMetricKeys.CONTRACTS_ABANDONED);
+        }
     }
 
     public void failContract(Player player, ActiveContract ac) {
         abandonContract(player, ac); // Same logic for V1: no payout, apply cooldown
+        if (metricsManager != null) {
+            metricsManager.increment(CityMetricKeys.CONTRACTS_FAILED);
+        }
     }
 
     public void cleanupExpiredContracts() {

@@ -183,13 +183,50 @@ commands:
     usage: /contractadmin <subcommand>
     permission: sunway.contracts.admin
 
+  events:
+    description: City Events system commands
+    usage: /events <subcommand>
+    permission: sunway.events.use
+
+  eventadmin:
+    description: Admin commands for City Events
+    usage: /eventadmin <subcommand>
+    permission: sunway.events.admin
+
+  city:
+    description: Shows the city overview and new player guide
+    usage: /city <status|guide|help>
+    permission: sunway.city.use
+    aliases: [sunway]
+
+  cityadmin:
+    description: Admin tools for city system validation and stats
+    usage: /cityadmin <validate|stats|help>
+    permission: sunway.city.admin
+
 permissions:
+  sunway.city.use:
+    description: Allows players to use the City overview command.
+    default: true
+
+  sunway.city.admin:
+    description: Allows admins to use city validation and stats tools.
+    default: op
+
   sunway.contracts.use:
     description: Allows players to use the City Contracts board and accept contracts.
     default: true
 
   sunway.contracts.admin:
     description: Allows admins to manage City Contracts.
+    default: op
+
+  sunway.events.use:
+    description: Allows players to view City Events.
+    default: true
+
+  sunway.events.admin:
+    description: Allows admins to manage City Events.
     default: op
 
   sunwayminecraft.beacons.pause:

@@ -99,6 +99,10 @@ public class ResidencyManager {
         );
     }
 
+    public List<String> validate() {
+        return validationService.validateAll();
+    }
+
     public JavaPlugin getPlugin() { return plugin; }
     public ResidencyRepository getRepository() { return repository; }
     public PremisesAccessService getAccessService() { return accessService; }
