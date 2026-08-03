@@ -2,6 +2,7 @@ package com.sunwayMinecraft.contracts.config;
 
 import com.sunwayMinecraft.contracts.domain.ContractCategory;
 import com.sunwayMinecraft.contracts.domain.ContractDefinition;
+import com.sunwayMinecraft.contracts.domain.ContractObjectiveType;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -44,6 +45,10 @@ public class ContractConfigManager {
                 String startEndpoint = section.getString(key + ".start_endpoint");
                 String endEndpoint = section.getString(key + ".end_endpoint");
                 String objective = section.getString(key + ".objective_description");
+                String objectiveTypeValue = section.getString(key + ".objective_type");
+                ContractObjectiveType objectiveType = objectiveTypeValue == null
+                    ? ContractDefinition.defaultObjectiveType(category)
+                    : ContractObjectiveType.valueOf(objectiveTypeValue.toUpperCase(java.util.Locale.ROOT));
 
                 Map<Material, Integer> materials = new HashMap<>();
                 ConfigurationSection matSection = section.getConfigurationSection(key + ".required_materials");
@@ -58,7 +63,7 @@ public class ContractConfigManager {
 
                 contracts.put(key, new ContractDefinition(
                     key, category, name, description, reward, duration, cooldown,
-                    startEndpoint, endEndpoint, materials, objective
+                    startEndpoint, endEndpoint, materials, objective, objectiveType
                 ));
             } catch (Exception e) {
                 plugin.getLogger().log(Level.SEVERE, "Failed to load contract: " + key, e);

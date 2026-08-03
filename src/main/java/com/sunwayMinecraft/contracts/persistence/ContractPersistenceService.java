@@ -24,6 +24,8 @@ public class ContractPersistenceService {
     }
 
     public void load() {
+        activeContracts.clear();
+        cooldowns.clear();
         if (!dataFile.exists()) return;
         YamlConfiguration config = YamlConfiguration.loadConfiguration(dataFile);
 
@@ -100,5 +102,10 @@ public class ContractPersistenceService {
 
     public Map<String, Instant> getPlayerCooldowns(UUID uuid) {
         return cooldowns.computeIfAbsent(uuid, k -> new HashMap<>());
+    }
+
+    /** Exposes active contracts for cleanup and reporting; callers may mutate the contained lists. */
+    public Map<UUID, List<ActiveContract>> getAllPlayerContracts() {
+        return activeContracts;
     }
 }

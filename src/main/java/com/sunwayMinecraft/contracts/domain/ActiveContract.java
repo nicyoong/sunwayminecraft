@@ -23,6 +23,10 @@ public class ActiveContract {
     public Instant getStartTime() { return startTime; }
     public Instant getExpiryTime() { return expiryTime; }
     public double getProgress() { return progress; }
-    public void setProgress(double progress) { this.progress = progress; }
+    public void setProgress(double progress) {
+        this.progress = Math.max(0.0, Math.min(1.0, progress));
+    }
+    public void completeObjective() { this.progress = 1.0; }
+    public boolean isObjectiveComplete() { return progress >= 1.0; }
     public boolean isExpired() { return Instant.now().isAfter(expiryTime); }
 }
