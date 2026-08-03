@@ -15,6 +15,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 public class ContractsManager {
@@ -54,6 +55,7 @@ public class ContractsManager {
         List<ActiveContract> active = persistence.getPlayerContracts(uuid);
         
         if (active.size() >= settingsConfig.getMaxActiveContracts()) return false;
+        if (active.stream().anyMatch(contract -> contract.getContractId().equals(contractId))) return false;
         
         // Check cooldown
         Instant cooldownUntil = persistence.getPlayerCooldowns(uuid).get(contractId);
@@ -72,8 +74,14 @@ public class ContractsManager {
     }
 
     public boolean completeContract(Player player, ActiveContract ac) {
+        if (ac == null || !player.getUniqueId().equals(ac.getPlayerUuid())
+                || ac.isExpired() || !ac.isObjectiveComplete()
+                || !persistence.getPlayerContracts(player.getUniqueId()).contains(ac)) {
+            return false;
+        }
+
         ContractDefinition def = contractConfig.getContract(ac.getContractId());
-        if (def == null) return false;
+        if (def == null || economy == null) return false;
 
         double reward = def.rewardMoney();
         boolean boosted = false;
@@ -124,7 +132,23 @@ public class ContractsManager {
     }
 
     public void cleanupExpiredContracts() {
-        // Logic to run on a task to fail expired contracts
+        boolean changed = false;
+        for (Map.Entry<UUID, List<ActiveContract>> entry : persistence.getAllPlayerContracts().entrySet()) {
+            List<ActiveContract> active = entry.getValue();
+            for (java.util.Iterator<ActiveContract> iterator = active.iterator(); iterator.hasNext();) {
+                ActiveContract contract = iterator.next();
+                if (!contract.isExpired()) continue;
+
+                ContractDefinition definition = contractConfig.getContract(contract.getContractId());
+                if (definition != null) {
+                    persistence.getPlayerCooldowns(entry.getKey()).put(contract.getContractId(),
+                            Instant.now().plus(Duration.ofMinutes(definition.cooldownMinutes())));
+                }
+                iterator.remove();
+                changed = true;
+            }
+        }
+        if (changed) persistence.save();
     }
 
     public ContractConfigManager getContractConfig() { return contractConfig; }

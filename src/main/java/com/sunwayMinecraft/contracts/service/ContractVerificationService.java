@@ -18,6 +18,11 @@ public class ContractVerificationService {
     }
 
     public VerificationResult verifyCompletion(Player player, ActiveContract ac) {
+        if (ac == null || !player.getUniqueId().equals(ac.getPlayerUuid())
+                || !manager.getPersistence().getPlayerContracts(player.getUniqueId()).contains(ac)) {
+            return new VerificationResult(false, "This contract is not active for you.");
+        }
+
         ContractDefinition def = manager.getContractConfig().getContract(ac.getContractId());
         if (def == null) return new VerificationResult(false, "Contract definition not found.");
 
@@ -30,27 +35,20 @@ public class ContractVerificationService {
         if (endPoint == null) return new VerificationResult(false, "Destination endpoint not found.");
 
         // Distance check
-        if (!player.getWorld().equals(endPoint.location().getWorld()) || 
-            player.getLocation().distance(endPoint.location()) > endPoint.radius()) {
+        if (!ContractObjectiveService.isWithinEndpoint(player.getLocation(), endPoint)) {
             return new VerificationResult(false, "You must be at " + endPoint.name() + " to complete this.");
         }
 
-        switch (def.category()) {
-            case HAULING -> {
-                return verifyHauling(player, def);
-            }
-            case COURIER, SURVEY, MAINTENANCE, RECOVERY -> {
-                // For V1, these are primarily location-based or simple interact-based
-                // Maintenance might need a prior interaction flag, but for V1 we'll allow completion if at the spot.
-                return new VerificationResult(true, "Objective met.");
-            }
-            default -> {
-                return new VerificationResult(false, "Unknown contract category.");
-            }
-        }
+        return switch (def.objectiveType()) {
+            case DELIVER_MATERIALS -> verifyHauling(player, def, ac);
+            case REACH_DESTINATION -> completeObjective(ac, "Destination reached.");
+            case INTERACT_AT_DESTINATION -> ac.isObjectiveComplete()
+                    ? new VerificationResult(true, "Objective met.")
+                    : new VerificationResult(false, "Interact with the target before completing this contract.");
+        };
     }
 
-    private VerificationResult verifyHauling(Player player, ContractDefinition def) {
+    private VerificationResult verifyHauling(Player player, ContractDefinition def, ActiveContract active) {
         Map<Material, Integer> required = def.requiredMaterials();
         for (Map.Entry<Material, Integer> entry : required.entrySet()) {
             if (!player.getInventory().containsAtLeast(new ItemStack(entry.getKey()), entry.getValue())) {
@@ -63,7 +61,13 @@ public class ContractVerificationService {
             removeFromInventory(player, entry.getKey(), entry.getValue());
         }
 
-        return new VerificationResult(true, "Items delivered.");
+        return completeObjective(active, "Items delivered.");
+    }
+
+    private VerificationResult completeObjective(ActiveContract active, String message) {
+        active.completeObjective();
+        manager.getPersistence().save();
+        return new VerificationResult(true, message);
     }
 
     private void removeFromInventory(Player player, Material material, int amount) {

@@ -9,6 +9,7 @@ contracts:
     start_endpoint: city_depot
     end_endpoint: city_depot
     objective_description: "Turn in 64 Stone to the City Depot."
+    objective_type: DELIVER_MATERIALS
     required_materials:
       STONE: 64
   courier_documents:
@@ -21,6 +22,7 @@ contracts:
     start_endpoint: city_depot
     end_endpoint: town_hall
     objective_description: "Reach the Town Hall."
+    objective_type: REACH_DESTINATION
   maintenance_lamp:
     category: MAINTENANCE
     name: "Street Lamp Repair"
@@ -31,3 +33,4 @@ contracts:
     start_endpoint: city_depot
     end_endpoint: lamp_plaza
     objective_description: "Interact with the lamp at the plaza."
+    objective_type: INTERACT_AT_DESTINATION

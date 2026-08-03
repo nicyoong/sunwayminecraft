@@ -21,6 +21,7 @@ import com.sunwayMinecraft.city.metrics.CityMetricsManager;
 import com.sunwayMinecraft.contracts.config.*;
 import com.sunwayMinecraft.contracts.persistence.ContractPersistenceService;
 import com.sunwayMinecraft.contracts.service.*;
+import com.sunwayMinecraft.contracts.listener.ContractObjectiveListener;
 import com.sunwayMinecraft.events.config.*;
 import com.sunwayMinecraft.events.persistence.EventPersistenceService;
 import com.sunwayMinecraft.events.service.*;
@@ -206,6 +207,9 @@ public class PluginInitializer {
     Economy econ = getEconomy();
     contractsManager = new ContractsManager(plugin, contractConfig, endpointConfig, settingsConfig, persistence, econ);
     contractVerificationService = new ContractVerificationService(contractsManager);
+    plugin.getServer().getPluginManager().registerEvents(
+        new ContractObjectiveListener(new ContractObjectiveService(contractsManager)), plugin);
+    plugin.getServer().getScheduler().runTaskTimer(plugin, contractsManager::cleanupExpiredContracts, 20L, 1200L);
   }
 
   private void initEventsSystem() {
