@@ -24,6 +24,9 @@ public final class SunwayMinecraft extends JavaPlugin {
 
   @Override
   public void onDisable() {
+    if (initializer != null && initializer.getCityMetricsManager() != null) {
+      initializer.getCityMetricsManager().save();
+    }
     if (initializer.getCoinFlipDatabase() != null) {
       initializer.getCoinFlipDatabase().close();
     }

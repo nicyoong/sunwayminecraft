@@ -120,6 +120,9 @@ public class PluginInitializer {
   private void initMetricsSystem() {
     cityMetricsManager = new CityMetricsManager(plugin);
     cityMetricsManager.initialize();
+
+    // persist city metrics every 5 minutes so counters survive restarts
+    plugin.getServer().getScheduler().runTaskTimer(plugin, cityMetricsManager::save, 6000L, 6000L);
   }
 
   private void initBeaconSystem() {
