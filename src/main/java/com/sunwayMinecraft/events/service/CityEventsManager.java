@@ -101,6 +101,10 @@ public class CityEventsManager {
         return false;
     }
 
+    public void saveActiveEvents() {
+        persistence.save(activeEvents);
+    }
+
     private void announceStart(ActiveCityEvent ac) {
         if (!settingsManager.isAutoAnnouncements()) return;
         CityEventDefinition def = configManager.getEvent(ac.getEventId());

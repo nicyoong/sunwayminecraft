@@ -27,6 +27,9 @@ public final class SunwayMinecraft extends JavaPlugin {
     if (initializer != null && initializer.getCityMetricsManager() != null) {
       initializer.getCityMetricsManager().save();
     }
+    if (initializer != null && initializer.getCityEventsManager() != null) {
+      initializer.getCityEventsManager().saveActiveEvents();
+    }
     if (initializer.getCoinFlipDatabase() != null) {
       initializer.getCoinFlipDatabase().close();
     }
