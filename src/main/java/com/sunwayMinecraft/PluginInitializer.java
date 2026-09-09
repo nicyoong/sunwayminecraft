@@ -27,6 +27,7 @@ import com.sunwayMinecraft.events.persistence.EventPersistenceService;
 import com.sunwayMinecraft.events.service.*;
 import com.sunwayMinecraft.utils.ConfigLoader;
 import net.milkbowl.vault.economy.Economy;
+import org.bukkit.plugin.RegisteredServiceProvider;
 import com.sunwayMinecraft.SunwayMinecraft;
 
 @SuppressWarnings("this-escape")
@@ -238,7 +239,13 @@ public class PluginInitializer {
 
   private Economy getEconomy() {
     if (plugin.getServer().getPluginManager().getPlugin("Vault") == null) return null;
-    return plugin.getServer().getServicesManager().getRegistration(Economy.class).getProvider();
+    RegisteredServiceProvider<Economy> registration =
+        plugin.getServer().getServicesManager().getRegistration(Economy.class);
+    if (registration == null) {
+      plugin.getLogger().severe("Vault is present but no economy provider is registered; economy features are disabled");
+      return null;
+    }
+    return registration.getProvider();
   }
 
   // ──────── getters for CommandRegistrar ─────────
