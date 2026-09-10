@@ -1,5 +1,7 @@
 package com.sunwayMinecraft.coinflip;
 
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.mockbukkit.mockbukkit.MockBukkit;
 import org.mockbukkit.mockbukkit.ServerMock;
 import org.mockbukkit.mockbukkit.entity.PlayerMock;
@@ -38,6 +40,18 @@ class ItemCoinFlipSystemTest {
         MockBukkit.unmock();
     }
 
+    private static Component legacy(String text) {
+        return LegacyComponentSerializer.legacySection().deserialize(text);
+    }
+
+    // MockBukkit deprecated both assertSaid overloads mid-migration to its matcher API;
+    // this keeps the same consume-and-compare semantics on the supported primitive.
+    private void assertSaid(Component expected) {
+        Component actual = player.nextComponentMessage();
+        assertNotNull(actual, "No more messages were sent");
+        assertEquals(expected, actual);
+    }
+
     @Test
     void testProcessItemFlipSuccessWin() {
         ItemStack diamonds = new ItemStack(Material.DIAMOND, 10);
@@ -56,7 +70,7 @@ class ItemCoinFlipSystemTest {
         }
         assertEquals(15, totalDiamonds);
         player.nextMessage(); // Consume "You bet..." message
-        player.assertSaid("§aYou won §ex10 diamond");
+        assertSaid(legacy("§aYou won §ex10 diamond"));
         verify(database).updateStats(any(PlayerStats.class));
     }
 
@@ -71,7 +85,7 @@ class ItemCoinFlipSystemTest {
 
         assertEquals(5, player.getInventory().getItemInMainHand().getAmount());
         player.nextMessage(); // Consume "You bet..." message
-        player.assertSaid("§cYou lost §ex5 diamond");
+        assertSaid(legacy("§cYou lost §ex5 diamond"));
         verify(database).updateStats(any(PlayerStats.class));
     }
 
@@ -82,7 +96,7 @@ class ItemCoinFlipSystemTest {
 
         itemCoinFlipSystem.processItemFlip(player, 1, true);
 
-        player.assertSaid("§cYou cannot bet non-stackable items like tools or weapons!");
+        assertSaid(legacy("§cYou cannot bet non-stackable items like tools or weapons!"));
         verify(coinFlipSystem, never()).processFlipLogic(anyBoolean());
     }
 
@@ -94,7 +108,7 @@ class ItemCoinFlipSystemTest {
         itemCoinFlipSystem.processItemFlip(player, 5, true);
 
         player.nextMessage(); // Consume "You bet..." message
-        player.assertSaid("§cYou only have 2 of that item!");
+        assertSaid(legacy("§cYou only have 2 of that item!"));
         verify(coinFlipSystem, never()).processFlipLogic(anyBoolean());
     }
 
@@ -106,7 +120,7 @@ class ItemCoinFlipSystemTest {
         itemCoinFlipSystem.processItemFlip(player, 0, true);
 
         player.nextMessage(); // Consume "You bet..." message
-        player.assertSaid("§cInvalid bet amount! Must be at least 1.");
+        assertSaid(legacy("§cInvalid bet amount! Must be at least 1."));
         verify(coinFlipSystem, never()).processFlipLogic(anyBoolean());
     }
 
@@ -119,7 +133,7 @@ class ItemCoinFlipSystemTest {
         itemCoinFlipSystem.processItemFlip(player, 65, true);
 
         player.nextMessage(); // Consume "You bet..." message
-        player.assertSaid("§cMaximum bet is 64 (1 stack)!");
+        assertSaid(legacy("§cMaximum bet is 64 (1 stack)!"));
         verify(coinFlipSystem, never()).processFlipLogic(anyBoolean());
     }
 
@@ -129,6 +143,6 @@ class ItemCoinFlipSystemTest {
 
         itemCoinFlipSystem.processItemFlip(player, 5, true);
 
-        player.assertSaid("§cYou must hold an item in your hand!");
+        assertSaid(legacy("§cYou must hold an item in your hand!"));
     }
 }

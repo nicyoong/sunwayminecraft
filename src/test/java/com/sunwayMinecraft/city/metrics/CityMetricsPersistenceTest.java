@@ -72,6 +72,10 @@ class CityMetricsPersistenceTest {
                 "counter saved on shutdown must survive a restart");
     }
 
+    // MockBukkit's PluginManagerMock.registerEvents resolves listeners through
+    // plugin.getPluginLoader(), so the stub is functionally required. Revisit when
+    // Paper completes its plugin-loader rework (both members are deprecated for removal).
+    @SuppressWarnings({"removal", "deprecation"})
     private SunwayMinecraft pluginMock() throws Exception {
         SunwayMinecraft plugin = mock(SunwayMinecraft.class);
         when(plugin.getServer()).thenReturn(server);

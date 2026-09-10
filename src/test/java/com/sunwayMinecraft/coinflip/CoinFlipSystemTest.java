@@ -3,6 +3,8 @@ package com.sunwayMinecraft.coinflip;
 import org.mockbukkit.mockbukkit.MockBukkit;
 import org.mockbukkit.mockbukkit.ServerMock;
 import org.mockbukkit.mockbukkit.entity.PlayerMock;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.milkbowl.vault.economy.Economy;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -38,6 +40,18 @@ class CoinFlipSystemTest {
         MockBukkit.unmock();
     }
 
+    private static Component legacy(String text) {
+        return LegacyComponentSerializer.legacySection().deserialize(text);
+    }
+
+    // MockBukkit deprecated both assertSaid overloads mid-migration to its matcher API;
+    // this keeps the same consume-and-compare semantics on the supported primitive.
+    private void assertSaid(Component expected) {
+        Component actual = player.nextComponentMessage();
+        assertNotNull(actual, "No more messages were sent");
+        assertEquals(expected, actual);
+    }
+
     @Test
     void testProcessCoinFlipWin() {
         double amount = 100.0;
@@ -51,7 +65,7 @@ class CoinFlipSystemTest {
         verify(econ, times(1)).depositPlayer(player, amount * 2);
         verify(database).updateStats(any(PlayerStats.class));
         player.nextMessage(); // Consume "You bet..." message
-        player.assertSaid("§aYou won §e$100.00");
+        assertSaid(legacy("§aYou won §e$100.00"));
     }
 
     @Test
@@ -67,7 +81,7 @@ class CoinFlipSystemTest {
         verify(econ, never()).depositPlayer(eq(player), anyDouble());
         verify(database).updateStats(any(PlayerStats.class));
         player.nextMessage(); // Consume "You bet..." message
-        player.assertSaid("§cYou lost §e$100.00");
+        assertSaid(legacy("§cYou lost §e$100.00"));
     }
 
     @Test
@@ -78,7 +92,7 @@ class CoinFlipSystemTest {
         coinFlipSystem.processCoinFlip(player, amount, true);
 
         verify(econ, never()).withdrawPlayer(any(org.bukkit.OfflinePlayer.class), anyDouble());
-        player.assertSaid("§cInsufficient funds!");
+        assertSaid(legacy("§cInsufficient funds!"));
     }
 
     @Test
@@ -87,11 +101,11 @@ class CoinFlipSystemTest {
 
         coinFlipSystem.handleMute(player, true);
         assertTrue(coinFlipSystem.isMuted(player));
-        player.assertSaid("§6Coin flip messages muted.");
+        assertSaid(legacy("§6Coin flip messages muted."));
 
         coinFlipSystem.handleMute(player, false);
         assertFalse(coinFlipSystem.isMuted(player));
-        player.assertSaid("§6Coin flip messages unmuted.");
+        assertSaid(legacy("§6Coin flip messages unmuted."));
     }
 
     @Test
@@ -108,7 +122,7 @@ class CoinFlipSystemTest {
         coinFlipSystem.processCoinFlip(player, amount, true);
 
         // Should have said the bet message
-        player.assertSaid("§aYou bet heads with $100.00");
+        assertSaid(legacy("§aYou bet heads with $100.00"));
         // But NOT the result message
         assertNull(player.nextMessage());
     }
