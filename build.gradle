@@ -55,6 +55,10 @@ dependencies {
     // Vault
     compileOnly ("com.github.MilkBowl:VaultAPI:1.7.1")
 
+    // SQLite JDBC for CoinFlipDatabase; provided by Paper at runtime,
+    // compileOnly so we don't shade a duplicate driver
+    compileOnly 'org.xerial:sqlite-jdbc:3.53.4.0'
+
     // Essentials
     // compileOnly ("net.essentialsx:EssentialsX:2.21.1")
 }
