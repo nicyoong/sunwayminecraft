@@ -1,4 +1,5 @@
 # SunwayMinecraft Plugin  
+[![Build](https://github.com/nicyoong/sunwayminecraft/actions/workflows/build.yml/badge.svg)](https://github.com/nicyoong/sunwayminecraft/actions/workflows/build.yml)  
 **Enhance Your Minecraft Experience**  
 *A collection of gameplay systems for Sunway Minecraft servers*  
 
