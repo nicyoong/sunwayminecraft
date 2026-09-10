@@ -9,7 +9,8 @@ import java.io.File;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.*;
-        import java.util.stream.Collectors;
+import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 public class YamlResidencyRepository implements ResidencyRepository {
     private final JavaPlugin plugin;
@@ -29,7 +30,7 @@ public class YamlResidencyRepository implements ResidencyRepository {
     public void load() {
         if (!plugin.getDataFolder().exists()) plugin.getDataFolder().mkdirs();
         if (!file.exists()) {
-            try { file.createNewFile(); } catch (IOException ignored) {}
+            try { file.createNewFile(); } catch (IOException e) { plugin.getLogger().log(Level.WARNING, "Could not create residency data file", e); }
         }
         yaml = YamlConfiguration.loadConfiguration(file);
         tenancies.clear(); roles.clear(); guests.clear(); escrows.clear();
@@ -84,7 +85,7 @@ public class YamlResidencyRepository implements ResidencyRepository {
             yaml.set(p + "next-due-at", rec.getNextDueAt() == null ? null : rec.getNextDueAt().toString());
             yaml.set(p + "approval-required", rec.isApprovalRequired());
         }
-        try { yaml.save(file); } catch (IOException e) { plugin.getLogger().severe("Failed to save residency data: " + e.getMessage()); }
+        try { yaml.save(file); } catch (IOException e) { plugin.getLogger().log(Level.SEVERE, "Failed to save residency data", e); }
     }
 
     @Override public UnitTenancyRecord getTenancy(String unitId) { return tenancies.computeIfAbsent(unitId.toLowerCase(), UnitTenancyRecord::new); }
