@@ -15,7 +15,6 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.attribute.Attribute;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
-import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import java.util.*;
 
@@ -51,6 +50,8 @@ public class PetSearchTask extends BukkitRunnable {
   private final LinkedList<String> lastChunks = new LinkedList<>();
   private int totalChunks;
   private int processedChunks = 0;
+  private int lastLoggedChunks = -1;
+  private boolean done = false;
   private int dogCount = 0;
   private int catCount = 0;
 
@@ -116,6 +117,7 @@ public class PetSearchTask extends BukkitRunnable {
     }
 
     if (entities.isEmpty()) {
+      done = true;
       sendFinalResults();
       manager.setSearchComplete();
       this.cancel();
@@ -139,8 +141,10 @@ public class PetSearchTask extends BukkitRunnable {
       }
     }
 
-    // Log every 10 chunks
-    if (processedChunks % 10 == 0 && !lastChunks.isEmpty()) {
+    // Log every 10 chunks; only when the count advanced and the search is not done
+    if (!done && processedChunks % 10 == 0 && processedChunks > lastLoggedChunks
+        && !lastChunks.isEmpty()) {
+      lastLoggedChunks = processedChunks;
       plugin.getLogger().info("Total chunks: " + totalChunks);
       plugin.getLogger().info("Recent chunks: " + String.join(", ", lastChunks));
     }
