@@ -11,6 +11,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
 
 /**
  * Schedules and coordinates a batched container scan over loaded chunks.
@@ -115,8 +116,7 @@ public class ContainerSearchTask extends BukkitRunnable {
         } catch (Exception e) {
             manager.markSearchCompleteWithoutCache();
             sender.sendMessage("§cContainer scan finished, but writing the report failed.");
-            plugin.getLogger().severe("Container scan report write failed: " + e.getMessage());
-            e.printStackTrace();
+            plugin.getLogger().log(Level.SEVERE, "Container scan report write failed", e);
         }
     }
 
