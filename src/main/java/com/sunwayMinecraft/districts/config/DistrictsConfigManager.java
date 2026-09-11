@@ -2,6 +2,7 @@ package com.sunwayMinecraft.districts.config;
 
 import com.sunwayMinecraft.districts.domain.ApprovalBias;
 import com.sunwayMinecraft.districts.domain.DistrictAccessRule;
+import com.sunwayMinecraft.districts.domain.DistrictControlProfile;
 import com.sunwayMinecraft.districts.domain.DistrictDefinition;
 import com.sunwayMinecraft.districts.domain.DistrictOwnership;
 import com.sunwayMinecraft.districts.domain.DistrictType;
@@ -46,6 +47,7 @@ public class DistrictsConfigManager {
     private final Map<String, DistrictOwnership> ownershipOverrides = new LinkedHashMap<>();
     private final Map<String, DistrictType> typeOverrides = new LinkedHashMap<>();
     private final File overridesFile;
+    private final Map<String, DistrictControlProfile> controlProfiles = new LinkedHashMap<>();
 
     public DistrictsConfigManager(JavaPlugin plugin) {
         this(plugin, defaultAlignmentValidator(plugin));
@@ -138,6 +140,11 @@ public class DistrictsConfigManager {
 
         DistrictShape shape = readShape(world, id, section);
         DistrictOwnership ownership = parseOwnership(id, section);
+        controlProfiles.put(key, new DistrictControlProfile(
+                section.getBoolean("contest_enabled", false),
+                section.getInt("points_required_to_capture", -1),
+                section.getDouble("control_point_radius", -1),
+                section.getInt("contest_cooldown_seconds", -1)));
 
         return new DistrictDefinition(
             id,
@@ -259,6 +266,36 @@ public class DistrictsConfigManager {
                 + "' references missing property policy '" + referenced + "'; falling back to '"
                 + DEFAULT_PROPERTY_POLICY + "'.");
         return DEFAULT_PROPERTY_POLICY;
+    }
+
+    /** Per-district contest profile; sentinel values mean "use global settings". */
+    public DistrictControlProfile getControlProfile(String districtId) {
+        return controlProfiles.getOrDefault(districtId.toLowerCase(Locale.ROOT),
+                new DistrictControlProfile(false, -1, -1, -1));
+    }
+
+    /** Runtime ownership merge used by the control system (not persisted to overrides). */
+    public void applyRuntimeOwnership(String districtId, DistrictOwnership ownership) {
+        DistrictDefinition existing = districts.get(districtId.toLowerCase(Locale.ROOT));
+        if (existing == null || ownership == null) {
+            return;
+        }
+        districts.put(districtId.toLowerCase(Locale.ROOT),
+                existing.getDefinitionWith(ownership, existing.getDistrictType()));
+    }
+
+    /** Display name of an alignment, read from alignments.yml, or the id. */
+    public String alignmentDisplayName(String alignmentId) {
+        if (alignmentId == null) {
+            return alignmentId;
+        }
+        File file = new File(plugin.getDataFolder(), "alignments.yml");
+        if (!file.exists()) {
+            return alignmentId;
+        }
+        YamlConfiguration alignments = YamlConfiguration.loadConfiguration(file);
+        return alignments.getString("alignments." + alignmentId.toLowerCase(Locale.ROOT)
+                + ".display_name", alignmentId);
     }
 
     // ───────────────────── runtime mutations (admin) ─────────────────────
