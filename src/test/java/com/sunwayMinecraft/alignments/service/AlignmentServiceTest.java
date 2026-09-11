@@ -32,6 +32,7 @@ class AlignmentServiceTest {
     private AlignmentRepository repository;
     private AlignmentCooldownManager cooldownManager;
     private AlignmentMembershipCache cache;
+    private AlignmentPerkService perkService;
     private AlignmentService service;
 
     private final UUID playerUuid = UUID.randomUUID();
@@ -49,11 +50,15 @@ class AlignmentServiceTest {
         repository = mock(AlignmentRepository.class);
         cooldownManager = mock(AlignmentCooldownManager.class);
         cache = mock(AlignmentMembershipCache.class);
+        perkService = mock(AlignmentPerkService.class);
+        when(perkService.applyCooldownReduction(any(UUID.class), anyLong()))
+            .thenAnswer(invocation -> invocation.getArgument(1));
         when(repository.isAvailable()).thenReturn(true);
         when(settings.getSwitchCooldownSeconds()).thenReturn(0L);
         when(settings.isCooldownAppliesToLeave()).thenReturn(false);
         when(cooldownManager.getRemainingSeconds(any(UUID.class), anyLong())).thenReturn(0L);
-        service = new AlignmentService(configManager, settings, repository, cooldownManager, cache);
+        service = new AlignmentService(
+            configManager, settings, repository, cooldownManager, cache, perkService);
     }
 
     @Test

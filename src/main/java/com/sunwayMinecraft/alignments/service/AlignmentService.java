@@ -24,18 +24,21 @@ public class AlignmentService {
   private final AlignmentRepository repository;
   private final AlignmentCooldownManager cooldownManager;
   private final AlignmentMembershipCache cache;
+  private final AlignmentPerkService perkService;
 
   public AlignmentService(
       AlignmentConfigManager configManager,
       AlignmentSettingsConfig settings,
       AlignmentRepository repository,
       AlignmentCooldownManager cooldownManager,
-      AlignmentMembershipCache cache) {
+      AlignmentMembershipCache cache,
+      AlignmentPerkService perkService) {
     this.configManager = configManager;
     this.settings = settings;
     this.repository = repository;
     this.cooldownManager = cooldownManager;
     this.cache = cache;
+    this.perkService = perkService;
   }
 
   /** True when membership persistence is usable and changes can be applied. */
@@ -59,8 +62,9 @@ public class AlignmentService {
       return AlignmentResult.DATABASE_FAILURE;
     }
     if (!bypassCooldown) {
-      long remaining =
-          cooldownManager.getRemainingSeconds(playerUuid, settings.getSwitchCooldownSeconds());
+      long window =
+          perkService.applyCooldownReduction(playerUuid, settings.getSwitchCooldownSeconds());
+      long remaining = cooldownManager.getRemainingSeconds(playerUuid, window);
       if (remaining > 0) {
         return AlignmentResult.COOLDOWN_ACTIVE;
       }
@@ -154,18 +158,75 @@ public class AlignmentService {
     return AlignmentResult.LEFT;
   }
 
-  /** Seconds until the player may join an alignment again; 0 when free. */
-  public long getRemainingCooldownSeconds(UUID playerUuid) {
-    return cooldownManager.getRemainingSeconds(playerUuid, settings.getSwitchCooldownSeconds());
-  }
-
   public AlignmentCooldownManager getCooldownManager() {
     return cooldownManager;
+  }
+
+  /** Adds (or removes for negative deltas) reputation; updates cache and rank. */
+  public AlignmentResult adjustReputation(UUID playerUuid, int delta) {
+    return mutateReputation(playerUuid, current -> current + delta);
+  }
+
+  /** Sets reputation directly; updates cache and rank. */
+  public AlignmentResult setReputation(UUID playerUuid, int reputation) {
+    return mutateReputation(playerUuid, current -> reputation);
+  }
+
+  private AlignmentResult mutateReputation(UUID playerUuid, java.util.function.IntUnaryOperator operator) {
+    if (!isAvailable()) {
+      return AlignmentResult.DATABASE_FAILURE;
+    }
+    Optional<AlignmentMembership> existing = repository.findByUuid(playerUuid);
+    if (existing.isEmpty()) {
+      return AlignmentResult.NOT_ALIGNED;
+    }
+    Optional<AlignmentDefinition> definition =
+        configManager.getAlignment(existing.get().alignmentId());
+    if (definition.isEmpty()) {
+      return AlignmentResult.NOT_FOUND;
+    }
+    int updated = Math.max(0, operator.applyAsInt(existing.get().reputation()));
+    AlignmentMembership membership = new AlignmentMembership(
+        playerUuid, existing.get().alignmentId(), existing.get().joinedAt(),
+        updated, existing.get().status());
+    if (!repository.upsert(membership)) {
+      return AlignmentResult.DATABASE_FAILURE;
+    }
+    cache.update(playerUuid, membership, definition.get());
+    LOGGER.info("Reputation of player " + playerUuid + " set to " + updated);
+    return AlignmentResult.JOINED;
+  }
+
+  /** Seconds until the player may join again, honouring perk cooldown reduction. */
+  public long getRemainingCooldownSeconds(UUID playerUuid) {
+    long window =
+        perkService.applyCooldownReduction(playerUuid, settings.getSwitchCooldownSeconds());
+    return cooldownManager.getRemainingSeconds(playerUuid, window);
   }
 
   /** Member count per alignment id across database, empty on failure. */
   public Map<String, Integer> getAlignmentMemberCounts() {
     return repository.countByAlignment();
+  }
+
+  /** Live totals per alignment: summed reputation and member count. */
+  public Map<String, long[]> getAlignmentTotals() {
+    return repository.getAlignmentTotals();
+  }
+
+  /** 1-based reputation position of the player inside their alignment. */
+  public int getReputationPosition(UUID playerUuid) {
+    Optional<AlignmentMembership> membership = repository.findByUuid(playerUuid);
+    if (membership.isEmpty()) {
+      return 0;
+    }
+    return repository.getReputationPosition(
+        membership.get().alignmentId(), membership.get().reputation());
+  }
+
+  /** Alignment id of the player's membership, if any. */
+  public Optional<String> getAlignmentId(UUID playerUuid) {
+    return repository.findByUuid(playerUuid).map(AlignmentMembership::alignmentId);
   }
 
   public Optional<AlignmentMembership> getMembership(UUID playerUuid) {
