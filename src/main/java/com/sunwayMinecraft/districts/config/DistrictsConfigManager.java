@@ -5,6 +5,7 @@ import com.sunwayMinecraft.districts.domain.DistrictAccessRule;
 import com.sunwayMinecraft.districts.domain.DistrictDefinition;
 import com.sunwayMinecraft.districts.domain.DistrictOwnership;
 import com.sunwayMinecraft.districts.domain.DistrictType;
+import com.sunwayMinecraft.districts.region.DistrictShape;
 import com.sunwayMinecraft.districts.region.Region3i;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -42,6 +43,9 @@ public class DistrictsConfigManager {
     private final Map<String, DistrictDefinition> districts = new LinkedHashMap<>();
     private YamlConfiguration config;
     private Set<String> knownPolicyIds = Set.of();
+    private final Map<String, DistrictOwnership> ownershipOverrides = new LinkedHashMap<>();
+    private final Map<String, DistrictType> typeOverrides = new LinkedHashMap<>();
+    private final File overridesFile;
 
     public DistrictsConfigManager(JavaPlugin plugin) {
         this(plugin, defaultAlignmentValidator(plugin));
@@ -50,6 +54,7 @@ public class DistrictsConfigManager {
     public DistrictsConfigManager(JavaPlugin plugin, Predicate<String> knownAlignmentId) {
         this.plugin = plugin;
         this.knownAlignmentId = knownAlignmentId;
+        this.overridesFile = new File(plugin.getDataFolder(), "district-overrides.yml");
     }
 
     /**
@@ -102,6 +107,7 @@ public class DistrictsConfigManager {
                         + "; entry skipped.");
             }
         }
+        applyOverrides();
     }
 
     private DistrictDefinition parseDistrict(String id, String key, ConfigurationSection section) {
@@ -130,7 +136,7 @@ public class DistrictsConfigManager {
         boolean allowPublicEvents = flags != null && flags.getBoolean("allow-public-events", false);
         boolean signatureArea = flags != null && flags.getBoolean("signature-area", false);
 
-        Region3i region = readRegion(world, section.getConfigurationSection("region"));
+        DistrictShape shape = readShape(world, id, section);
         DistrictOwnership ownership = parseOwnership(id, section);
 
         return new DistrictDefinition(
@@ -138,7 +144,7 @@ public class DistrictsConfigManager {
             displayName,
             blankToNull(shortName),
             world,
-            region,
+            shape,
             enabled,
             type,
             prestigeTier,
@@ -255,6 +261,118 @@ public class DistrictsConfigManager {
         return DEFAULT_PROPERTY_POLICY;
     }
 
+    // ───────────────────── runtime mutations (admin) ─────────────────────
+
+    /** Replaces a district's ownership at runtime. Logs the admin change. */
+    public void updateOwnership(String districtId, DistrictOwnership ownership, String actor) {
+        DistrictDefinition existing = districts.get(districtId.toLowerCase(Locale.ROOT));
+        if (existing == null) {
+            throw new IllegalArgumentException("Unknown district: " + districtId);
+        }
+        districts.put(districtId.toLowerCase(Locale.ROOT),
+                existing.getDefinitionWith(ownership, existing.getDistrictType()));
+        ownershipOverrides.put(districtId.toLowerCase(Locale.ROOT), ownership);
+        plugin.getLogger().info("[Districts] " + actor + " set ownership of '" + districtId + "' to "
+                + (ownership.alignmentOwner() != null ? ownership.alignmentOwner() : "neutral"));
+    }
+
+    /** Replaces a district's type at runtime. Logs the admin change. */
+    public void updateDistrictType(String districtId, DistrictType type, String actor) {
+        DistrictDefinition existing = districts.get(districtId.toLowerCase(Locale.ROOT));
+        if (existing == null) {
+            throw new IllegalArgumentException("Unknown district: " + districtId);
+        }
+        districts.put(districtId.toLowerCase(Locale.ROOT),
+                existing.getDefinitionWith(existing.getOwnership(), type));
+        typeOverrides.put(districtId.toLowerCase(Locale.ROOT), type);
+        plugin.getLogger().info("[Districts] " + actor + " set type of '" + districtId + "' to " + type);
+    }
+
+    /** Persists runtime mutations to district-overrides.yml. */
+    public void saveOverrides() {
+        YamlConfiguration out = new YamlConfiguration();
+        for (Map.Entry<String, DistrictOwnership> entry : ownershipOverrides.entrySet()) {
+            DistrictOwnership o = entry.getValue();
+            String base = "overrides." + entry.getKey() + ".";
+            if (o.alignmentOwner() != null) out.set(base + "alignment_owner", o.alignmentOwner());
+            if (o.grandAllianceOwner() != null) out.set(base + "grand_alliance_owner", o.grandAllianceOwner());
+            out.set(base + "allowed_alignments", o.allowedAlignments());
+            out.set(base + "denied_alignments", o.deniedAlignments());
+            if (o.homeCampus() != null) out.set(base + "home_campus", o.homeCampus());
+            if (o.propertyPolicy() != null) out.set(base + "property_policy", o.propertyPolicy());
+            out.set(base + "transit_connected", o.transitConnected());
+            out.set(base + "contested", o.contested());
+        }
+        for (Map.Entry<String, DistrictType> entry : typeOverrides.entrySet()) {
+            out.set("overrides." + entry.getKey() + ".district-type", entry.getValue().name());
+        }
+        try {
+            out.save(overridesFile);
+            plugin.getLogger().info("[Districts] Saved " + (ownershipOverrides.size() + typeOverrides.size())
+                    + " override(s) to district-overrides.yml");
+        } catch (java.io.IOException e) {
+            plugin.getLogger().severe("[Districts] Could not save district overrides: " + e.getMessage());
+        }
+    }
+
+    /** Re-applies saved runtime mutations after districts.yml is parsed. */
+    private void applyOverrides() {
+        if (!overridesFile.exists()) {
+            return;
+        }
+        YamlConfiguration overrides = YamlConfiguration.loadConfiguration(overridesFile);
+        ConfigurationSection root = overrides.getConfigurationSection("overrides");
+        if (root == null) {
+            return;
+        }
+        for (String key : root.getKeys(false)) {
+            DistrictDefinition existing = districts.get(key);
+            if (existing == null) {
+                plugin.getLogger().warning("[Districts] Override for unknown district '" + key + "'; ignored.");
+                continue;
+            }
+            ConfigurationSection section = root.getConfigurationSection(key);
+            DistrictOwnership current = existing.getOwnership();
+            DistrictOwnership ownership = new DistrictOwnership(
+                    section.getString("home_campus", current.homeCampus()),
+                    section.getString("grand_alliance_owner", current.grandAllianceOwner()),
+                    section.getString("alignment_owner", current.alignmentOwner()),
+                    section.contains("allowed_alignments")
+                            ? section.getStringList("allowed_alignments")
+                            : current.allowedAlignments(),
+                    section.contains("denied_alignments")
+                            ? section.getStringList("denied_alignments")
+                            : current.deniedAlignments(),
+                    section.getString("property_policy", current.propertyPolicy()),
+                    section.getBoolean("transit_connected", current.transitConnected()),
+                    section.getBoolean("contested", current.contested()));
+            DistrictType type = section.contains("district-type")
+                    ? parseTypeSafe(section.getString("district-type"), key)
+                    : existing.getDistrictType();
+            districts.put(key, existing.getDefinitionWith(ownership, type));
+        }
+        plugin.getLogger().info("[Districts] Applied district overrides from district-overrides.yml");
+    }
+
+    private DistrictType parseTypeSafe(String raw, String key) {
+        try {
+            return DistrictType.valueOf(raw.toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException e) {
+            plugin.getLogger().warning("[Districts] Invalid overridden district-type for '" + key + "'");
+            return districts.containsKey(key) ? districts.get(key).getDistrictType() : DistrictType.MIXED_USE;
+        }
+    }
+
+    /** Grand alliance id of an alignment, read from alignments.yml, or null. */
+    public String allianceOfAlignment(String alignmentId) {
+        File file = new File(plugin.getDataFolder(), "alignments.yml");
+        if (!file.exists() || alignmentId == null) {
+            return null;
+        }
+        YamlConfiguration alignments = YamlConfiguration.loadConfiguration(file);
+        return alignments.getString("alignments." + alignmentId.toLowerCase(Locale.ROOT) + ".grand_alliance");
+    }
+
     private void ensureDefaultFile() {
         if (!plugin.getDataFolder().exists()) {
             plugin.getDataFolder().mkdirs();
@@ -359,16 +477,38 @@ public class DistrictsConfigManager {
         return config;
     }
 
-    private Region3i readRegion(String world, ConfigurationSection section) {
-        if (section == null) {
+    /**
+     * Reads the district shape: {@code shape: point_radius} with
+     * center_x/y/z and radius, or the classic cuboid {@code region} section.
+     * Invalid shapes throw so the entry is skipped with a logged warning.
+     */
+    private DistrictShape readShape(String world, String id, ConfigurationSection section) {
+        String shape = section.getString("shape", "cuboid");
+        if ("point_radius".equalsIgnoreCase(shape)) {
+            ConfigurationSection center = section.getConfigurationSection("center");
+            if (center == null) {
+                throw new IllegalArgumentException("point_radius requires a center section");
+            }
+            double radius = center.getDouble("radius", section.getDouble("radius", 0));
+            if (radius <= 0) {
+                throw new IllegalArgumentException("point_radius requires a positive radius");
+            }
+            return DistrictShape.pointRadius(world,
+                center.getDouble("x"), center.getDouble("y"), center.getDouble("z"), radius);
+        }
+        if (!"cuboid".equalsIgnoreCase(shape)) {
+            throw new IllegalArgumentException("unknown shape '" + shape + "' (use cuboid or point_radius)");
+        }
+        ConfigurationSection regionSection = section.getConfigurationSection("region");
+        if (regionSection == null) {
             throw new IllegalArgumentException("Missing region section");
         }
-        ConfigurationSection min = section.getConfigurationSection("min");
-        ConfigurationSection max = section.getConfigurationSection("max");
+        ConfigurationSection min = regionSection.getConfigurationSection("min");
+        ConfigurationSection max = regionSection.getConfigurationSection("max");
         if (min == null || max == null) {
             throw new IllegalArgumentException("Region must have min and max");
         }
-        return new Region3i(
+        return DistrictShape.cuboid(new Region3i(
             world,
             min.getInt("x"),
             min.getInt("y"),
@@ -376,7 +516,7 @@ public class DistrictsConfigManager {
             max.getInt("x"),
             max.getInt("y"),
             max.getInt("z")
-        );
+        ));
     }
 
     private String blankToNull(String value) {
