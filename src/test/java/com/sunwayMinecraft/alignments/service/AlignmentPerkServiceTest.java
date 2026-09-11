@@ -11,7 +11,6 @@ import com.sunwayMinecraft.alignments.service.AlignmentMembershipCache.CachedMem
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffectType;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.Optional;
@@ -227,14 +226,12 @@ class AlignmentPerkServiceTest {
     }
 
     @Test
-    @Disabled("BUG-QA3 (medium): perks are applied once and never refreshed. reconcile() "
-            + "only calls addPotionEffect when the perk is not yet tracked, so the short "
-            + "PotionEffect (duration_seconds, default 15s) expires while the service keeps "
-            + "the perk marked active - players silently lose perks. Desired perks should be "
-            + "re-applied on every refresh pass.")
     void desiredPerksAreRefreshedOnEveryPass() {
         service.reconcile(player, membership(150), azureHearth);
-        service.reconcile(player, membership(150), azureHearth);
         org.mockito.Mockito.verify(player, org.mockito.Mockito.times(2)).addPotionEffect(any());
+        // steward: swiftness + diligence must be re-applied on the second pass so the
+        // short effects never lapse while the player stays eligible
+        service.reconcile(player, membership(150), azureHearth);
+        org.mockito.Mockito.verify(player, org.mockito.Mockito.times(4)).addPotionEffect(any());
     }
 }

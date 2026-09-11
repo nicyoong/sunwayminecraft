@@ -11,7 +11,6 @@ import com.sunwayMinecraft.alignments.persistence.AlignmentSeasonRepository;
 import com.sunwayMinecraft.alignments.persistence.AlignmentSeasonRepository.SeasonState;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -217,10 +216,6 @@ class AlignmentSeasonServiceTest {
     }
 
     @Test
-    @Disabled("BUG-QA4 (medium): /align leaderboard season reads player_season_reputation, "
-            + "which is only written when a season ENDS - so the current-season leaderboard "
-            + "is always empty during the season even though members have reputation. "
-            + "Season views should fall back to live totals from the membership table.")
     void currentSeasonLeaderboardReflectsLiveReputation() {
         seasonRepository.saveSeasonState(new SeasonState("season-1", System.currentTimeMillis()));
         when(membershipRepository.getAlignmentTotals())
@@ -232,10 +227,6 @@ class AlignmentSeasonServiceTest {
     }
 
     @Test
-    @Disabled("BUG-QA6 (low): nextSeasonId() strips a fixed 7-character 'season-' prefix, "
-            + "so a season named 'spring-2026' resets to 'season-2027' instead of "
-            + "'spring-2026-next' - the custom season id is silently discarded. The id "
-            + "suffix should only be incremented when it actually starts with 'season-'.")
     void nonNumericSeasonIdsGetSuffixedInsteadOfIncremented() {
         seasonRepository.saveSeasonState(new SeasonState("spring-2026", System.currentTimeMillis()));
         when(membershipRepository.getAlignmentTotals()).thenReturn(Map.of());

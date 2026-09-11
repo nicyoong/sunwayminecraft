@@ -8,7 +8,6 @@ import com.sunwayMinecraft.alignments.domain.Campus;
 import com.sunwayMinecraft.alignments.domain.GrandAlliance;
 import com.sunwayMinecraft.alignments.persistence.AlignmentRepository;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.Optional;
@@ -170,6 +169,7 @@ class AlignmentServiceTest {
 
         assertEquals(AlignmentResult.LEFT, service.leave(playerUuid));
         verify(cache).invalidate(playerUuid);
+        verify(perkService).forgetPlayer(playerUuid);
         verify(cooldownManager, never()).recordSwitch(playerUuid);
 
         when(settings.isCooldownAppliesToLeave()).thenReturn(true);
@@ -276,10 +276,6 @@ class AlignmentServiceTest {
     }
 
     @Test
-    @Disabled("BUG-QA1 (medium): joining the same alignment while under cooldown returns "
-            + "COOLDOWN_ACTIVE instead of ALREADY_ALIGNED because the cooldown check runs "
-            + "before the already-aligned check; a no-op rejoin should be idempotent. "
-            + "Merge after the service checks the existing membership first.")
     void joinUnderCooldownRemainsIdempotentForTheSameAlignment() {
         when(settings.getSwitchCooldownSeconds()).thenReturn(3600L);
         when(cooldownManager.getRemainingSeconds(playerUuid, 3600L)).thenReturn(1200L);
@@ -291,9 +287,6 @@ class AlignmentServiceTest {
     }
 
     @Test
-    @Disabled("BUG-QA2 (low): reputation addition overflows int arithmetic; "
-            + "2_000_000_000 + 2_000_000_000 wraps negative and is clamped to 0, silently "
-            + "destroying the player's reputation. Use long arithmetic or clamp to MAX_VALUE.")
     void reputationAdditionMustNotOverflowToZero() {
         AlignmentMembership existing = new AlignmentMembership(
                 playerUuid, "lagoon_covenant", 1000L, 2_000_000_000, "active");
