@@ -117,13 +117,15 @@ public class DistrictProtectionListener implements Listener {
         if (district == null) {
             return;
         }
-        if (alignmentService.canPlayerAccessDistrict(event.getPlayer(), district)) {
-            return;
-        }
 
+        // both gates must pass: the player needs access AND the per-type flag
+        // must allow the category (archived districts deny everything via
+        // their flags, sanctuary districts deny containers and redstone)
+        boolean accessAllowed =
+                alignmentService.canPlayerAccessDistrict(event.getPlayer(), district);
         InteractionFlags flags = settings.interactionFlagsFor(district.getDistrictType());
         Material material = event.getClickedBlock().getType();
-        if (interactionAllowed(flags, material)) {
+        if (accessAllowed && interactionAllowed(flags, material)) {
             return;
         }
         event.setCancelled(true);
