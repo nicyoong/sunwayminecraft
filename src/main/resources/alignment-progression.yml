@@ -1,0 +1,74 @@
+# Triple Alliance alignment progression configuration
+#
+# Reputation ranks, season settings and grand alliance score weights.
+# Missing or invalid values fall back to safe defaults.
+
+# Global rank set (fallback for all grand alliances). Ranks are resolved by
+# the highest minimum_reputation the player's reputation reaches.
+ranks:
+  initiate:
+    display_name: "Initiate"
+    minimum_reputation: 0
+    chat_suffix: ""
+    description: "Newly pledged to an alignment."
+    enabled: true
+  associate:
+    display_name: "Associate"
+    minimum_reputation: 25
+    chat_suffix: ""
+    description: "A trusted member of the alliance."
+    enabled: true
+  fellow:
+    display_name: "Fellow"
+    minimum_reputation: 75
+    chat_suffix: ""
+    description: "A proven contributor to alignment works."
+    enabled: true
+  steward:
+    display_name: "Steward"
+    minimum_reputation: 150
+    chat_suffix: "Steward"
+    description: "A caretaker of alignment interests."
+    enabled: true
+  archon:
+    display_name: "Archon"
+    minimum_reputation: 300
+    chat_suffix: "Archon"
+    description: "The highest honour an alignment bestows."
+    enabled: true
+
+# Optional per-grand-alliance rank overrides. Any alliance not listed uses
+# the global ranks above. Ids must match the global set.
+alliance_ranks: {}
+#  concordat_of_the_dawn:
+#    archon:
+#      display_name: "Dawn Archon"
+#      minimum_reputation: 300
+#      chat_suffix: "Dawn Archon"
+#      description: "First light of the Concordat."
+#      enabled: true
+
+season:
+  # Season length: days + hours. 0/0 disables seasons entirely.
+  length_days: 30
+  length_hours: 0
+  # continue: the season timer persists across restarts (stored in SQLite).
+  # end_pending_on_enable: a season that ended while the server was offline
+  # is snapshotted and closed as soon as the plugin enables.
+  restart_behavior: end_pending_on_enable
+  # Reset everyone's reputation to zero when a season ends.
+  reset_reputation_on_end: false
+  # Broadcast season results to all online players on season end.
+  broadcast_results: true
+
+# Grand alliance score = reputation_weight * total_reputation
+#                     + member_weight * member_count
+#                     + district_weight * districts_held
+#                     + contract_weight * contracts_completed
+# District control and contract completions contribute 0 when the
+# corresponding system cannot provide per-alliance data.
+score_weights:
+  reputation: 1
+  member: 2
+  district: 25
+  contract: 1

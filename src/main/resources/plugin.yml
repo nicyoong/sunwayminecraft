@@ -204,6 +204,16 @@ commands:
     usage: /cityadmin <validate|stats|help>
     permission: sunway.city.admin
 
+  align:
+    description: Triple Alliance alignment commands
+    usage: /align <help|list|join|leave|show|chat|chatspy|set|clear|info|reload>
+    permission: sunway.align.use
+
+  ac:
+    description: Send a message to your alignment
+    usage: /ac <message>
+    permission: sunway.align.use
+
 permissions:
   sunway.city.use:
     description: Allows players to use the City overview command.
@@ -365,4 +375,24 @@ permissions:
 
   sunway.districts.admin:
     description: Allows admins to manage and validate districts
+    default: op
+
+  sunway.align.use:
+    description: Allows players to view and manage their Triple Alliance alignment
+    default: true
+
+  sunway.align.admin:
+    description: Allows admins to view other players' alignments and manage memberships
+    default: op
+
+  sunway.align.chatspy:
+    description: Allows admins to spy on alignment-only chat
+    default: op
+
+  sunway.align.bypass.cooldown:
+    description: Allows bypassing the alignment switch cooldown
+    default: op
+
+  sunway.align.perks.admin:
+    description: Testing bypass for alignment perk rank and district gates
     default: op
