@@ -8,6 +8,7 @@ import com.sunwayMinecraft.alignments.domain.Campus;
 import com.sunwayMinecraft.alignments.domain.GrandAlliance;
 import com.sunwayMinecraft.alignments.persistence.AlignmentRepository;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.Optional;
@@ -226,5 +227,81 @@ class AlignmentServiceTest {
         assertTrue(service.isAvailable());
         when(repository.isAvailable()).thenReturn(false);
         assertFalse(service.isAvailable());
+    }
+
+    @Test
+    void cooldownRemainingUsesThePerkReducedWindow() {
+        when(settings.getSwitchCooldownSeconds()).thenReturn(100L);
+        when(perkService.applyCooldownReduction(playerUuid, 100L)).thenReturn(75L);
+        when(cooldownManager.getRemainingSeconds(playerUuid, 75L)).thenReturn(40L);
+
+        assertEquals(40L, service.getRemainingCooldownSeconds(playerUuid));
+    }
+
+    @Test
+    void adjustAndSetReputationUpdateTheDatabaseAndCache() {
+        AlignmentMembership existing = new AlignmentMembership(
+                playerUuid, "lagoon_covenant", 1000L, 50, "active");
+        when(configManager.getAlignment("lagoon_covenant")).thenReturn(Optional.of(lagoonCovenant));
+        when(repository.findByUuid(playerUuid)).thenReturn(Optional.of(existing));
+        when(repository.upsert(any())).thenReturn(true);
+
+        assertEquals(AlignmentResult.JOINED, service.adjustReputation(playerUuid, 25));
+        verify(repository).upsert(argThat(m -> m.reputation() == 75 && m.joinedAt() == 1000L
+                && m.status().equals("active")));
+        verify(cache).update(eq(playerUuid), any(), eq(lagoonCovenant));
+
+        assertEquals(AlignmentResult.JOINED, service.setReputation(playerUuid, 10));
+        verify(repository).upsert(argThat(m -> m.reputation() == 10));
+
+        // removal below zero is clamped, not wrapped
+        assertEquals(AlignmentResult.JOINED, service.adjustReputation(playerUuid, -1000));
+        verify(repository).upsert(argThat(m -> m.reputation() == 0));
+    }
+
+    @Test
+    void reputationMutationsRequireAnActiveAlignmentAndAvailableStorage() {
+        when(repository.findByUuid(playerUuid)).thenReturn(Optional.empty());
+        assertEquals(AlignmentResult.NOT_ALIGNED, service.adjustReputation(playerUuid, 5));
+
+        when(repository.isAvailable()).thenReturn(false);
+        assertEquals(AlignmentResult.DATABASE_FAILURE, service.setReputation(playerUuid, 5));
+
+        when(repository.isAvailable()).thenReturn(true);
+        AlignmentMembership vanished = new AlignmentMembership(
+                playerUuid, "vanished_alignment", 1000L, 5, "active");
+        when(repository.findByUuid(playerUuid)).thenReturn(Optional.of(vanished));
+        when(configManager.getAlignment("vanished_alignment")).thenReturn(Optional.empty());
+        assertEquals(AlignmentResult.NOT_FOUND, service.adjustReputation(playerUuid, 5));
+    }
+
+    @Test
+    @Disabled("BUG-QA1 (medium): joining the same alignment while under cooldown returns "
+            + "COOLDOWN_ACTIVE instead of ALREADY_ALIGNED because the cooldown check runs "
+            + "before the already-aligned check; a no-op rejoin should be idempotent. "
+            + "Merge after the service checks the existing membership first.")
+    void joinUnderCooldownRemainsIdempotentForTheSameAlignment() {
+        when(settings.getSwitchCooldownSeconds()).thenReturn(3600L);
+        when(cooldownManager.getRemainingSeconds(playerUuid, 3600L)).thenReturn(1200L);
+        when(configManager.getAlignment("lagoon_covenant")).thenReturn(Optional.of(lagoonCovenant));
+        when(repository.findByUuid(playerUuid)).thenReturn(Optional.of(new AlignmentMembership(
+                playerUuid, "lagoon_covenant", 1000L, 5, "active")));
+
+        assertEquals(AlignmentResult.ALREADY_ALIGNED, service.join(playerUuid, "lagoon_covenant"));
+    }
+
+    @Test
+    @Disabled("BUG-QA2 (low): reputation addition overflows int arithmetic; "
+            + "2_000_000_000 + 2_000_000_000 wraps negative and is clamped to 0, silently "
+            + "destroying the player's reputation. Use long arithmetic or clamp to MAX_VALUE.")
+    void reputationAdditionMustNotOverflowToZero() {
+        AlignmentMembership existing = new AlignmentMembership(
+                playerUuid, "lagoon_covenant", 1000L, 2_000_000_000, "active");
+        when(configManager.getAlignment("lagoon_covenant")).thenReturn(Optional.of(lagoonCovenant));
+        when(repository.findByUuid(playerUuid)).thenReturn(Optional.of(existing));
+        when(repository.upsert(any())).thenReturn(true);
+
+        assertEquals(AlignmentResult.JOINED, service.adjustReputation(playerUuid, 2_000_000_000));
+        verify(repository).upsert(argThat(m -> m.reputation() >= 2_000_000_000));
     }
 }

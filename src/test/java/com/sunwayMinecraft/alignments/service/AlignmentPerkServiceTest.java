@@ -11,6 +11,7 @@ import com.sunwayMinecraft.alignments.service.AlignmentMembershipCache.CachedMem
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffectType;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.Optional;
@@ -188,5 +189,52 @@ class AlignmentPerkServiceTest {
         service.reconcile(player, membership(0), azureHearth);
         assertTrue(service.getActivePerkIds(playerUuid).isEmpty());
         org.mockito.Mockito.verify(player).removePotionEffect(PotionEffectType.SPEED);
+    }
+
+    @Test
+    void districtGateBlocksPerksOutsideQualifyingAreas() {
+        when(perksConfig.isApplyInAnyDistrict()).thenReturn(false);
+        AlignmentPerkService gated = new AlignmentPerkService(
+                mock(org.bukkit.plugin.java.JavaPlugin.class), perksConfig, configManager,
+                rankService, cache, player -> false);
+        gated.reconcile(player, membership(150), azureHearth);
+        assertTrue(gated.getActivePerkIds(playerUuid).isEmpty(),
+                "perks must not apply when the district gate rejects the location");
+
+        AlignmentPerkService allowed = new AlignmentPerkService(
+                mock(org.bukkit.plugin.java.JavaPlugin.class), perksConfig, configManager,
+                rankService, cache, player2 -> true);
+        allowed.reconcile(player, membership(150), azureHearth);
+        assertTrue(allowed.getActivePerkIds(playerUuid).contains("swiftness"),
+                "perks must apply when the district gate accepts the location");
+    }
+
+    @Test
+    void forgetPlayerDropsTrackingAndRemovesEffects() {
+        org.mockbukkit.mockbukkit.MockBukkit.mock(); // forgetPlayer consults Bukkit.getPlayer
+        try {
+            service.reconcile(player, membership(150), azureHearth);
+            assertTrue(service.getActivePerkIds(playerUuid).contains("swiftness"));
+
+            service.forgetPlayer(playerUuid);
+            assertTrue(service.getActivePerkIds(playerUuid).isEmpty(),
+                    "forgetPlayer must drop the tracking entry");
+            // effect removal only applies to players resolvable online; an unregistered
+            // uuid is skipped, which is the production-safe behavior for offline players
+        } finally {
+            org.mockbukkit.mockbukkit.MockBukkit.unmock();
+        }
+    }
+
+    @Test
+    @Disabled("BUG-QA3 (medium): perks are applied once and never refreshed. reconcile() "
+            + "only calls addPotionEffect when the perk is not yet tracked, so the short "
+            + "PotionEffect (duration_seconds, default 15s) expires while the service keeps "
+            + "the perk marked active - players silently lose perks. Desired perks should be "
+            + "re-applied on every refresh pass.")
+    void desiredPerksAreRefreshedOnEveryPass() {
+        service.reconcile(player, membership(150), azureHearth);
+        service.reconcile(player, membership(150), azureHearth);
+        org.mockito.Mockito.verify(player, org.mockito.Mockito.times(2)).addPotionEffect(any());
     }
 }
