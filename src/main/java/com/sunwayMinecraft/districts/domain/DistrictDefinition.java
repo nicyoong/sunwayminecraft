@@ -24,6 +24,7 @@ public class DistrictDefinition {
     private final ApprovalBias recommendedApprovalBias;
     private final boolean allowPublicEvents;
     private final boolean signatureArea;
+    private final DistrictOwnership ownership;
 
     public DistrictDefinition(String id,
                               String displayName,
@@ -42,6 +43,30 @@ public class DistrictDefinition {
                               ApprovalBias recommendedApprovalBias,
                               boolean allowPublicEvents,
                               boolean signatureArea) {
+        this(id, displayName, shortName, world, region, enabled, districtType, prestigeTier,
+                publicSummary, tags, publicVisible, listingPriority, storefrontPriority,
+                residencyPriority, recommendedApprovalBias, allowPublicEvents, signatureArea,
+                DistrictOwnership.neutral());
+    }
+
+    public DistrictDefinition(String id,
+                              String displayName,
+                              String shortName,
+                              String world,
+                              Region3i region,
+                              boolean enabled,
+                              DistrictType districtType,
+                              int prestigeTier,
+                              String publicSummary,
+                              List<String> tags,
+                              boolean publicVisible,
+                              int listingPriority,
+                              boolean storefrontPriority,
+                              boolean residencyPriority,
+                              ApprovalBias recommendedApprovalBias,
+                              boolean allowPublicEvents,
+                              boolean signatureArea,
+                              DistrictOwnership ownership) {
         this.id = Objects.requireNonNull(id, "id");
         this.displayName = Objects.requireNonNull(displayName, "displayName");
         this.shortName = shortName;
@@ -59,6 +84,7 @@ public class DistrictDefinition {
         this.recommendedApprovalBias = recommendedApprovalBias == null ? ApprovalBias.STANDARD : recommendedApprovalBias;
         this.allowPublicEvents = allowPublicEvents;
         this.signatureArea = signatureArea;
+        this.ownership = ownership == null ? DistrictOwnership.neutral() : ownership;
     }
 
     public String getId() { return id; }
@@ -79,6 +105,16 @@ public class DistrictDefinition {
     public ApprovalBias getRecommendedApprovalBias() { return recommendedApprovalBias; }
     public boolean isAllowPublicEvents() { return allowPublicEvents; }
     public boolean isSignatureArea() { return signatureArea; }
+    public DistrictOwnership getOwnership() { return ownership; }
+
+    public DistrictAccessRule getAccessRule() {
+        return DistrictAccessRule.forOwnership(ownership);
+    }
+
+    /** True when this district's type forbids building, renting and trading. */
+    public boolean isArchived() {
+        return districtType == DistrictType.ARCHIVED;
+    }
 
     public String getDisplayShortNameOrName() {
         return shortName != null && !shortName.isBlank() ? shortName : displayName;
