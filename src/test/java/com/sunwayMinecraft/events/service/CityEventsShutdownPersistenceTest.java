@@ -81,6 +81,9 @@ class CityEventsShutdownPersistenceTest {
             if (restarted.getAlignmentRepository() != null) {
                 restarted.getAlignmentRepository().close();
             }
+            if (restarted.getAlignmentSeasonRepository() != null) {
+                restarted.getAlignmentSeasonRepository().close();
+            }
         }
     }
 

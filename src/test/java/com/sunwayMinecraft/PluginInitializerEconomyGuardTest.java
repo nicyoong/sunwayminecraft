@@ -76,6 +76,9 @@ class PluginInitializerEconomyGuardTest {
         if (initializer.getAlignmentRepository() != null) {
             initializer.getAlignmentRepository().close();
         }
+        if (initializer.getAlignmentSeasonRepository() != null) {
+            initializer.getAlignmentSeasonRepository().close();
+        }
     }
 
     private final List<LogRecord> severeRecords = new ArrayList<>();
