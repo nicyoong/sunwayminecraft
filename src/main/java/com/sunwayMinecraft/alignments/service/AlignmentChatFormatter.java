@@ -64,7 +64,9 @@ public final class AlignmentChatFormatter {
       AlignmentConfigManager configManager,
       AlignmentSettingsConfig settings,
       AlignmentDefinition definition,
-      String playerName) {
+      String playerName,
+      String rankDisplayName,
+      String rankSuffix) {
     Map<String, String> values = new HashMap<>();
     values.put("player", playerName);
     values.put("alignment", coloredAlignmentName(settings, definition));
@@ -91,6 +93,8 @@ public final class AlignmentChatFormatter {
     values.put("grand_alliance", AlignmentChatFormatter.colorize(allianceColor) + allianceDisplay + "§r");
     values.put("grand_alliance_short", AlignmentChatFormatter.colorize(allianceColor) + allianceShort + "§r");
     values.put("grand_alliance_plain", allianceDisplay);
+    values.put("rank", rankDisplayName == null ? "" : rankDisplayName);
+    values.put("rank_suffix", rankSuffix == null ? "" : rankSuffix);
     return values;
   }
 

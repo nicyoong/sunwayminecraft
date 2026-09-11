@@ -23,7 +23,9 @@ public class AlignmentSettingsConfig {
 
   private boolean allowAlignmentChat = true;
   private boolean allowGlobalChatPrefix = true;
+  private boolean allowChatRankSuffix = true;
   private String chatPrefixFormat = "&7[{grand_alliance_short} | {alignment}&7] &r";
+  private String chatRankSuffixFormat = "&7[{rank_suffix}&7] &r";
   private String alignmentChatFormat = "&7[{alignment}&7] &f{player}&7: &f{message}";
   private String alignmentChatColor = "&b";
   private long switchCooldownSeconds = 0;
@@ -47,7 +49,9 @@ public class AlignmentSettingsConfig {
 
     allowAlignmentChat = config.getBoolean("allow_alignment_chat", true);
     allowGlobalChatPrefix = config.getBoolean("allow_global_chat_prefix", true);
+    allowChatRankSuffix = config.getBoolean("allow_chat_rank_suffix", true);
     chatPrefixFormat = config.getString("chat_prefix_format", chatPrefixFormat);
+    chatRankSuffixFormat = config.getString("chat_rank_suffix_format", chatRankSuffixFormat);
     alignmentChatFormat = config.getString("alignment_chat_format", alignmentChatFormat);
     alignmentChatColor = config.getString("alignment_chat_color", alignmentChatColor);
     switchCooldownSeconds = Math.max(0, config.getLong("switch_cooldown_seconds", 0));
@@ -83,6 +87,14 @@ public class AlignmentSettingsConfig {
 
   public boolean isAllowGlobalChatPrefix() {
     return allowGlobalChatPrefix;
+  }
+
+  public boolean isAllowChatRankSuffix() {
+    return allowChatRankSuffix;
+  }
+
+  public String getChatRankSuffixFormat() {
+    return chatRankSuffixFormat;
   }
 
   public String getChatPrefixFormat() {

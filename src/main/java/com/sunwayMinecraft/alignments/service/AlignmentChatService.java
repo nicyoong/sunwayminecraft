@@ -101,7 +101,8 @@ public class AlignmentChatService {
       String playerName, AlignmentDefinition definition, String message) {
     return AlignmentChatFormatter.renderWithMessage(
         settings.getAlignmentChatFormat(),
-        AlignmentChatFormatter.placeholders(configManager, settings, definition, playerName),
+        AlignmentChatFormatter.placeholders(
+            configManager, settings, definition, playerName, null, null),
         Component.text(message));
   }
 

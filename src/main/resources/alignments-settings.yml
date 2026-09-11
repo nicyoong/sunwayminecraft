@@ -15,6 +15,12 @@ allow_global_chat_prefix: true
 # Players without an alignment never get a prefix.
 chat_prefix_format: "&7[{grand_alliance_short} | {alignment}&7] &r"
 
+# Reputation rank suffix shown after the alignment prefix, e.g.
+# [Concordat | Azure Hearth] [Steward] PlayerName. Requires a rank with
+# a non-empty chat_suffix in alignment-progression.yml.
+allow_chat_rank_suffix: true
+chat_rank_suffix_format: "&7[{rank_suffix}&7] &r"
+
 # Alignment-only chat (/align chat or /ac). Placeholders:
 #   {alignment}, {grand_alliance}, {grand_alliance_short}, {player}, {message}
 alignment_chat_format: "&7[{alignment}&7] &f{player}&7: &f{message}"

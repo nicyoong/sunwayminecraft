@@ -1,6 +1,7 @@
 package com.sunwayMinecraft.alignments.listener;
 
 import com.sunwayMinecraft.alignments.config.AlignmentConfigManager;
+import com.sunwayMinecraft.alignments.config.AlignmentProgressionConfig;
 import com.sunwayMinecraft.alignments.config.AlignmentSettingsConfig;
 import com.sunwayMinecraft.alignments.domain.AlignmentDefinition;
 import com.sunwayMinecraft.alignments.domain.Campus;
@@ -29,6 +30,7 @@ class AlignmentChatListenerTest {
     private AlignmentSettingsConfig settings;
     private AlignmentConfigManager configManager;
     private AlignmentMembershipCache cache;
+    private com.sunwayMinecraft.alignments.config.AlignmentProgressionConfig progressionConfig;
     private AlignmentChatListener listener;
     private org.mockbukkit.mockbukkit.ServerMock server;
 
@@ -54,7 +56,11 @@ class AlignmentChatListenerTest {
         when(configManager.getAllianceDefinition(GrandAlliance.CONCORDAT_OF_THE_DAWN))
                 .thenReturn(Optional.of(new GrandAllianceDefinition(
                         "concordat_of_the_dawn", "Concordat of the Dawn", "desc", "&b")));
-        listener = new AlignmentChatListener(settings, configManager, cache);
+        progressionConfig = mock(com.sunwayMinecraft.alignments.config.AlignmentProgressionConfig.class);
+        listener = new AlignmentChatListener(
+            settings, configManager, cache,
+            mock(com.sunwayMinecraft.alignments.service.AlignmentRankService.class),
+            progressionConfig);
         player = server.addPlayer();
     }
 
@@ -120,5 +126,45 @@ class AlignmentChatListenerTest {
                 player.getUniqueId(), alignmentId,
                 GrandAlliance.CONCORDAT_OF_THE_DAWN.getId(), Campus.TAYLORS.getId(),
                 0, status, System.currentTimeMillis())));
+    }
+
+    @Test
+    void rankSuffixIsAppendedWhenTheRankHasOneAndIsEnabled() {
+        when(settings.isAllowChatRankSuffix()).thenReturn(true);
+        when(settings.getChatRankSuffixFormat()).thenReturn("&7[{rank_suffix}&7] &r");
+        when(progressionConfig.getRank("concordat_of_the_dawn", "steward"))
+                .thenReturn(Optional.of(new AlignmentProgressionConfig.RankDefinition(
+                        "steward", "Steward", 150, "Steward", "desc", true)));
+        cacheMembershipWithRank("azure_hearth", "active", "steward");
+
+        String prefix = LEGACY.serialize(listener.buildPrefix(player));
+        assertTrue(prefix.contains("Steward"), "rank suffix expected, got: " + prefix);
+        assertTrue(prefix.contains("Azure Hearth"), "alignment prefix expected, got: " + prefix);
+    }
+
+    @Test
+    void ranksWithoutASuffixAddNothingWhenOnlyTheSuffixIsEnabled() {
+        when(settings.isAllowGlobalChatPrefix()).thenReturn(false);
+        when(settings.isAllowChatRankSuffix()).thenReturn(true);
+        when(settings.getChatRankSuffixFormat()).thenReturn("&7[{rank_suffix}&7] &r");
+        cacheMembershipWithRank("azure_hearth", "active", "initiate");
+
+        assertNull(listener.buildPrefix(player),
+                "empty chat_suffix must not render a suffix-only prefix");
+    }
+
+    @Test
+    void bothPrefixAndSuffixDisabledLeavesChatUntouched() {
+        when(settings.isAllowGlobalChatPrefix()).thenReturn(false);
+        when(settings.isAllowChatRankSuffix()).thenReturn(false);
+        cacheMembership("azure_hearth", "active");
+        assertNull(listener.buildPrefix(player));
+    }
+
+    private void cacheMembershipWithRank(String alignmentId, String status, String rankId) {
+        when(cache.getOrLoad(player.getUniqueId())).thenReturn(Optional.of(new CachedMembership(
+                player.getUniqueId(), alignmentId,
+                GrandAlliance.CONCORDAT_OF_THE_DAWN.getId(), Campus.TAYLORS.getId(),
+                150, status, System.currentTimeMillis(), rankId)));
     }
 }
