@@ -1,6 +1,7 @@
 package com.sunwayMinecraft.alignments.service;
 
 import com.sunwayMinecraft.alignments.config.AlignmentConfigManager;
+import com.sunwayMinecraft.alignments.config.AlignmentSettingsConfig;
 import com.sunwayMinecraft.alignments.domain.AlignmentDefinition;
 import com.sunwayMinecraft.alignments.domain.AlignmentMembership;
 import com.sunwayMinecraft.alignments.domain.Campus;
@@ -13,8 +14,13 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -22,7 +28,10 @@ import static org.mockito.Mockito.when;
 
 class AlignmentServiceTest {
     private AlignmentConfigManager configManager;
+    private AlignmentSettingsConfig settings;
     private AlignmentRepository repository;
+    private AlignmentCooldownManager cooldownManager;
+    private AlignmentMembershipCache cache;
     private AlignmentService service;
 
     private final UUID playerUuid = UUID.randomUUID();
@@ -36,16 +45,22 @@ class AlignmentServiceTest {
     @BeforeEach
     void setUp() {
         configManager = mock(AlignmentConfigManager.class);
+        settings = mock(AlignmentSettingsConfig.class);
         repository = mock(AlignmentRepository.class);
+        cooldownManager = mock(AlignmentCooldownManager.class);
+        cache = mock(AlignmentMembershipCache.class);
         when(repository.isAvailable()).thenReturn(true);
-        service = new AlignmentService(configManager, repository);
+        when(settings.getSwitchCooldownSeconds()).thenReturn(0L);
+        when(settings.isCooldownAppliesToLeave()).thenReturn(false);
+        when(cooldownManager.getRemainingSeconds(any(UUID.class), anyLong())).thenReturn(0L);
+        service = new AlignmentService(configManager, settings, repository, cooldownManager, cache);
     }
 
     @Test
-    void joinPersistsNewMembershipWhenAlignmentIsKnownAndEnabled() {
+    void joinPersistsNewMembershipAndRefreshesCache() {
         when(configManager.getAlignment("lagoon_covenant")).thenReturn(Optional.of(lagoonCovenant));
         when(repository.findByUuid(playerUuid)).thenReturn(Optional.empty());
-        when(repository.upsert(org.mockito.ArgumentMatchers.any())).thenReturn(true);
+        when(repository.upsert(any())).thenReturn(true);
 
         assertEquals(AlignmentResult.JOINED, service.join(playerUuid, "lagoon_covenant"));
 
@@ -55,6 +70,8 @@ class AlignmentServiceTest {
                         && membership.status().equals("active")
                         && membership.reputation() == 0
                         && membership.joinedAt() > 0));
+        verify(cooldownManager).recordSwitch(playerUuid);
+        verify(cache).update(eq(playerUuid), any(), eq(lagoonCovenant));
     }
 
     @Test
@@ -63,13 +80,14 @@ class AlignmentServiceTest {
         AlignmentMembership old = new AlignmentMembership(
                 playerUuid, "pyramid_ascendancy", 1000L, 25, "active");
         when(repository.findByUuid(playerUuid)).thenReturn(Optional.of(old));
-        when(repository.upsert(org.mockito.ArgumentMatchers.any())).thenReturn(true);
+        when(repository.upsert(any())).thenReturn(true);
 
         assertEquals(AlignmentResult.JOINED, service.join(playerUuid, "lagoon_covenant"));
 
         verify(repository).upsert(argThat(membership ->
                 membership.alignmentId().equals("lagoon_covenant")
                         && membership.joinedAt() >= 1000L));
+        verify(cache).update(eq(playerUuid), any(), eq(lagoonCovenant));
     }
 
     @Test
@@ -80,7 +98,8 @@ class AlignmentServiceTest {
         when(repository.findByUuid(playerUuid)).thenReturn(Optional.of(existing));
 
         assertEquals(AlignmentResult.ALREADY_ALIGNED, service.join(playerUuid, "lagoon_covenant"));
-        verify(repository, never()).upsert(org.mockito.ArgumentMatchers.any());
+        verify(repository, never()).upsert(any());
+        verify(cooldownManager, never()).recordSwitch(playerUuid);
     }
 
     @Test
@@ -91,7 +110,35 @@ class AlignmentServiceTest {
         assertEquals(AlignmentResult.NOT_FOUND, service.join(playerUuid, "missing"));
         assertEquals(AlignmentResult.DISABLED, service.join(playerUuid, "retired_order"));
         verify(repository, never()).findByUuid(playerUuid);
-        verify(repository, never()).upsert(org.mockito.ArgumentMatchers.any());
+        verify(repository, never()).upsert(any());
+    }
+
+    @Test
+    void cooldownBlocksSwitchingUntilItExpires() {
+        when(settings.getSwitchCooldownSeconds()).thenReturn(3600L);
+        when(configManager.getAlignment("lagoon_covenant")).thenReturn(Optional.of(lagoonCovenant));
+        when(cooldownManager.getRemainingSeconds(playerUuid, 3600L)).thenReturn(1200L);
+
+        assertEquals(AlignmentResult.COOLDOWN_ACTIVE, service.join(playerUuid, "lagoon_covenant"));
+        verify(repository, never()).upsert(any());
+        assertEquals(1200L, service.getRemainingCooldownSeconds(playerUuid));
+
+        when(cooldownManager.getRemainingSeconds(playerUuid, 3600L)).thenReturn(0L);
+        when(repository.findByUuid(playerUuid)).thenReturn(Optional.empty());
+        when(repository.upsert(any())).thenReturn(true);
+        assertEquals(AlignmentResult.JOINED, service.join(playerUuid, "lagoon_covenant"));
+    }
+
+    @Test
+    void adminJoinBypassesCooldown() {
+        when(settings.getSwitchCooldownSeconds()).thenReturn(3600L);
+        when(configManager.getAlignment("lagoon_covenant")).thenReturn(Optional.of(lagoonCovenant));
+        when(cooldownManager.getRemainingSeconds(playerUuid, 3600L)).thenReturn(1200L);
+        when(repository.upsert(any())).thenReturn(true);
+
+        assertEquals(AlignmentResult.JOINED, service.join(playerUuid, "lagoon_covenant", true));
+        verify(cooldownManager, never()).getRemainingSeconds(any(UUID.class), anyLong());
+        verify(cooldownManager).recordSwitch(playerUuid);
     }
 
     @Test
@@ -103,23 +150,35 @@ class AlignmentServiceTest {
 
         when(repository.isAvailable()).thenReturn(true);
         when(repository.findByUuid(playerUuid)).thenReturn(Optional.empty());
-        when(repository.upsert(org.mockito.ArgumentMatchers.any())).thenReturn(false);
+        when(repository.upsert(any())).thenReturn(false);
         assertEquals(AlignmentResult.DATABASE_FAILURE, service.join(playerUuid, "lagoon_covenant"));
+        verify(cooldownManager, never()).recordSwitch(playerUuid);
     }
 
     @Test
-    void leaveRemovesMembershipAndReportsMissingOrDatabaseFailures() {
-        when(repository.isAvailable()).thenReturn(true);
+    void leaveRemovesMembershipClearsCacheAndHonoursLeaveCooldownSetting() {
+        AlignmentMembership existing = new AlignmentMembership(
+                playerUuid, "lagoon_covenant", 1000L, 0, "active");
+        when(repository.findByUuid(playerUuid)).thenReturn(Optional.of(existing));
+        when(repository.remove(playerUuid)).thenReturn(true);
+
+        assertEquals(AlignmentResult.LEFT, service.leave(playerUuid));
+        verify(cache).invalidate(playerUuid);
+        verify(cooldownManager, never()).recordSwitch(playerUuid);
+
+        when(settings.isCooldownAppliesToLeave()).thenReturn(true);
+        assertEquals(AlignmentResult.LEFT, service.leave(playerUuid));
+        verify(cooldownManager).recordSwitch(playerUuid);
+    }
+
+    @Test
+    void leaveReportsMissingOrDatabaseFailures() {
         when(repository.findByUuid(playerUuid)).thenReturn(Optional.empty());
         assertEquals(AlignmentResult.NOT_ALIGNED, service.leave(playerUuid));
 
         AlignmentMembership existing = new AlignmentMembership(
                 playerUuid, "lagoon_covenant", 1000L, 0, "active");
         when(repository.findByUuid(playerUuid)).thenReturn(Optional.of(existing));
-        when(repository.remove(playerUuid)).thenReturn(true);
-        assertEquals(AlignmentResult.LEFT, service.leave(playerUuid));
-        verify(repository).remove(playerUuid);
-
         when(repository.remove(playerUuid)).thenReturn(false);
         assertEquals(AlignmentResult.DATABASE_FAILURE, service.leave(playerUuid));
 
@@ -128,9 +187,39 @@ class AlignmentServiceTest {
     }
 
     @Test
+    void adminSetForcesMembershipWithoutCooldownOrAlreadyAlignedCheck() {
+        when(configManager.getAlignment("lagoon_covenant")).thenReturn(Optional.of(lagoonCovenant));
+        AlignmentMembership existing = new AlignmentMembership(
+                playerUuid, "lagoon_covenant", 1000L, 25, "active");
+        when(repository.findByUuid(playerUuid)).thenReturn(Optional.of(existing));
+        when(repository.upsert(any())).thenReturn(true);
+
+        assertEquals(AlignmentResult.JOINED, service.adminSet(playerUuid, "lagoon_covenant"));
+        verify(repository).upsert(any());
+        verify(cache).update(eq(playerUuid), any(), eq(lagoonCovenant));
+        verify(cooldownManager, never()).recordSwitch(any(UUID.class));
+
+        when(configManager.getAlignment("missing")).thenReturn(Optional.empty());
+        assertEquals(AlignmentResult.NOT_FOUND, service.adminSet(playerUuid, "missing"));
+    }
+
+    @Test
+    void adminClearRemovesMembershipAndCacheEntry() {
+        when(repository.findByUuid(playerUuid)).thenReturn(Optional.empty());
+        assertEquals(AlignmentResult.NOT_ALIGNED, service.adminClear(playerUuid));
+
+        AlignmentMembership existing = new AlignmentMembership(
+                playerUuid, "lagoon_covenant", 1000L, 0, "active");
+        when(repository.findByUuid(playerUuid)).thenReturn(Optional.of(existing));
+        when(repository.remove(playerUuid)).thenReturn(true);
+        assertEquals(AlignmentResult.LEFT, service.adminClear(playerUuid));
+        verify(cache).invalidate(playerUuid);
+    }
+
+    @Test
     void availabilityTracksRepositoryState() {
         assertTrue(service.isAvailable());
         when(repository.isAvailable()).thenReturn(false);
-        assertEquals(false, service.isAvailable());
+        assertFalse(service.isAvailable());
     }
 }

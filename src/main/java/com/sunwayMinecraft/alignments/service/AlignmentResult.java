@@ -8,6 +8,7 @@ public enum AlignmentResult {
   NOT_ALIGNED(false),
   NOT_FOUND(false),
   DISABLED(false),
+  COOLDOWN_ACTIVE(false),
   DATABASE_FAILURE(false);
 
   private final boolean success;
