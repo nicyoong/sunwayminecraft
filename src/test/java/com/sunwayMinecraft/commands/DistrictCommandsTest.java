@@ -4,6 +4,7 @@ import com.sunwayMinecraft.districts.DistrictManager;
 import com.sunwayMinecraft.districts.domain.DistrictDefinition;
 import com.sunwayMinecraft.districts.domain.DistrictOwnership;
 import com.sunwayMinecraft.districts.domain.DistrictType;
+import com.sunwayMinecraft.districts.region.DistrictShape;
 import com.sunwayMinecraft.districts.region.Region3i;
 import com.sunwayMinecraft.districts.service.DistrictAlignmentService;
 import org.bukkit.Location;
@@ -32,7 +33,7 @@ class DistrictCommandsTest {
     private DistrictManager districtManager;
     private DistrictCommands commands;
 
-    private static final Region3i REGION = new Region3i("world", 0, 0, 0, 9, 9, 9);
+    private static final DistrictShape REGION = DistrictShape.cuboid(new Region3i("world", 0, 0, 0, 9, 9, 9));
 
     @BeforeEach
     void setUp() {
@@ -43,7 +44,9 @@ class DistrictCommandsTest {
         DistrictAlignmentService service = new DistrictAlignmentService(
                 mock(com.sunwayMinecraft.districts.config.DistrictsConfigManager.class),
                 uuid -> Optional.empty());
-        commands = new DistrictCommands(districtManager, service);
+        commands = new DistrictCommands(districtManager, service,
+                new com.sunwayMinecraft.commands.DistrictAdminSubCommands(districtManager,
+                        mock(com.sunwayMinecraft.districts.config.DistrictsConfigManager.class)));
     }
 
     @AfterEach

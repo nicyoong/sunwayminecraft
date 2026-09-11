@@ -278,14 +278,9 @@ public class DistrictAdminCommands implements CommandExecutor, TabCompleter {
     }
 
     private String formatRegion(DistrictDefinition district) {
-        return "("
-                + district.getRegion().getMinX() + ", "
-                + district.getRegion().getMinY() + ", "
-                + district.getRegion().getMinZ() + ") -> ("
-                + district.getRegion().getMaxX() + ", "
-                + district.getRegion().getMaxY() + ", "
-                + district.getRegion().getMaxZ() + ")";
+        return district.getShape().describe();
     }
+
 
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
