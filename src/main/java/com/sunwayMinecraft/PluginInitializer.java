@@ -15,6 +15,9 @@ import com.sunwayMinecraft.districts.DistrictManager;
 import com.sunwayMinecraft.coinflip.*;
 import com.sunwayMinecraft.switches.*;
 import com.sunwayMinecraft.worldtravel.*;
+import com.sunwayMinecraft.alignments.config.AlignmentConfigManager;
+import com.sunwayMinecraft.alignments.persistence.AlignmentRepository;
+import com.sunwayMinecraft.alignments.service.AlignmentService;
 import com.sunwayMinecraft.city.CityOverviewService;
 import com.sunwayMinecraft.city.CityValidationService;
 import com.sunwayMinecraft.city.metrics.CityMetricsManager;
@@ -89,6 +92,11 @@ public class PluginInitializer {
   private CityOverviewService cityOverviewService;
   private CityValidationService cityValidationService;
 
+  // Triple Alliance alignments
+  private AlignmentConfigManager alignmentConfigManager;
+  private AlignmentRepository alignmentRepository;
+  private AlignmentService alignmentService;
+
   public PluginInitializer(SunwayMinecraft plugin) {
     this.plugin = plugin;
 
@@ -111,6 +119,7 @@ public class PluginInitializer {
     initContractsSystem();
     initEventsSystem();
     initCityIntegration();
+    initAlignmentSystem();
   }
 
   private void initCityIntegration() {
@@ -237,6 +246,17 @@ public class PluginInitializer {
     }
   }
 
+  private void initAlignmentSystem() {
+    alignmentConfigManager = new AlignmentConfigManager(plugin);
+    alignmentConfigManager.load();
+    alignmentRepository = new AlignmentRepository(plugin);
+    if (!alignmentRepository.isAvailable()) {
+      plugin.getLogger()
+          .warning("Alignment membership storage is unavailable; alignment changes are disabled");
+    }
+    alignmentService = new AlignmentService(alignmentConfigManager, alignmentRepository);
+  }
+
   private Economy getEconomy() {
     if (plugin.getServer().getPluginManager().getPlugin("Vault") == null) return null;
     RegisteredServiceProvider<Economy> registration =
@@ -339,5 +359,17 @@ public class PluginInitializer {
 
   public CityValidationService getCityValidationService() {
     return cityValidationService;
+  }
+
+  public AlignmentConfigManager getAlignmentConfigManager() {
+    return alignmentConfigManager;
+  }
+
+  public AlignmentRepository getAlignmentRepository() {
+    return alignmentRepository;
+  }
+
+  public AlignmentService getAlignmentService() {
+    return alignmentService;
   }
 }

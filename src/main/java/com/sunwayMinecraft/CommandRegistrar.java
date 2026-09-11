@@ -134,6 +134,12 @@ public class CommandRegistrar {
     CityAdminCommands cityAdminCmds = new CityAdminCommands(init.getCityMetricsManager(), init.getCityValidationService());
     registerCommand("cityadmin", cityAdminCmds);
     plugin.getCommand("cityadmin").setTabCompleter(cityAdminCmds);
+
+    // Triple Alliance alignments
+    AlignCommands alignCmds =
+        new AlignCommands(init.getAlignmentService(), init.getAlignmentConfigManager());
+    registerCommand("align", alignCmds);
+    plugin.getCommand("align").setTabCompleter(alignCmds);
   }
 
   private void registerCommand(String name, CommandExecutor executor) {

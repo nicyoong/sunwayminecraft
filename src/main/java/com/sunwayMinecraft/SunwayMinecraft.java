@@ -33,6 +33,9 @@ public final class SunwayMinecraft extends JavaPlugin {
     if (initializer.getCoinFlipDatabase() != null) {
       initializer.getCoinFlipDatabase().close();
     }
+    if (initializer.getAlignmentRepository() != null) {
+      initializer.getAlignmentRepository().close();
+    }
     getLogger().log(Level.INFO, "Disabling SunwayMinecraft plugin...");
   }
 }
