@@ -204,6 +204,11 @@ commands:
     usage: /cityadmin <validate|stats|help>
     permission: sunway.city.admin
 
+  align:
+    description: Triple Alliance alignment commands
+    usage: /align <help|list|join <alignment>|leave|show [player]>
+    permission: sunway.align.use
+
 permissions:
   sunway.city.use:
     description: Allows players to use the City overview command.
@@ -365,4 +370,12 @@ permissions:
 
   sunway.districts.admin:
     description: Allows admins to manage and validate districts
+    default: op
+
+  sunway.align.use:
+    description: Allows players to view and manage their Triple Alliance alignment
+    default: true
+
+  sunway.align.admin:
+    description: Allows admins to view other players' alignments
     default: op
