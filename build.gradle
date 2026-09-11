@@ -69,6 +69,10 @@ dependencies {
 
 test {
     useJUnitPlatform()
+    // Mockito's inline mock maker must attach an agent to the test JVM;
+    // without this flag Byte Buddy falls back to an external attach process,
+    // which fails under memory pressure
+    jvmArgs "-Djdk.attach.allowAttachSelf=true"
     testLogging {
         events = ["passed", "skipped", "failed"]
         exceptionFormat = "full"
