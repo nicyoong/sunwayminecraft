@@ -61,6 +61,12 @@ public class AlignmentService {
     if (!isAvailable()) {
       return AlignmentResult.DATABASE_FAILURE;
     }
+
+    String alignmentId = definition.get().id();
+    Optional<AlignmentMembership> existing = repository.findByUuid(playerUuid);
+    if (existing.isPresent() && existing.get().isSameAlignment(alignmentId)) {
+      return AlignmentResult.ALREADY_ALIGNED;
+    }
     if (!bypassCooldown) {
       long window =
           perkService.applyCooldownReduction(playerUuid, settings.getSwitchCooldownSeconds());
@@ -68,12 +74,6 @@ public class AlignmentService {
       if (remaining > 0) {
         return AlignmentResult.COOLDOWN_ACTIVE;
       }
-    }
-
-    String alignmentId = definition.get().id();
-    Optional<AlignmentMembership> existing = repository.findByUuid(playerUuid);
-    if (existing.isPresent() && existing.get().isSameAlignment(alignmentId)) {
-      return AlignmentResult.ALREADY_ALIGNED;
     }
 
     AlignmentMembership membership =
@@ -84,6 +84,7 @@ public class AlignmentService {
     cooldownManager.recordSwitch(playerUuid);
     cache.update(playerUuid, membership, definition.get());
     if (existing.isPresent()) {
+      perkService.forgetPlayer(playerUuid);
       LOGGER.info("Player " + playerUuid + " switched alignment to " + alignmentId);
     } else {
       LOGGER.info("Player " + playerUuid + " joined alignment " + alignmentId);
@@ -107,6 +108,7 @@ public class AlignmentService {
       return AlignmentResult.DATABASE_FAILURE;
     }
     cache.invalidate(playerUuid);
+    perkService.forgetPlayer(playerUuid);
     if (recordCooldown) {
       cooldownManager.recordSwitch(playerUuid);
     }
@@ -164,7 +166,7 @@ public class AlignmentService {
 
   /** Adds (or removes for negative deltas) reputation; updates cache and rank. */
   public AlignmentResult adjustReputation(UUID playerUuid, int delta) {
-    return mutateReputation(playerUuid, current -> current + delta);
+    return mutateReputation(playerUuid, current -> current + (long) delta);
   }
 
   /** Sets reputation directly; updates cache and rank. */
@@ -172,7 +174,7 @@ public class AlignmentService {
     return mutateReputation(playerUuid, current -> reputation);
   }
 
-  private AlignmentResult mutateReputation(UUID playerUuid, java.util.function.IntUnaryOperator operator) {
+  private AlignmentResult mutateReputation(UUID playerUuid, java.util.function.LongUnaryOperator operator) {
     if (!isAvailable()) {
       return AlignmentResult.DATABASE_FAILURE;
     }
@@ -185,7 +187,9 @@ public class AlignmentService {
     if (definition.isEmpty()) {
       return AlignmentResult.NOT_FOUND;
     }
-    int updated = Math.max(0, operator.applyAsInt(existing.get().reputation()));
+    // long arithmetic so huge admin adjustments wrap-free; clamped to the int range
+    int updated = (int) Math.min(Integer.MAX_VALUE,
+        Math.max(0L, operator.applyAsLong(existing.get().reputation())));
     AlignmentMembership membership = new AlignmentMembership(
         playerUuid, existing.get().alignmentId(), existing.get().joinedAt(),
         updated, existing.get().status());
