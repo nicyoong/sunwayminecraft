@@ -180,4 +180,28 @@ class AlignmentMembershipCacheTest {
                 "150 reputation must resolve to the steward rank");
     }
 
+
+    @Test
+    void revalidateUnalignsPlayersWhoseAlignmentVanishedFromConfig() {
+        when(settings.getStaleMembershipAction()).thenReturn(
+                AlignmentSettingsConfig.StaleMembershipAction.UNALIGN);
+        cache.update(playerUuid,
+                AlignmentMembership.newMembership(playerUuid, "vanished", 1000L), retiredOrder);
+        when(configManager.getAlignment("vanished")).thenReturn(Optional.empty());
+
+        cache.revalidate(settings);
+
+        assertTrue(cache.get(playerUuid).isEmpty(),
+                "memberships whose alignment no longer exists must be removed under UNALIGN");
+        verify(repository).remove(playerUuid);
+    }
+
+    @Test
+    void cacheMissWithUnavailableDatabaseReturnsEmptyWithoutThrowing() {
+        when(repository.isAvailable()).thenReturn(false);
+        when(repository.findByUuid(playerUuid)).thenReturn(Optional.empty());
+
+        assertTrue(cache.getOrLoad(playerUuid).isEmpty(),
+                "a cache miss with the database down must degrade to unaligned, not fail");
+    }
 }

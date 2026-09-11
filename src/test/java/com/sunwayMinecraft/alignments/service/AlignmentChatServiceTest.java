@@ -165,4 +165,38 @@ class AlignmentChatServiceTest {
         }
         return messages;
     }
+
+    @Test
+    void inactiveMembersNeitherSendNorReceiveAlignmentChat() {
+        when(cache.getOrLoad(lagoonMember.getUniqueId())).thenReturn(Optional.of(
+                new CachedMembership(lagoonMember.getUniqueId(), "lagoon_covenant",
+                        GrandAlliance.CONCORDAT_OF_THE_DAWN.getId(), Campus.SUNWAY.getId(),
+                        0, "inactive", System.currentTimeMillis())));
+        assertEquals(AlignmentChatService.ChatResult.NO_ALIGNMENT,
+                chatService.sendAlignmentChat(lagoonMember, "anyone?"));
+
+        // an inactive member of the same alignment must not receive either
+        when(cache.getOrLoad(lagoonMate.getUniqueId())).thenReturn(Optional.of(
+                new CachedMembership(lagoonMate.getUniqueId(), "lagoon_covenant",
+                        GrandAlliance.CONCORDAT_OF_THE_DAWN.getId(), Campus.SUNWAY.getId(),
+                        0, "inactive", System.currentTimeMillis())));
+        // restore an active sender
+        when(cache.getOrLoad(lagoonMember.getUniqueId())).thenReturn(Optional.of(
+                new CachedMembership(lagoonMember.getUniqueId(), "lagoon_covenant",
+                        GrandAlliance.CONCORDAT_OF_THE_DAWN.getId(), Campus.SUNWAY.getId(),
+                        0, "active", System.currentTimeMillis())));
+        assertEquals(AlignmentChatService.ChatResult.SENT,
+                chatService.sendAlignmentChat(lagoonMember, "hello inactive"));
+        assertTrue(drainMessages(lagoonMate).stream().noneMatch(msg -> msg.contains("hello inactive")),
+                "inactive members must be excluded from delivery");
+    }
+
+    @Test
+    void spyToggleIsRequiredToObserveChat() {
+        // SpyAdmin has no cached membership and never toggled: must not receive
+        assertEquals(AlignmentChatService.ChatResult.SENT,
+                chatService.sendAlignmentChat(lagoonMember, "secret plans"));
+        assertTrue(drainMessages(spyAdmin).isEmpty(),
+                "an admin who has not toggled chatspy must not observe alignment chat");
+    }
 }

@@ -11,6 +11,7 @@ import com.sunwayMinecraft.alignments.persistence.AlignmentSeasonRepository;
 import com.sunwayMinecraft.alignments.persistence.AlignmentSeasonRepository.SeasonState;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -177,5 +178,72 @@ class AlignmentSeasonServiceTest {
 
         assertEquals("season-2", service.getCurrentSeason().get().seasonId(),
                 "END_PENDING_ON_ENABLE must close a season that ended while offline");
+    }
+
+    @Test
+    void endlessSeasonsAreNeverEndedByThePeriodicCheck() {
+        when(progressionConfig.getSeasonLengthMillis()).thenReturn(0L);
+        seasonRepository.saveSeasonState(new SeasonState("season-1", 0L));
+
+        service.checkSeason();
+
+        assertEquals("season-1", service.getCurrentSeason().get().seasonId(),
+                "length 0 disables seasons entirely");
+    }
+
+    @Test
+    void continueBehaviorKeepsAPendingSeasonOpenOnEnable() {
+        long length = 30L * 24 * 3_600_000L;
+        when(progressionConfig.getSeasonLengthMillis()).thenReturn(length);
+        when(progressionConfig.getRestartBehavior())
+                .thenReturn(AlignmentProgressionConfig.RestartBehavior.CONTINUE);
+        seasonRepository.saveSeasonState(
+                new SeasonState("season-1", System.currentTimeMillis() - length - 5000));
+
+        service.start();
+
+        assertEquals("season-1", service.getCurrentSeason().get().seasonId(),
+                "CONTINUE must not close a season on enable; the periodic check owns it");
+    }
+
+    @Test
+    void operationsFailGracefullyWhenSeasonStorageIsUnavailable() {
+        seasonRepository.close();
+        assertFalse(service.endSeason("any"));
+        assertFalse(service.resetSeason());
+        assertFalse(service.forceSnapshot());
+        assertTrue(service.getSeasonAlignmentTotals().isEmpty());
+        assertTrue(service.getCurrentSeason().isEmpty());
+    }
+
+    @Test
+    @Disabled("BUG-QA4 (medium): /align leaderboard season reads player_season_reputation, "
+            + "which is only written when a season ENDS - so the current-season leaderboard "
+            + "is always empty during the season even though members have reputation. "
+            + "Season views should fall back to live totals from the membership table.")
+    void currentSeasonLeaderboardReflectsLiveReputation() {
+        seasonRepository.saveSeasonState(new SeasonState("season-1", System.currentTimeMillis()));
+        when(membershipRepository.getAlignmentTotals())
+                .thenReturn(Map.of("azure_hearth", new long[] {420, 7}));
+        when(membershipRepository.getAllMemberships()).thenReturn(List.of());
+
+        assertFalse(service.getSeasonAlignmentTotals().isEmpty(),
+                "the current season must expose live standings before it ends");
+    }
+
+    @Test
+    @Disabled("BUG-QA6 (low): nextSeasonId() strips a fixed 7-character 'season-' prefix, "
+            + "so a season named 'spring-2026' resets to 'season-2027' instead of "
+            + "'spring-2026-next' - the custom season id is silently discarded. The id "
+            + "suffix should only be incremented when it actually starts with 'season-'.")
+    void nonNumericSeasonIdsGetSuffixedInsteadOfIncremented() {
+        seasonRepository.saveSeasonState(new SeasonState("spring-2026", System.currentTimeMillis()));
+        when(membershipRepository.getAlignmentTotals()).thenReturn(Map.of());
+        when(membershipRepository.getAllMemberships()).thenReturn(List.of());
+
+        assertTrue(service.resetSeason());
+
+        assertEquals("spring-2026-next", service.getCurrentSeason().get().seasonId(),
+                "non-numeric season ids must be suffixed, not crash the increment");
     }
 }

@@ -19,6 +19,7 @@ import org.mockbukkit.mockbukkit.entity.PlayerMock;
 
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -166,5 +167,21 @@ class AlignmentChatListenerTest {
                 player.getUniqueId(), alignmentId,
                 GrandAlliance.CONCORDAT_OF_THE_DAWN.getId(), Campus.TAYLORS.getId(),
                 150, status, System.currentTimeMillis(), rankId)));
+    }
+
+    @Test
+    void suffixOnlyRenderingWhenPrefixDisabledButRankHasSuffix() {
+        when(settings.isAllowGlobalChatPrefix()).thenReturn(false);
+        when(settings.isAllowChatRankSuffix()).thenReturn(true);
+        when(settings.getChatRankSuffixFormat()).thenReturn("&7[{rank_suffix}&7] &r");
+        when(progressionConfig.getRank("concordat_of_the_dawn", "steward"))
+                .thenReturn(Optional.of(new AlignmentProgressionConfig.RankDefinition(
+                        "steward", "Steward", 150, "Steward", "desc", true)));
+        cacheMembershipWithRank("azure_hearth", "active", "steward");
+
+        String prefix = LEGACY.serialize(listener.buildPrefix(player));
+        assertTrue(prefix.contains("Steward"), "suffix-only output expected, got: " + prefix);
+        assertFalse(prefix.contains("Azure Hearth"),
+                "the alignment prefix must not appear when it is disabled");
     }
 }
