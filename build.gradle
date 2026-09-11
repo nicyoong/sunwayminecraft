@@ -1,5 +1,6 @@
 plugins {
     id 'java'
+    id 'jacoco'
 }
 
 group = 'com'
@@ -41,12 +42,12 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     testImplementation 'org.mockito:mockito-core:5.14.2'
-    testImplementation ("io.papermc.paper:paper-api:26.2.build.123-stable")
+    testImplementation ("io.papermc.paper:paper-api:26.2.build.111-stable")
     testImplementation 'org.mockbukkit.mockbukkit:mockbukkit-v26.2:4.116.1'
     testImplementation ("com.github.MilkBowl:VaultAPI:1.7.1")
 
     // 26.2 Paper API
-    compileOnly("io.papermc.paper:paper-api:26.2.build.123-stable")
+    compileOnly("io.papermc.paper:paper-api:26.2.build.111-stable")
 
     // Bukkit API (match your server version)
     // compileOnly 'org.spigotmc:spigot-api:1.21.5-R0.1-SNAPSHOT'
@@ -72,7 +73,7 @@ test {
     maxParallelForks = 1
     // MockBukkit suites leak native handles across many mock cycles on Windows;
     // a fresh JVM per class keeps runs deterministic on this machine
-    forkEvery = 20
+    forkEvery = 1
     jvmArgs '-Xmx768m', '-Djdk.attach.allowAttachSelf=true' 
     testLogging {
         events = ["passed", "skipped", "failed"]
@@ -107,5 +108,13 @@ processResources {
     filteringCharset = 'UTF-8'
     filesMatching('plugin.yml') {
         expand props
+    }
+}
+
+jacocoTestReport {
+    dependsOn test
+    reports {
+        xml.required = true
+        html.required = true
     }
 }
