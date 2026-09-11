@@ -9,7 +9,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalLong;
@@ -183,6 +185,82 @@ public class AlignmentRepository {
       return Map.of();
     }
     return counts;
+  }
+
+  /** Live totals per alignment id: summed reputation and member count. */
+  public Map<String, long[]> getAlignmentTotals() {
+    Map<String, long[]> totals = new HashMap<>();
+    if (!isAvailable()) return totals;
+    String sql =
+        "SELECT alignment_id, SUM(reputation) AS total_rep, COUNT(*) AS members "
+            + "FROM player_alignment_membership GROUP BY alignment_id";
+    try (Statement stmt = connection.createStatement();
+         ResultSet rs = stmt.executeQuery(sql)) {
+      while (rs.next()) {
+        totals.put(rs.getString("alignment_id"),
+            new long[] {rs.getLong("total_rep"), rs.getLong("members")});
+      }
+    } catch (SQLException e) {
+      plugin.getLogger().severe("Error loading alignment totals: " + e.getMessage());
+      return Map.of();
+    }
+    return totals;
+  }
+
+  /** Every stored membership, for season snapshots. */
+  public List<AlignmentMembership> getAllMemberships() {
+    List<AlignmentMembership> memberships = new ArrayList<>();
+    if (!isAvailable()) return memberships;
+    String sql =
+        "SELECT player_uuid, alignment_id, joined_at, reputation, status "
+            + "FROM player_alignment_membership";
+    try (Statement stmt = connection.createStatement();
+         ResultSet rs = stmt.executeQuery(sql)) {
+      while (rs.next()) {
+        memberships.add(new AlignmentMembership(
+            UUID.fromString(rs.getString("player_uuid")),
+            rs.getString("alignment_id"),
+            rs.getLong("joined_at"),
+            rs.getInt("reputation"),
+            rs.getString("status")));
+      }
+    } catch (SQLException e) {
+      plugin.getLogger().severe("Error loading all memberships: " + e.getMessage());
+    }
+    return memberships;
+  }
+
+  /** Updates only the reputation column; returns false on failure. */
+  public boolean updateReputation(UUID playerUuid, int reputation) {
+    if (!isAvailable()) return false;
+    String sql =
+        "UPDATE player_alignment_membership SET reputation = ? WHERE player_uuid = ?";
+    try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+      pstmt.setInt(1, reputation);
+      pstmt.setString(2, playerUuid.toString());
+      return pstmt.executeUpdate() > 0;
+    } catch (SQLException e) {
+      plugin.getLogger().severe("Error updating reputation: " + e.getMessage());
+      return false;
+    }
+  }
+
+  /** 1-based rank of a reputation value within an alignment; 0 on failure. */
+  public int getReputationPosition(String alignmentId, int reputation) {
+    if (!isAvailable()) return 0;
+    String sql =
+        "SELECT COUNT(*) + 1 AS position FROM player_alignment_membership "
+            + "WHERE alignment_id = ? AND reputation > ? AND status = 'active'";
+    try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+      pstmt.setString(1, alignmentId);
+      pstmt.setInt(2, reputation);
+      try (ResultSet rs = pstmt.executeQuery()) {
+        return rs.next() ? rs.getInt("position") : 0;
+      }
+    } catch (SQLException e) {
+      plugin.getLogger().severe("Error loading reputation position: " + e.getMessage());
+      return 0;
+    }
   }
 
   public void close() {
