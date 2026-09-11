@@ -232,6 +232,73 @@ public class DistrictControlService {
     }
 
 
+    private void sendContestActionBar(List<UUID> presentPlayers, ControlState state, int required) {
+        String template = settings.getContestActionBar();
+        for (UUID uuid : presentPlayers) {
+            Player player = Bukkit.getPlayer(uuid);
+            if (player != null) {
+                player.sendActionBar(Component.text(template
+                        .replace("{alignment}", String.valueOf(state.leadingAlignmentId))
+                        .replace("{percent}", String.valueOf(state.getProgressPercent(required)))));
+            }
+        }
+    }
+
+    private void transitionToContested(ControlState state, DistrictDefinition district,
+                                       String leadingAlignmentId) {
+        boolean fromStable = state.state == ContestState.STABLE;
+        state.state = ContestState.CONTESTED;
+        state.leadingAlignmentId = leadingAlignmentId;
+        persist(state, "contested");
+        if (fromStable && settings.isBroadcastContestStart()) {
+            broadcast(settings.getContestStartMessage()
+                    .replace("{district}", district.getDisplayName())
+                    .replace("{alignment}", leadingAlignmentId == null ? "unknown" : leadingAlignmentId));
+        }
+        metrics().ifPresent(m -> m.accept("district_contests_started"));
+    }
+
+    private void neutralReset(ControlState state, DistrictDefinition district) {
+        String previous = state.controllerAlignmentId;
+        state.controllerAlignmentId = null;
+        state.controllerGrandAllianceId = null;
+        applyOwnership(state.districtId, null, null, previous,
+                DistrictControlChangeEvent.ChangeReason.NEUTRAL_RESET);
+        repository.appendHistory(new DistrictControlRepository.ControlHistoryRecord(
+                0, state.districtId, previous, null,
+                state.state.name(), System.currentTimeMillis(), "neutral_reset"));
+        LOGGER.info("[Districts] District '" + state.districtId + "' decayed to neutral");
+    }
+
+    private void handleNoPresence(ControlState state, DistrictDefinition district) {
+        boolean wasContesting = state.state == ContestState.CONTESTED
+                || state.state == ContestState.CAPTURING;
+        if (state.progress <= 0 && !wasContesting) {
+            return;
+        }
+        if (!settings.isDecayWhenUncontested()) {
+            return;
+        }
+        state.progress = Math.max(0, state.progress - settings.getPointsPerPlayerPerTick());
+        if (state.progress <= 0) {
+            if (wasContesting) {
+                if (settings.isBroadcastContestEnd()) {
+                    broadcast(settings.getContestEndMessage()
+                            .replace("{district}", district.getDisplayName()));
+                }
+                metrics().ifPresent(m -> m.accept("district_contests_expired"));
+            }
+            state.state = ContestState.STABLE;
+            state.leadingAlignmentId = null;
+            state.contributors.clear();
+            if (settings.isAllowNeutralReset() && state.controllerAlignmentId != null) {
+                neutralReset(state, district);
+            }
+        }
+        persist(state, "decay");
+    }
+
+
     private java.util.Optional<Consumer<String>> metrics() {
         try {
             return java.util.Optional.ofNullable(metricsSupplier.get());
