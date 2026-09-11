@@ -124,23 +124,6 @@ public class AlignmentMembershipCache {
             cached.rankId()));
   }
 
-  /** Recomputes the player's rank from the cached reputation. */
-  public void updateRank(UUID playerUuid) {
-    CachedMembership cached = cache.get(playerUuid);
-    if (cached == null) return;
-    cache.put(
-        playerUuid,
-        new CachedMembership(
-            cached.playerUuid(),
-            cached.alignmentId(),
-            cached.grandAllianceId(),
-            cached.campusId(),
-            cached.reputation(),
-            cached.status(),
-            System.currentTimeMillis(),
-            rankService.resolveRankId(cached.reputation(), cached.grandAllianceId())));
-  }
-
   public void invalidate(UUID playerUuid) {
     cache.remove(playerUuid);
   }
