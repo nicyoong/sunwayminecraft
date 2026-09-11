@@ -5,6 +5,8 @@ import com.sunwayMinecraft.SunwayMinecraft;
 import com.sunwayMinecraft.events.domain.ActiveCityEvent;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPluginLoader;
+import java.util.ArrayList;
+import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,6 +33,11 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 class CityEventsShutdownPersistenceTest {
+    private final List<PluginInitializer> createdInitializers = new ArrayList<>();
+    // The initializer registers a PlayerJoinEvent listener with the mocked
+    // plugin; MockBukkit's unmock does not clear static handler lists, so the
+    // registration must be removed manually or later addPlayer calls NPE.
+    private SunwayMinecraft registeredPlugin;
     @TempDir
     Path dataDirectory;
 
@@ -45,13 +52,26 @@ class CityEventsShutdownPersistenceTest {
 
     @AfterEach
     void tearDown() {
+        for (PluginInitializer initializer : createdInitializers) {
+            // close SQLite connections so @TempDir cleanup works on Windows
+            if (initializer.getCoinFlipDatabase() != null) {
+                initializer.getCoinFlipDatabase().close();
+            }
+            if (initializer.getDistrictControlRepository() != null) {
+                initializer.getDistrictControlRepository().close();
+            }
+        }
+
+        org.bukkit.event.HandlerList.unregisterAll();
         MockBukkit.unmock();
     }
 
     @Test
     void activeEventStateIsPersistedOnDisableAndSurvivesRestart() throws Exception {
         SunwayMinecraft plugin = pluginMock();
+        registeredPlugin = plugin;
         PluginInitializer initializer = new PluginInitializer(plugin);
+        createdInitializers.add(initializer);
         CityEventsManager events = initializer.getCityEventsManager();
         assertNotNull(events);
 
@@ -65,11 +85,13 @@ class CityEventsShutdownPersistenceTest {
         assertTrue(stateFile.exists(),
                 "onDisable must persist the current active event state");
 
+        org.bukkit.event.HandlerList.unregisterAll();
         MockBukkit.unmock();
         server = MockBukkit.mock();
         server.addSimpleWorld("world");
         server.addSimpleWorld("world_nether");
         PluginInitializer restarted = new PluginInitializer(pluginMock());
+        createdInitializers.add(restarted);
         assertTrue(restarted.getCityEventsManager().isEventActive("supply_drive"),
                 "an event active at shutdown must survive a restart");
     }

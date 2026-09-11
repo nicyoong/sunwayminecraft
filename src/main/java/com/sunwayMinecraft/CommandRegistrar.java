@@ -81,7 +81,9 @@ public class CommandRegistrar {
       DistrictCommands districtCmds =
               new DistrictCommands(init.getDistrictManager(), init.getDistrictAlignmentService(),
                       new com.sunwayMinecraft.commands.DistrictAdminSubCommands(init.getDistrictManager(),
-                              init.getDistrictManager().getConfigManager()));
+                              init.getDistrictManager().getConfigManager()),
+                      new com.sunwayMinecraft.commands.DistrictControlCommands(init.getDistrictControlService(),
+                              init.getDistrictControlSettings()));
       registerCommand("district", districtCmds);
 
       DistrictAdminCommands districtAdminCmds =

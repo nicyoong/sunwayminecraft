@@ -4,6 +4,8 @@ import com.sunwayMinecraft.PluginInitializer;
 import com.sunwayMinecraft.SunwayMinecraft;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPluginLoader;
+import java.util.ArrayList;
+import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,6 +31,11 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 class CityMetricsPersistenceTest {
+    private final List<PluginInitializer> createdInitializers = new ArrayList<>();
+    // The initializer registers a PlayerJoinEvent listener with the mocked
+    // plugin; MockBukkit's unmock does not clear static handler lists, so the
+    // registration must be removed manually or later addPlayer calls NPE.
+    private SunwayMinecraft registeredPlugin;
     @TempDir
     Path dataDirectory;
 
@@ -43,13 +50,26 @@ class CityMetricsPersistenceTest {
 
     @AfterEach
     void tearDown() {
+        for (PluginInitializer initializer : createdInitializers) {
+            // close SQLite connections so @TempDir cleanup works on Windows
+            if (initializer.getCoinFlipDatabase() != null) {
+                initializer.getCoinFlipDatabase().close();
+            }
+            if (initializer.getDistrictControlRepository() != null) {
+                initializer.getDistrictControlRepository().close();
+            }
+        }
+
+        org.bukkit.event.HandlerList.unregisterAll();
         MockBukkit.unmock();
     }
 
     @Test
     void periodicTaskAndShutdownPersistCountersAcrossServerRestart() throws Exception {
         SunwayMinecraft plugin = pluginMock();
+        registeredPlugin = plugin;
         PluginInitializer initializer = new PluginInitializer(plugin);
+        createdInitializers.add(initializer);
         CityMetricsManager metrics = initializer.getCityMetricsManager();
         assertNotNull(metrics);
 
@@ -62,10 +82,12 @@ class CityMetricsPersistenceTest {
 
         metrics.increment("events.started", 2);
         shutdown(plugin, initializer);
+        org.bukkit.event.HandlerList.unregisterAll();
         MockBukkit.unmock();
 
         server = MockBukkit.mock();
         PluginInitializer restarted = new PluginInitializer(pluginMock());
+        createdInitializers.add(restarted);
         assertEquals(3.0, restarted.getCityMetricsManager().getSnapshot().getMetric("contracts.completed"),
                 "counter saved by the periodic task must survive a restart");
         assertEquals(2.0, restarted.getCityMetricsManager().getSnapshot().getMetric("events.started"),

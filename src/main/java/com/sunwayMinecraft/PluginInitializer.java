@@ -11,7 +11,9 @@ import com.sunwayMinecraft.residency.admin.AdminSelectionManager;
 import com.sunwayMinecraft.residency.ResidencyBootstrap;
 import com.sunwayMinecraft.residency.ResidencyManager;
 import com.sunwayMinecraft.districts.DistrictBootstrap;
+import com.sunwayMinecraft.districts.config.DistrictControlSettingsConfig;
 import com.sunwayMinecraft.districts.config.DistrictSettingsConfig;
+import com.sunwayMinecraft.districts.service.DistrictControlService;
 import com.sunwayMinecraft.districts.service.DistrictResidencyGuard;
 import com.sunwayMinecraft.districts.service.DistrictAlignmentService;
 import com.sunwayMinecraft.districts.DistrictManager;
@@ -72,6 +74,8 @@ public class PluginInitializer {
   private DistrictSettingsConfig districtSettings;
   private DistrictResidencyGuard districtResidencyGuard;
   private DistrictAlignmentService districtAlignmentService;
+  private DistrictControlService districtControlService;
+  private DistrictControlSettingsConfig districtControlSettings;
 
   // Coin flip
   private CoinFlipSystem coinFlipSystem;
@@ -189,10 +193,12 @@ public class PluginInitializer {
 
   private void initDistrictSystem() {
     DistrictBootstrap districtBootstrap = new DistrictBootstrap(plugin, playerAlignmentResolver,
-        () -> cityMetricsManager == null ? null : cityMetricsManager::increment);
+        () -> cityMetricsManager == null ? null : cityMetricsManager::increment,
+        () -> getEconomy());
     districtManager = districtBootstrap.initialize();
     districtSettings = districtBootstrap.getSettings();
     districtAlignmentService = districtBootstrap.getAlignmentService();
+    districtControlService = districtBootstrap.getControlService();
   }
 
   private void initCoinFlipSystem() {
@@ -307,6 +313,18 @@ public class PluginInitializer {
 
   public DistrictAlignmentService getDistrictAlignmentService() {
     return districtAlignmentService;
+  }
+
+  public com.sunwayMinecraft.districts.persistence.DistrictControlRepository getDistrictControlRepository() {
+    return districtControlService == null ? null : districtControlService.getRepository();
+  }
+
+  public DistrictControlService getDistrictControlService() {
+    return districtControlService;
+  }
+
+  public DistrictControlSettingsConfig getDistrictControlSettings() {
+    return districtControlSettings;
   }
 
   public DistrictResidencyGuard getDistrictResidencyGuard() {
