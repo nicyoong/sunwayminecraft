@@ -113,15 +113,15 @@ public class AlignmentPerkService {
       }
       active.remove(perkId);
     }
-    // apply or re-apply desired perks
+    // apply or refresh desired perks: addPotionEffect replaces the existing
+    // effect, so every pass renews the short duration and picks up amplifier
+    // changes from reloaded config
     for (PerkDefinition perk : perksConfig.getPerks().values()) {
       if (!desired.contains(perk.id())) {
         continue;
       }
-      if (!active.containsKey(perk.id())) {
-        apply(player, perk);
-        active.put(perk.id(), perk.effect());
-      }
+      apply(player, perk);
+      active.put(perk.id(), perk.effect());
     }
 
     if (active.isEmpty()) {
