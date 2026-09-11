@@ -503,6 +503,124 @@ public class DistrictControlService {
     }
 
 
+    /** Loads persisted control state and merges controllers into runtime ownership. */
+    public void load() {
+        for (ControlStateRecord record : repository.loadAllStates().values()) {
+            ControlState state = new ControlState(record.districtId());
+            state.controllerAlignmentId = record.controllerAlignmentId();
+            state.controllerGrandAllianceId = record.controllerGrandAllianceId();
+            try {
+                state.state = ContestState.valueOf(record.contestState());
+            } catch (IllegalArgumentException e) {
+                state.state = ContestState.STABLE;
+            }
+            state.leadingAlignmentId = record.leadingAlignmentId();
+            state.progress = record.controlProgress();
+            states.put(state.districtId, state);
+            if (state.controllerAlignmentId != null) {
+                configManager.applyRuntimeOwnership(state.districtId, ownershipWithController(
+                        configManager.getDistrict(state.districtId), state.controllerAlignmentId,
+                        state.controllerGrandAllianceId));
+                fireControlChange(state.districtId, null, state.controllerAlignmentId,
+                        state.controllerGrandAllianceId,
+                        DistrictControlChangeEvent.ChangeReason.OVERRIDE_MERGE);
+            }
+        }
+        LOGGER.info("[Districts] Loaded " + states.size() + " district control state(s)");
+    }
+
+    public void adminStartContest(String districtId, String actor) {
+        ControlState state = states.computeIfAbsent(districtId, ControlState::new);
+        state.forceContest = true;
+        persist(state, "admin_start");
+        logAdmin(actor, "started contest for '" + districtId + "'");
+    }
+
+    public void adminStopContest(String districtId, String actor) {
+        ControlState state = states.computeIfAbsent(districtId, ControlState::new);
+        state.forceContest = false;
+        state.state = ContestState.STABLE;
+        state.leadingAlignmentId = null;
+        state.progress = 0;
+        state.contributors.clear();
+        persist(state, "admin_stop");
+        logAdmin(actor, "stopped contest for '" + districtId + "'");
+    }
+
+    public void adminResetContest(String districtId, String actor) {
+        ControlState state = states.computeIfAbsent(districtId, ControlState::new);
+        state.progress = 0;
+        state.leadingAlignmentId = null;
+        state.state = ContestState.STABLE;
+        state.cooldownUntil = 0;
+        state.contributors.clear();
+        persist(state, "admin_reset");
+        logAdmin(actor, "reset contest for '" + districtId + "'");
+    }
+
+    public void adminSetControl(String districtId, String alignmentId, String actor) {
+        ControlState state = states.computeIfAbsent(districtId, ControlState::new);
+        String alliance = configManager.allianceOfAlignment(alignmentId);
+        String previous = state.controllerAlignmentId;
+        state.controllerAlignmentId = alignmentId;
+        state.controllerGrandAllianceId = alliance;
+        state.state = ContestState.STABLE;
+        state.progress = 0;
+        state.leadingAlignmentId = null;
+        state.cooldownUntil = 0;
+        persist(state, "admin_set");
+        repository.appendHistory(new DistrictControlRepository.ControlHistoryRecord(
+                0, districtId, previous, alignmentId, state.state.name(),
+                System.currentTimeMillis(), "admin_set"));
+        applyOwnership(districtId, alignmentId, alliance, previous,
+                DistrictControlChangeEvent.ChangeReason.ADMIN_SET);
+        logAdmin(actor, "set control of '" + districtId + "' to " + alignmentId);
+    }
+
+    public void adminClearControl(String districtId, String actor) {
+        ControlState state = states.computeIfAbsent(districtId, ControlState::new);
+        String previous = state.controllerAlignmentId;
+        state.controllerAlignmentId = null;
+        state.controllerGrandAllianceId = null;
+        state.state = ContestState.STABLE;
+        state.progress = 0;
+        state.leadingAlignmentId = null;
+        persist(state, "admin_clear");
+        repository.appendHistory(new DistrictControlRepository.ControlHistoryRecord(
+                0, districtId, previous, null, state.state.name(),
+                System.currentTimeMillis(), "admin_clear"));
+        applyOwnership(districtId, null, null, previous,
+                DistrictControlChangeEvent.ChangeReason.ADMIN_CLEAR);
+        logAdmin(actor, "cleared control of '" + districtId + "'");
+    }
+
+    public void adminLock(String districtId, String actor) {
+        ControlState state = states.computeIfAbsent(districtId, ControlState::new);
+        state.state = ContestState.LOCKED;
+        persist(state, "admin_lock");
+        logAdmin(actor, "locked control of '" + districtId + "'");
+    }
+
+    public void adminUnlock(String districtId, String actor) {
+        ControlState state = states.computeIfAbsent(districtId, ControlState::new);
+        state.state = ContestState.STABLE;
+        persist(state, "admin_unlock");
+        logAdmin(actor, "unlocked control of '" + districtId + "'");
+    }
+
+    public void rebuildOverrides(String actor) {
+        for (ControlState state : states.values()) {
+            if (state.controllerAlignmentId == null) {
+                continue;
+            }
+            configManager.updateOwnership(state.districtId, ownershipWithController(
+                    configManager.getDistrict(state.districtId), state.controllerAlignmentId,
+                    state.controllerGrandAllianceId), actor);
+        }
+        LOGGER.info("[Districts] [admin] " + actor + " rebuilt district overrides from control state");
+    }
+
+
     private java.util.Optional<Consumer<String>> metrics() {
         try {
             return java.util.Optional.ofNullable(metricsSupplier.get());
