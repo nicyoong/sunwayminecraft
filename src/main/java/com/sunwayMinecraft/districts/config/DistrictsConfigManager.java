@@ -286,6 +286,75 @@ public class DistrictsConfigManager {
         return districts.get(id.toLowerCase(Locale.ROOT));
     }
 
+    public DistrictDefinition getDistrictById(String id) {
+        return getDistrict(id);
+    }
+
+    public List<DistrictDefinition> getDistrictsByCampus(String campusId) {
+        List<DistrictDefinition> result = new ArrayList<>();
+        if (campusId == null) return result;
+        String campus = campusId.toLowerCase(Locale.ROOT);
+        for (DistrictDefinition district : districts.values()) {
+            if (campus.equals(district.getOwnership().homeCampus())) {
+                result.add(district);
+            }
+        }
+        return result;
+    }
+
+    public List<DistrictDefinition> getDistrictsByGrandAlliance(String grandAllianceId) {
+        List<DistrictDefinition> result = new ArrayList<>();
+        if (grandAllianceId == null) return result;
+        String alliance = grandAllianceId.toLowerCase(Locale.ROOT);
+        for (DistrictDefinition district : districts.values()) {
+            if (alliance.equals(district.getOwnership().grandAllianceOwner())) {
+                result.add(district);
+            }
+        }
+        return result;
+    }
+
+    public List<DistrictDefinition> getDistrictsByType(DistrictType type) {
+        List<DistrictDefinition> result = new ArrayList<>();
+        if (type == null) return result;
+        for (DistrictDefinition district : districts.values()) {
+            if (district.getDistrictType() == type) {
+                result.add(district);
+            }
+        }
+        return result;
+    }
+
+    public List<DistrictDefinition> getContestedDistricts() {
+        List<DistrictDefinition> result = new ArrayList<>();
+        for (DistrictDefinition district : districts.values()) {
+            if (district.getOwnership().contested()) {
+                result.add(district);
+            }
+        }
+        return result;
+    }
+
+    public List<DistrictDefinition> getTransitDistricts() {
+        List<DistrictDefinition> result = new ArrayList<>();
+        for (DistrictDefinition district : districts.values()) {
+            if (district.getOwnership().transitConnected()) {
+                result.add(district);
+            }
+        }
+        return result;
+    }
+
+    public List<DistrictDefinition> getEnabledDistricts() {
+        List<DistrictDefinition> result = new ArrayList<>();
+        for (DistrictDefinition district : districts.values()) {
+            if (district.isEnabled()) {
+                result.add(district);
+            }
+        }
+        return result;
+    }
+
     public YamlConfiguration getConfig() {
         return config;
     }
