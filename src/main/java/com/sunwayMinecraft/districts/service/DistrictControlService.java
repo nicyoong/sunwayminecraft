@@ -621,6 +621,17 @@ public class DistrictControlService {
     }
 
 
+    private void applyOwnership(String districtId, String alignmentId, String allianceId,
+                                String previous, DistrictControlChangeEvent.ChangeReason reason) {
+        DistrictDefinition district = configManager.getDistrict(districtId);
+        if (district == null) {
+            return;
+        }
+        configManager.applyRuntimeOwnership(districtId, ownershipWithController(district, alignmentId, allianceId));
+        fireControlChange(districtId, previous, alignmentId, allianceId, reason);
+    }
+
+
     private java.util.Optional<Consumer<String>> metrics() {
         try {
             return java.util.Optional.ofNullable(metricsSupplier.get());
