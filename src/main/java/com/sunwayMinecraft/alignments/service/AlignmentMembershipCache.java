@@ -31,16 +31,29 @@ public class AlignmentMembershipCache {
       String campusId,
       int reputation,
       String status,
-      long lastUpdated) {}
+      long lastUpdated,
+      String rankId) {
+    public CachedMembership(
+        UUID playerUuid, String alignmentId, String grandAllianceId, String campusId,
+        int reputation, String status, long lastUpdated) {
+      this(playerUuid, alignmentId, grandAllianceId, campusId, reputation, status,
+          lastUpdated, null);
+    }
+  }
 
   private final AlignmentConfigManager configManager;
   private final AlignmentRepository repository;
+  private final AlignmentRankService rankService;
   private final Map<UUID, CachedMembership> cache = new ConcurrentHashMap<>();
   private long lastDbUnavailableWarning = 0;
 
-  public AlignmentMembershipCache(AlignmentConfigManager configManager, AlignmentRepository repository) {
+  public AlignmentMembershipCache(
+      AlignmentConfigManager configManager,
+      AlignmentRepository repository,
+      AlignmentRankService rankService) {
     this.configManager = configManager;
     this.repository = repository;
+    this.rankService = rankService;
   }
 
   /** Populates the cache for everyone online; used on plugin enable. */
@@ -91,7 +104,8 @@ public class AlignmentMembershipCache {
             definition.homeCampus().getId(),
             membership.reputation(),
             membership.status(),
-            System.currentTimeMillis()));
+            System.currentTimeMillis(),
+            rankService.resolveRankId(membership.reputation(), definition.grandAlliance().getId())));
   }
 
   public void updateStatus(UUID playerUuid, String status) {
@@ -106,11 +120,34 @@ public class AlignmentMembershipCache {
             cached.campusId(),
             cached.reputation(),
             status,
-            System.currentTimeMillis()));
+            System.currentTimeMillis(),
+            cached.rankId()));
+  }
+
+  /** Recomputes the player's rank from the cached reputation. */
+  public void updateRank(UUID playerUuid) {
+    CachedMembership cached = cache.get(playerUuid);
+    if (cached == null) return;
+    cache.put(
+        playerUuid,
+        new CachedMembership(
+            cached.playerUuid(),
+            cached.alignmentId(),
+            cached.grandAllianceId(),
+            cached.campusId(),
+            cached.reputation(),
+            cached.status(),
+            System.currentTimeMillis(),
+            rankService.resolveRankId(cached.reputation(), cached.grandAllianceId())));
   }
 
   public void invalidate(UUID playerUuid) {
     cache.remove(playerUuid);
+  }
+
+  /** Drops every cached entry; used after bulk reputation resets. */
+  public void clearAll() {
+    cache.clear();
   }
 
   public int size() {
@@ -168,7 +205,8 @@ public class AlignmentMembershipCache {
             def.homeCampus().getId(),
             membership.get().reputation(),
             membership.get().status(),
-            System.currentTimeMillis()));
+            System.currentTimeMillis(),
+            rankService.resolveRankId(membership.get().reputation(), def.grandAlliance().getId())));
   }
 
   private void warnDbUnavailable() {

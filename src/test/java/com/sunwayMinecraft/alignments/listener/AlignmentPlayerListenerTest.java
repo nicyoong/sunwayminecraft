@@ -42,7 +42,10 @@ class AlignmentPlayerListenerTest {
         when(repository.findByUuid(any(UUID.class))).thenAnswer(invocation ->
                 Optional.of(AlignmentMembership.newMembership(
                         invocation.getArgument(0, UUID.class), "azure_hearth", 1000L)));
-        cache = new AlignmentMembershipCache(configManager, repository);
+        cache = new AlignmentMembershipCache(
+            configManager, repository,
+            new com.sunwayMinecraft.alignments.service.AlignmentRankService(
+                mock(com.sunwayMinecraft.alignments.config.AlignmentProgressionConfig.class)));
         listener = new AlignmentPlayerListener(cache);
         JavaPlugin plugin = MockBukkit.createMockPlugin();
         listener.register(plugin);
