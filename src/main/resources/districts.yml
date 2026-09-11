@@ -10,3 +10,112 @@ districts:
     region:
       min: { x: 100, y: 60, z: 200 }
       max: { x: 250, y: 100, z: 400 }
+
+  # ---------------------------------------------------------------------------
+  # Bandar Sunway Triple Alliance map. Ownership fields (grand_alliance_owner,
+  # alignment_owner, allowed_alignments, denied_alignments) are neutral in the
+  # shipped defaults; see docs/admin/alignmentadmin.md for ownership syntax.
+  # ---------------------------------------------------------------------------
+
+  taylors_lakeside_campus:
+    display-name: "Taylors Lakeside Campus"
+    district-type: CAMPUS
+    home_campus: taylors
+    world: "world"
+    enabled: true
+    prestige-tier: 4
+    public-summary: "Lakeside campus of Taylors University - lecture halls, the library and the student hub."
+    description: "Taylors University lakeside campus grounds."
+    region:
+      min: { x: 300, y: 60, z: 300 }
+      max: { x: 360, y: 100, z: 360 }
+
+  sunway_university_campus:
+    display-name: "Sunway University Campus"
+    district-type: CAMPUS
+    home_campus: sunway
+    world: "world"
+    enabled: true
+    prestige-tier: 4
+    public-summary: "Sunway University grounds - the heart of the alliance's original campus."
+    description: "Sunway University campus grounds."
+    region:
+      min: { x: 400, y: 60, z: 300 }
+      max: { x: 460, y: 100, z: 360 }
+
+  monash_research_campus:
+    display-name: "Monash Research Campus"
+    district-type: CAMPUS
+    home_campus: monash
+    world: "world"
+    enabled: true
+    prestige-tier: 4
+    public-summary: "Monash Malaysia research campus - laboratories and the engineering quad."
+    description: "Monash Malaysia research campus grounds."
+    region:
+      min: { x: 500, y: 60, z: 300 }
+      max: { x: 560, y: 100, z: 360 }
+
+  sunway_pyramid_commercial:
+    display-name: "Sunway Pyramid Commercial"
+    district-type: COMMERCIAL
+    home_campus: sunway
+    world: "world"
+    enabled: true
+    prestige-tier: 5
+    property_policy: "commercial_standard"
+    public-summary: "The great pyramid mall - shops, food court and the ice rink."
+    description: "Sunway Pyramid shopping district."
+    region:
+      min: { x: 400, y: 60, z: 400 }
+      max: { x: 450, y: 100, z: 450 }
+
+  sunway_lagoon_entertainment:
+    display-name: "Sunway Lagoon Entertainment"
+    district-type: ENTERTAINMENT
+    home_campus: sunway
+    world: "world"
+    enabled: true
+    prestige-tier: 3
+    public-summary: "Sunway Lagoon theme park - water rides, waves and weekend events."
+    description: "Sunway Lagoon entertainment quarter."
+    region:
+      min: { x: 300, y: 60, z: 400 }
+      max: { x: 350, y: 100, z: 450 }
+
+  brt_central_transit:
+    display-name: "BRT Central Transit"
+    district-type: TRANSIT
+    world: "world"
+    enabled: true
+    prestige-tier: 1
+    transit_connected: true
+    public-summary: "The Bus Rapid Transit interchange connecting every campus and the pyramid."
+    description: "Central BRT transit hub for the alliance."
+    region:
+      min: { x: 370, y: 60, z: 380 }
+      max: { x: 390, y: 100, z: 398 }
+
+  triple_alliance_sanctuary:
+    display-name: "Triple Alliance Sanctuary"
+    district-type: SANCTUARY
+    world: "world"
+    enabled: true
+    prestige-tier: 5
+    public-summary: "Neutral ground where all three campuses meet - no flags fly here."
+    description: "Neutral meeting ground shared by the whole alliance."
+    region:
+      min: { x: 600, y: 60, z: 600 }
+      max: { x: 660, y: 100, z: 660 }
+
+  old_world_archive:
+    display-name: "Old World Archive"
+    district-type: ARCHIVED
+    world: "world"
+    enabled: true
+    prestige-tier: 2
+    public-summary: "The preserved ruins of the first city - read-only heritage, do not build."
+    description: "Archived heritage site from the founding era."
+    region:
+      min: { x: 700, y: 60, z: 700 }
+      max: { x: 750, y: 100, z: 750 }
