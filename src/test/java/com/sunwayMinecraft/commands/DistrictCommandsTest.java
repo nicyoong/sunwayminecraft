@@ -9,6 +9,7 @@ import com.sunwayMinecraft.districts.region.Region3i;
 import com.sunwayMinecraft.districts.service.DistrictAlignmentService;
 import org.bukkit.Location;
 import org.bukkit.command.Command;
+import org.bukkit.command.CommandSender;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -159,5 +160,18 @@ class DistrictCommandsTest {
             messages.add(message);
         }
         return messages;
+    }
+
+    @Test
+    void contestFromConsoleDoesNotCrashAndExplainsThePlayerOnlyRule() {
+        // a permitted console exercises the fixed path: before BUG-DIST2 the
+        // hard cast to Player threw ClassCastException here
+        org.bukkit.command.CommandSender console = mock(CommandSender.class);
+        when(console.hasPermission(org.mockito.ArgumentMatchers.anyString())).thenReturn(true);
+
+        assertTrue(commands.onCommand(console, command("district"), "district",
+                new String[]{"contest"}));
+        org.mockito.Mockito.verify(console).sendMessage(org.mockito.ArgumentMatchers.argThat(
+                (String message) -> message != null && message.contains("Only players")));
     }
 }

@@ -56,7 +56,8 @@ public class DistrictCommands implements CommandExecutor, TabCompleter {
             case "admin":
                 return adminSubCommands.handle(sender, args);
             case "contest":
-                return controlCommands.handleContest(sender, (Player) sender);
+                return controlCommands.handleContest(sender,
+                        sender instanceof Player p ? p : null);
             case "control":
                 return controlCommands.handleControl(sender, sender instanceof Player p ? p : null, args);
             default:

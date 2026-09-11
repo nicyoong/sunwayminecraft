@@ -35,6 +35,11 @@ public class DistrictControlCommands {
 
     /** /district contest - contest status in the player's current district. */
     public boolean handleContest(CommandSender sender, Player player) {
+        if (player == null) {
+            sender.sendMessage("§cOnly players can check their current district. "
+                    + "Use §f/district control status <district>§c instead.");
+            return true;
+        }
         DistrictDefinition district = currentDistrict(player);
         if (district == null) {
             sender.sendMessage("§7You are not inside a district.");
