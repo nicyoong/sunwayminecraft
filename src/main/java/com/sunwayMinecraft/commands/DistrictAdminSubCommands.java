@@ -115,9 +115,10 @@ public class DistrictAdminSubCommands {
             sender.sendMessage("§cUsage: /district admin toggle <contested|transit> <district>");
             return;
         }
+        String target = args[2].toLowerCase(Locale.ROOT);
         DistrictDefinition district = requireDistrict(args[3]);
         DistrictOwnership current = district.getOwnership();
-        switch (args[1].toLowerCase(Locale.ROOT)) {
+        switch (target) {
             case "contested" -> {
                 boolean newValue = !current.contested();
                 configManager.updateOwnership(district.getId(), new DistrictOwnership(
