@@ -195,6 +195,43 @@ public class DistrictControlService {
         return repository;
     }
 
+    private void persist(ControlState state, String reason) {
+        boolean saved = repository.saveState(new ControlStateRecord(
+                state.districtId, state.controllerAlignmentId, state.controllerGrandAllianceId,
+                state.state.name(), state.leadingAlignmentId, (int) state.progress,
+                System.currentTimeMillis()));
+        if (!saved) {
+            // keep runtime state; the next successful save will catch up
+            LOGGER.warning("[Districts] Could not persist control state for '" + state.districtId
+                    + "' (" + reason + "); runtime state kept");
+        }
+    }
+
+    private void broadcast(String message) {
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            player.sendMessage(message);
+        }
+    }
+
+    private void fireControlChange(String districtId, String previous, String newAlignmentId,
+                                   String allianceId, DistrictControlChangeEvent.ChangeReason reason) {
+        DistrictDefinition district = configManager.getDistrict(districtId);
+        Bukkit.getPluginManager().callEvent(new DistrictControlChangeEvent(
+                district, previous, newAlignmentId, allianceId, reason));
+    }
+
+    private DistrictOwnership ownershipWithController(
+            DistrictDefinition district, String alignmentId, String allianceId) {
+        DistrictOwnership current = district == null ? null : district.getOwnership();
+        if (current == null) {
+            current = DistrictOwnership.neutral();
+        }
+        return new DistrictOwnership(current.homeCampus(), allianceId, alignmentId,
+                current.allowedAlignments(), current.deniedAlignments(),
+                current.propertyPolicy(), current.transitConnected(), current.contested());
+    }
+
+
     private java.util.Optional<Consumer<String>> metrics() {
         try {
             return java.util.Optional.ofNullable(metricsSupplier.get());
