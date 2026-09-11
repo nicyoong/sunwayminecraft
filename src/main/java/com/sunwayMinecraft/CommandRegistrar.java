@@ -137,9 +137,16 @@ public class CommandRegistrar {
 
     // Triple Alliance alignments
     AlignCommands alignCmds =
-        new AlignCommands(init.getAlignmentService(), init.getAlignmentConfigManager());
+        new AlignCommands(
+            init.getAlignmentService(),
+            init.getAlignmentConfigManager(),
+            init.getAlignmentSettings(),
+            init.getAlignmentChatService(),
+            init.getAlignmentCache());
     registerCommand("align", alignCmds);
-    plugin.getCommand("align").setTabCompleter(alignCmds);
+    plugin.getCommand("align").setTabCompleter(
+        new AlignTabCompleter(init.getAlignmentConfigManager()));
+    registerCommand("ac", alignCmds);
   }
 
   private void registerCommand(String name, CommandExecutor executor) {

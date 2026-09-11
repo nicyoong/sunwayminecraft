@@ -16,7 +16,13 @@ import com.sunwayMinecraft.coinflip.*;
 import com.sunwayMinecraft.switches.*;
 import com.sunwayMinecraft.worldtravel.*;
 import com.sunwayMinecraft.alignments.config.AlignmentConfigManager;
+import com.sunwayMinecraft.alignments.config.AlignmentSettingsConfig;
+import com.sunwayMinecraft.alignments.listener.AlignmentChatListener;
+import com.sunwayMinecraft.alignments.listener.AlignmentPlayerListener;
 import com.sunwayMinecraft.alignments.persistence.AlignmentRepository;
+import com.sunwayMinecraft.alignments.service.AlignmentChatService;
+import com.sunwayMinecraft.alignments.service.AlignmentCooldownManager;
+import com.sunwayMinecraft.alignments.service.AlignmentMembershipCache;
 import com.sunwayMinecraft.alignments.service.AlignmentService;
 import com.sunwayMinecraft.city.CityOverviewService;
 import com.sunwayMinecraft.city.CityValidationService;
@@ -94,8 +100,12 @@ public class PluginInitializer {
 
   // Triple Alliance alignments
   private AlignmentConfigManager alignmentConfigManager;
+  private AlignmentSettingsConfig alignmentSettings;
   private AlignmentRepository alignmentRepository;
+  private AlignmentMembershipCache alignmentCache;
+  private AlignmentCooldownManager alignmentCooldownManager;
   private AlignmentService alignmentService;
+  private AlignmentChatService alignmentChatService;
 
   public PluginInitializer(SunwayMinecraft plugin) {
     this.plugin = plugin;
@@ -247,6 +257,8 @@ public class PluginInitializer {
   }
 
   private void initAlignmentSystem() {
+    alignmentSettings = new AlignmentSettingsConfig(plugin);
+    alignmentSettings.load();
     alignmentConfigManager = new AlignmentConfigManager(plugin);
     alignmentConfigManager.load();
     alignmentRepository = new AlignmentRepository(plugin);
@@ -254,7 +266,19 @@ public class PluginInitializer {
       plugin.getLogger()
           .warning("Alignment membership storage is unavailable; alignment changes are disabled");
     }
-    alignmentService = new AlignmentService(alignmentConfigManager, alignmentRepository);
+    alignmentCache = new AlignmentMembershipCache(alignmentConfigManager, alignmentRepository);
+    alignmentCooldownManager = new AlignmentCooldownManager(alignmentRepository);
+    alignmentService =
+        new AlignmentService(
+            alignmentConfigManager, alignmentSettings, alignmentRepository,
+            alignmentCooldownManager, alignmentCache);
+    alignmentChatService =
+        new AlignmentChatService(alignmentSettings, alignmentConfigManager, alignmentCache);
+
+    new AlignmentPlayerListener(alignmentCache).register(plugin);
+    new AlignmentChatListener(alignmentSettings, alignmentConfigManager, alignmentCache)
+        .register(plugin);
+    alignmentCache.loadOnlinePlayers();
   }
 
   private Economy getEconomy() {
@@ -365,8 +389,20 @@ public class PluginInitializer {
     return alignmentConfigManager;
   }
 
+  public AlignmentSettingsConfig getAlignmentSettings() {
+    return alignmentSettings;
+  }
+
   public AlignmentRepository getAlignmentRepository() {
     return alignmentRepository;
+  }
+
+  public AlignmentMembershipCache getAlignmentCache() {
+    return alignmentCache;
+  }
+
+  public AlignmentChatService getAlignmentChatService() {
+    return alignmentChatService;
   }
 
   public AlignmentService getAlignmentService() {

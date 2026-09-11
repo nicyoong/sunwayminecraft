@@ -206,7 +206,12 @@ commands:
 
   align:
     description: Triple Alliance alignment commands
-    usage: /align <help|list|join <alignment>|leave|show [player]>
+    usage: /align <help|list|join|leave|show|chat|chatspy|set|clear|info|reload>
+    permission: sunway.align.use
+
+  ac:
+    description: Send a message to your alignment
+    usage: /ac <message>
     permission: sunway.align.use
 
 permissions:
@@ -377,5 +382,13 @@ permissions:
     default: true
 
   sunway.align.admin:
-    description: Allows admins to view other players' alignments
+    description: Allows admins to view other players' alignments and manage memberships
+    default: op
+
+  sunway.align.chatspy:
+    description: Allows admins to spy on alignment-only chat
+    default: op
+
+  sunway.align.bypass.cooldown:
+    description: Allows bypassing the alignment switch cooldown
     default: op
