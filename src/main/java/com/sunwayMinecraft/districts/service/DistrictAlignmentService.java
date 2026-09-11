@@ -31,6 +31,11 @@ public class DistrictAlignmentService {
     this.playerAlignmentResolver = playerAlignmentResolver;
   }
 
+  /** District lookup by id, delegating to the config manager. */
+  public DistrictDefinition getDistrictById(String districtId) {
+    return configManager.getDistrictById(districtId);
+  }
+
   /** Whether the given alignment may access the district at all. */
   public boolean canAlignmentAccessDistrict(String alignmentId, DistrictDefinition district) {
     return accessRule(district).allows(alignmentId);
