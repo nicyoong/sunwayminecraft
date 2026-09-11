@@ -98,4 +98,71 @@ class AlignmentRepositoryTest {
         when(plugin.getLogger()).thenReturn(Logger.getLogger("AlignmentRepositoryTest"));
         return plugin;
     }
+
+    @Test
+    void updateReputationReportsFalseForUnknownPlayers() {
+        AlignmentRepository repository = newRepository();
+        assertFalse(repository.updateReputation(UUID.randomUUID(), 100));
+    }
+
+    @Test
+    void reputationPositionCountsOnlyActiveHigherReputations() {
+        AlignmentRepository repository = newRepository();
+        UUID first = UUID.randomUUID();
+        UUID second = UUID.randomUUID();
+        UUID inactive = UUID.randomUUID();
+        UUID third = UUID.randomUUID();
+        repository.upsert(new AlignmentMembership(first, "azure_hearth", 1000L, 300, "active"));
+        repository.upsert(new AlignmentMembership(second, "azure_hearth", 1000L, 100, "active"));
+        repository.upsert(new AlignmentMembership(inactive, "azure_hearth", 1000L, 900, "inactive"));
+        repository.upsert(new AlignmentMembership(third, "spirewrights", 1000L, 999, "active"));
+
+        assertEquals(1, repository.getReputationPosition("azure_hearth", 300),
+                "the top active member is ranked #1");
+        assertEquals(2, repository.getReputationPosition("azure_hearth", 100),
+                "inactive higher reputation must not count towards standing");
+        assertEquals(3, repository.getReputationPosition("azure_hearth", 0),
+                "active members of other alignments must not count");
+        assertEquals(1, repository.getReputationPosition("unknown_alignment", 10),
+                "documented quirk: unknown alignments report the would-be rank 1; "
+                    + "unreachable via commands because the caller checks membership first");
+    }
+
+    @Test
+    void cooldownTableRoundTripsThroughSqlite() {
+        AlignmentRepository repository = newRepository();
+        UUID playerUuid = UUID.randomUUID();
+
+        assertTrue(repository.getLastSwitchAt(playerUuid).isEmpty());
+        assertTrue(repository.setLastSwitchAt(playerUuid, 5000L));
+        assertEquals(5000L, repository.getLastSwitchAt(playerUuid).getAsLong());
+        assertTrue(repository.setLastSwitchAt(playerUuid, 6000L),
+                "a second switch must replace the timestamp");
+        assertEquals(6000L, repository.getLastSwitchAt(playerUuid).getAsLong());
+    }
+
+    @Test
+    void totalsAndBulkReadsReflectStoredMemberships() {
+        AlignmentRepository repository = newRepository();
+        UUID aligned = UUID.randomUUID();
+        UUID unaligned = UUID.randomUUID();
+        repository.upsert(new AlignmentMembership(aligned, "azure_hearth", 1000L, 120, "active"));
+        repository.upsert(new AlignmentMembership(UUID.randomUUID(), "azure_hearth", 1000L, 30, "active"));
+        repository.upsert(new AlignmentMembership(UUID.randomUUID(), "spirewrights", 1000L, 10, "active"));
+
+        var totals = repository.getAlignmentTotals();
+        assertEquals(2, totals.size());
+        assertEquals(150L, totals.get("azure_hearth")[0]);
+        assertEquals(2L, totals.get("azure_hearth")[1]);
+        assertEquals(10L, totals.get("spirewrights")[0]);
+
+        assertEquals(3, repository.getAllMemberships().size());
+        var counts = repository.countByAlignment();
+        assertEquals(2, counts.get("azure_hearth"));
+        assertEquals(1, counts.get("spirewrights"));
+
+        // memberships added after the totals snapshot appear on the next read
+        repository.upsert(AlignmentMembership.newMembership(unaligned, "lagoon_covenant", 2000L));
+        assertEquals(4, repository.getAllMemberships().size());
+    }
 }

@@ -8,6 +8,8 @@ import com.sunwayMinecraft.alignments.service.AlignmentRankService;
 import com.sunwayMinecraft.alignments.service.AlignmentResult;
 import com.sunwayMinecraft.alignments.service.AlignmentScoreService;
 import com.sunwayMinecraft.alignments.service.AlignmentSeasonService;
+import com.sunwayMinecraft.alignments.domain.AlignmentMembership;
+import com.sunwayMinecraft.alignments.service.AlignmentMembershipCache;
 import com.sunwayMinecraft.alignments.service.AlignmentService;
 import com.sunwayMinecraft.alignments.service.AlignmentSeasonService;
 import org.bukkit.command.CommandSender;
@@ -193,5 +195,86 @@ class AlignProgressionCommandsTest {
             messages.add(message);
         }
         return messages;
+    }
+
+    @Test
+    void leaderboardPaginationServesTheSecondPage() {
+        java.util.Map<String, long[]> totals = new java.util.LinkedHashMap<>();
+        for (int i = 1; i <= 9; i++) {
+            totals.put("alignment_" + i, new long[] {1000L - i, 3});
+        }
+        when(service.getAlignmentTotals()).thenReturn(totals);
+
+        call("leaderboard", "alignments", "2");
+
+        List<String> messages = drainMessages(admin);
+        assertTrue(messages.stream().anyMatch(msg -> msg.contains("page 2/2")), messages.toString());
+        assertTrue(messages.stream().anyMatch(msg -> msg.contains("alignment_9")),
+                "the 9th (last) alignment must appear on page 2");
+        assertTrue(messages.stream().noneMatch(msg -> msg.contains("alignment_1 ")),
+                "the 1st alignment must remain on page 1");
+    }
+
+    @Test
+    void reputationRejectsNonNumericAmounts() {
+        server.addPlayer("Target");
+        call("reputation", "add", "Target", "abc");
+        assertTrue(drainMessages(admin).stream()
+                .anyMatch(msg -> msg.contains("Invalid amount")));
+        verify(service, never()).adjustReputation(any(UUID.class), org.mockito.ArgumentMatchers.anyInt());
+    }
+
+    @Test
+    void leaderboardReloadReloadsProgressionConfiguration() {
+        AlignmentProgressionConfig progression = mock(AlignmentProgressionConfig.class);
+        commands = new AlignProgressionCommands(service, progression, perksConfig,
+                mock(AlignmentRankService.class), seasonService, scoreService);
+
+        call("leaderboard", "reload");
+
+        verify(progression).load();
+        verify(perksConfig).load();
+        assertTrue(drainMessages(admin).stream()
+                .anyMatch(msg -> msg.contains("progression and perks configuration reloaded")));
+    }
+
+    @Test
+    void playerStandingShowsReputationPositionAndRankForAlignedPlayers() {
+        PlayerMock target = server.addPlayer("Target");
+        AlignmentMembershipCache cache = mock(AlignmentMembershipCache.class);
+        when(service.getCache()).thenReturn(cache);
+        when(cache.getOrLoad(target.getUniqueId())).thenReturn(Optional.of(
+                new com.sunwayMinecraft.alignments.service.AlignmentMembershipCache.CachedMembership(
+                        target.getUniqueId(), "azure_hearth", "concordat_of_the_dawn",
+                        "taylors", 150, "active", System.currentTimeMillis(), "steward")));
+        when(service.getMembership(target.getUniqueId())).thenReturn(Optional.of(
+                new AlignmentMembership(target.getUniqueId(), "azure_hearth", 1000L, 150, "active")));
+        when(service.getAlignmentId(target.getUniqueId())).thenReturn(Optional.of("azure_hearth"));
+        when(service.getReputationPosition(target.getUniqueId())).thenReturn(2);
+        commands = new AlignProgressionCommands(service,
+                progressionWithRankLookup(), perksConfig,
+                rankServiceWithSteward(), seasonService, scoreService);
+
+        call("leaderboard", "player", "Target");
+
+        List<String> messages = drainMessages(admin);
+        assertTrue(messages.stream().anyMatch(msg -> msg.contains("Reputation: §f150")),
+                messages.toString());
+        assertTrue(messages.stream().anyMatch(msg -> msg.contains("Standing: §f#2")),
+                messages.toString());
+        assertTrue(messages.stream().anyMatch(msg -> msg.contains("Rank: §fSteward")),
+                messages.toString());
+    }
+
+    private AlignmentProgressionConfig progressionWithRankLookup() {
+        return mock(AlignmentProgressionConfig.class);
+    }
+
+    private AlignmentRankService rankServiceWithSteward() {
+        AlignmentRankService rankService = mock(AlignmentRankService.class);
+        when(rankService.resolveRank(org.mockito.ArgumentMatchers.anyInt(), org.mockito.ArgumentMatchers.any()))
+                .thenReturn(Optional.of(new AlignmentProgressionConfig.RankDefinition(
+                        "steward", "Steward", 150, "Steward", "desc", true)));
+        return rankService;
     }
 }

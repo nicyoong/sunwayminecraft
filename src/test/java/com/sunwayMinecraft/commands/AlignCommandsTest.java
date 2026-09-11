@@ -30,6 +30,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -266,5 +267,91 @@ class AlignCommandsTest {
         Command command = mock(Command.class);
         when(command.getName()).thenReturn(name);
         return command;
+    }
+
+    @Test
+    void everySubcommandRoutesToItsCollaboratorWithoutUnknownMessages() {
+        when(service.join(org.mockito.ArgumentMatchers.eq(player.getUniqueId()),
+                org.mockito.ArgumentMatchers.eq("azure_hearth"),
+                org.mockito.ArgumentMatchers.anyBoolean()))
+                .thenReturn(AlignmentResult.JOINED);
+        when(service.leave(player.getUniqueId())).thenReturn(AlignmentResult.LEFT);
+        when(cache.getOrLoad(player.getUniqueId())).thenReturn(Optional.empty());
+        when(chatService.sendAlignmentChat(player, "hello")).thenReturn(AlignmentChatService.ChatResult.SENT);
+        when(chatService.toggleSpy(player.getUniqueId())).thenReturn(true);
+        when(service.adjustReputation(player.getUniqueId(), 5)).thenReturn(AlignmentResult.JOINED);
+        when(service.adminSet(any(), org.mockito.ArgumentMatchers.any()))
+                .thenReturn(AlignmentResult.JOINED);
+        when(service.adminClear(any())).thenReturn(AlignmentResult.LEFT);
+        when(service.getMembership(player.getUniqueId())).thenReturn(Optional.empty());
+        player.setOp(true);
+        PlayerMock adminTarget = server.addPlayer("Admin"); // target for set/clear/info/reputation
+
+        String[][] calls = {
+                {"help"}, {"list"}, {"join", "azure_hearth"}, {"leave"},
+                {"show"}, {"chat", "hello"}, {"chatspy"},
+                {"set", "Admin", "azure_hearth"}, {"clear", "Admin"},
+                {"info", "Admin"}, {"reload"},
+                {"leaderboard"}, {"season", "info"}, {"reputation", "add", "Admin", "5"},
+                {"perks", "reload"}};
+        for (String[] callArgs : calls) {
+            drainMessages(player);
+            assertTrue(commands.onCommand(player, command("align"), "align", callArgs),
+                    "onCommand must return true for " + java.util.Arrays.toString(callArgs));
+            assertTrue(drainMessages(player).stream()
+                            .noneMatch(msg -> msg.contains("Unknown subcommand")),
+                    "subcommand must be routed: " + java.util.Arrays.toString(callArgs));
+        }
+        verify(service).adjustReputation(adminTarget.getUniqueId(), 5);
+        verify(service).adminSet(adminTarget.getUniqueId(), "azure_hearth");
+        verify(service).adminClear(adminTarget.getUniqueId());
+        verify(chatService).toggleSpy(player.getUniqueId());
+    }
+
+    @Test
+    void consoleIsRejectedForPlayerOnlySubcommandsWithUsageHints() {
+        CommandSender console = mock(CommandSender.class);
+        assertTrue(commands.onCommand(console, command("align"), "align", new String[]{"join", "azure_hearth"}));
+        verify(console).sendMessage(org.mockito.ArgumentMatchers.argThat(
+                (String m) -> m != null && m.contains("Only players can join")));
+        assertTrue(commands.onCommand(console, command("align"), "align", new String[]{"leave"}));
+        verify(console).sendMessage(org.mockito.ArgumentMatchers.argThat(
+                (String m) -> m != null && m.contains("Only players can leave")));
+        assertTrue(commands.onCommand(console, command("align"), "align", new String[]{"chat"}));
+        verify(console).sendMessage(org.mockito.ArgumentMatchers.argThat(
+                (String m) -> m != null && m.contains("Only players can use alignment chat")));
+        assertTrue(commands.onCommand(console, command("ac"), "ac", new String[0]));
+        verify(console, org.mockito.Mockito.times(2)).sendMessage(org.mockito.ArgumentMatchers.argThat(
+                (String m) -> m != null && m.contains("Only players can use alignment chat")));
+    }
+
+    @Test
+    void alignmentChatReportsDisabledAndEmptyStates() {
+        when(chatService.sendAlignmentChat(org.mockito.ArgumentMatchers.eq(player), org.mockito.ArgumentMatchers.any()))
+                .thenReturn(AlignmentChatService.ChatResult.DISABLED, AlignmentChatService.ChatResult.EMPTY_MESSAGE);
+
+        assertTrue(commands.onCommand(player, command("align"), "align", new String[]{"chat", "x"}));
+        assertTrue(drainMessages(player).stream().anyMatch(msg -> msg.contains("disabled")));
+        assertTrue(commands.onCommand(player, command("align"), "align", new String[]{"chat", " "}));
+        assertTrue(drainMessages(player).stream().anyMatch(msg -> msg.contains("Usage")));
+    }
+
+    @Test
+    void adminTabCompletionExposesAdminSubcommandsAndViews() {
+        CommandSender admin = mock(CommandSender.class);
+        when(admin.hasPermission("sunway.align.admin")).thenReturn(true);
+        when(admin.hasPermission("sunway.align.chatspy")).thenReturn(true);
+
+        List<String> top = tabCompleter.onTabComplete(admin, command("align"), "align", new String[]{""});
+        assertTrue(top.containsAll(List.of("set", "clear", "info", "reload", "chatspy")),
+                "admin subcommands must complete for admins: " + top);
+
+        List<String> views = tabCompleter.onTabComplete(admin, command("align"), "align",
+                new String[]{"leaderboard", ""});
+        assertEquals(List.of("alignments", "grand", "season", "player", "reload"), views);
+
+        List<String> season = tabCompleter.onTabComplete(admin, command("align"), "align",
+                new String[]{"season", ""});
+        assertEquals(List.of("info", "end", "reset", "snapshot"), season);
     }
 }
