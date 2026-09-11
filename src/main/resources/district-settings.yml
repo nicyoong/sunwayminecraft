@@ -1,0 +1,60 @@
+# District protection and feedback settings
+#
+# Missing or invalid values fall back to safe defaults.
+
+# Master switches - set any of these to false to disable that enforcement
+# layer without touching the others.
+enforce_build_rules: true
+enforce_interaction_rules: true
+enforce_residency_rules: true
+
+# Archived districts are read-only heritage sites.
+archived_read_only: true
+
+# Sanctuary behaviour.
+sanctuary_no_pvp: true
+sanctuary_no_build: true
+sanctuary_no_mob_damage: true
+
+# Contested districts pause rentals unless this is true.
+contested_allow_access: false
+
+# Enter feedback: chat, action_bar or none.
+enter_message_mode: action_bar
+# Re-show the same district message after this many seconds even if the
+# player never left it (0 = only on district change).
+enter_message_cooldown_seconds: 0
+show_owner: true
+show_contested_status: true
+show_district_type: true
+
+# Log every denied build/interact attempt to the console (spammy - for
+# debugging only).
+verbose_denial_logging: false
+
+# Interaction defaults per district type. Recognised flags:
+#   allow_interact   - doors, buttons, levers, trapdoors, gates
+#   allow_containers - chests, barrels, furnaces, hoppers, shulkers
+#   allow_redstone   - buttons, levers, pressure plates, repeaters
+#   allow_doors      - wooden and iron doors and trapdoors
+#   allow_crafting   - crafting tables, anvils, enchanting tables
+# Types without an entry use the "default" set.
+interaction-defaults:
+  default:
+    allow_interact: true
+    allow_containers: true
+    allow_redstone: true
+    allow_doors: true
+    allow_crafting: true
+  ARCHIVED:
+    allow_interact: false
+    allow_containers: false
+    allow_redstone: false
+    allow_doors: false
+    allow_crafting: false
+  SANCTUARY:
+    allow_interact: true
+    allow_containers: false
+    allow_redstone: false
+    allow_doors: true
+    allow_crafting: true
