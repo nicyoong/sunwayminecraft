@@ -17,6 +17,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+// resolver migrated to DistrictLocationResolver
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -57,11 +58,13 @@ class DistrictRegionAndValidationTest {
         DistrictDefinition disabled = district("disabled", new Region3i("world", 0, 0, 0, 10, 10, 10), false, 1, "summary");
         DistrictDefinition enabled = district("enabled", new Region3i("world", 20, 0, 20, 30, 10, 30), true, 1, "summary");
         when(config.getDistricts()).thenReturn(List.of(disabled, enabled));
-        DistrictResolver resolver = new DistrictResolver(config);
+        DistrictLocationResolver resolver = new DistrictLocationResolver(config);
 
-        assertNull(resolver.resolve(new Location(world, 1, 1, 1)));
-        assertEquals(enabled, resolver.resolve(new Location(world, 20, 1, 20)));
-        assertNull(resolver.resolve(null));
+        assertNull(resolver.getDistrictAt(new Location(world, 1, 1, 1)));
+        assertEquals(enabled, resolver.getDistrictAt(new Location(world, 20, 1, 20)));
+        assertNull(resolver.getDistrictAt(null));
+        assertTrue(resolver.isInsideDistrict(new Location(world, 20, 1, 20), enabled));
+        assertFalse(resolver.isInsideDistrict(new Location(world, 1, 1, 1), enabled));
     }
 
     @Test

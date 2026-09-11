@@ -3,6 +3,7 @@ package com.sunwayMinecraft.districts.service;
 import com.sunwayMinecraft.districts.domain.DistrictDefinition;
 import com.sunwayMinecraft.districts.domain.DistrictOwnership;
 import com.sunwayMinecraft.districts.domain.DistrictType;
+import com.sunwayMinecraft.districts.region.DistrictShape;
 import com.sunwayMinecraft.districts.region.Region3i;
 import org.bukkit.entity.Player;
 import org.junit.jupiter.api.Test;
@@ -18,7 +19,7 @@ import static org.mockito.Mockito.when;
 
 /** Access, build, rent and trade decisions for alignment districts. */
 class DistrictAlignmentServiceTest {
-    private static final Region3i REGION = new Region3i("world", 0, 0, 0, 9, 9, 9);
+    private static final DistrictShape REGION = DistrictShape.cuboid(new Region3i("world", 0, 0, 0, 9, 9, 9));
 
     private final UUID playerUuid = UUID.randomUUID();
     private final Player player = playerWith(false, "azure_hearth");

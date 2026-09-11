@@ -36,7 +36,7 @@ public class DistrictValidationService {
             if (district.getPrestigeTier() < 1 || district.getPrestigeTier() > 5) {
                 errors.add("District '" + district.getId() + "' prestige tier must be between 1 and 5.");
             }
-            if (district.getRegion().getVolume() > MAX_REGION_VOLUME) {
+            if (district.getShape().getVolume() > MAX_REGION_VOLUME) {
                 errors.add("District '" + district.getId() + "' exceeds max volume of " + MAX_REGION_VOLUME + " blocks.");
             }
         }
@@ -46,7 +46,7 @@ public class DistrictValidationService {
                 DistrictDefinition a = districts.get(i);
                 DistrictDefinition b = districts.get(j);
                 if (!a.isEnabled() || !b.isEnabled()) continue;
-                if (a.getRegion().overlapsVolume(b.getRegion())) {
+                if (a.getShape().overlapsVolume(b.getShape())) {
                     errors.add("Districts '" + a.getId() + "' and '" + b.getId() + "' overlap.");
                 }
             }

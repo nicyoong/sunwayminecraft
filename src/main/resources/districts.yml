@@ -90,11 +90,14 @@ districts:
     enabled: true
     prestige-tier: 1
     transit_connected: true
+    shape: point_radius
+    center:
+      x: 380
+      y: 80
+      z: 389
+      radius: 14
     public-summary: "The Bus Rapid Transit interchange connecting every campus and the pyramid."
     description: "Central BRT transit hub for the alliance."
-    region:
-      min: { x: 370, y: 60, z: 380 }
-      max: { x: 390, y: 100, z: 398 }
 
   triple_alliance_sanctuary:
     display-name: "Triple Alliance Sanctuary"
