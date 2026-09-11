@@ -42,6 +42,27 @@ public class AlignTabCompleter implements TabCompleter {
       }
     } else if (args.length == 2) {
       switch (args[0].toLowerCase(Locale.ROOT)) {
+        case "leaderboard" -> {
+          completions.addAll(List.of("alignments", "grand", "season", "player"));
+          if (admin) {
+            completions.add("reload");
+          }
+        }
+        case "season" -> {
+          if (admin) {
+            completions.addAll(List.of("info", "end", "reset", "snapshot"));
+          }
+        }
+        case "reputation" -> {
+          if (admin) {
+            completions.addAll(List.of("add", "remove", "set"));
+          }
+        }
+        case "perks" -> {
+          if (admin) {
+            completions.add("reload");
+          }
+        }
         case "join" -> completions.addAll(alignmentIds());
         case "show", "info", "clear" -> {
           if (admin || "show".equalsIgnoreCase(args[0])) {
@@ -55,8 +76,14 @@ public class AlignTabCompleter implements TabCompleter {
         }
         default -> {}
       }
-    } else if (args.length == 3 && "set".equalsIgnoreCase(args[0]) && admin) {
-      completions.addAll(alignmentIds());
+    } else if (args.length == 3 && admin) {
+      if ("set".equalsIgnoreCase(args[0])) {
+        completions.addAll(alignmentIds());
+      } else if ("reputation".equalsIgnoreCase(args[0])) {
+        completions.addAll(onlinePlayerNames());
+      } else if ("leaderboard".equalsIgnoreCase(args[0])) {
+        completions.addAll(onlinePlayerNames());
+      }
     }
     completions.removeIf(
         entry ->

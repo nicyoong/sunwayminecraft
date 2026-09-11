@@ -392,3 +392,7 @@ permissions:
   sunway.align.bypass.cooldown:
     description: Allows bypassing the alignment switch cooldown
     default: op
+
+  sunway.align.perks.admin:
+    description: Testing bypass for alignment perk rank and district gates
+    default: op

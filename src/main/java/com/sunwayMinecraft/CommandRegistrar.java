@@ -136,13 +136,21 @@ public class CommandRegistrar {
     plugin.getCommand("cityadmin").setTabCompleter(cityAdminCmds);
 
     // Triple Alliance alignments
+    AlignProgressionCommands progressionCmds = new AlignProgressionCommands(
+        init.getAlignmentService(),
+        init.getAlignmentProgression(),
+        init.getAlignmentPerksConfig(),
+        init.getAlignmentRankService(),
+        init.getAlignmentSeasonService(),
+        init.getAlignmentScoreService());
     AlignCommands alignCmds =
         new AlignCommands(
             init.getAlignmentService(),
             init.getAlignmentConfigManager(),
             init.getAlignmentSettings(),
             init.getAlignmentChatService(),
-            init.getAlignmentCache());
+            init.getAlignmentCache(),
+            progressionCmds);
     registerCommand("align", alignCmds);
     plugin.getCommand("align").setTabCompleter(
         new AlignTabCompleter(init.getAlignmentConfigManager()));

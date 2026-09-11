@@ -27,18 +27,21 @@ public class AlignCommands implements CommandExecutor {
   private final AlignMemberCommands memberCommands;
   private final AlignChatCommands chatCommands;
   private final AlignAdminCommands adminCommands;
+  private final AlignProgressionCommands progressionCommands;
 
   public AlignCommands(
       AlignmentService service,
       AlignmentConfigManager configManager,
       AlignmentSettingsConfig settings,
       AlignmentChatService chatService,
-      AlignmentMembershipCache cache) {
+      AlignmentMembershipCache cache,
+      AlignProgressionCommands progressionCommands) {
     this.configManager = configManager;
     this.memberCommands =
         new AlignMemberCommands(service, configManager, settings, chatService, cache);
     this.chatCommands = new AlignChatCommands(chatService);
     this.adminCommands = new AlignAdminCommands(service, configManager, settings, cache);
+    this.progressionCommands = progressionCommands;
   }
 
   @Override
@@ -62,6 +65,10 @@ public class AlignCommands implements CommandExecutor {
       case "clear" -> adminCommands.handleClear(sender, args);
       case "info" -> adminCommands.handleInfo(sender, args);
       case "reload" -> adminCommands.handleReload(sender);
+      case "leaderboard" -> progressionCommands.handleLeaderboard(sender, args);
+      case "season" -> progressionCommands.handleSeason(sender, args);
+      case "reputation" -> progressionCommands.handleReputation(sender, args);
+      case "perks" -> progressionCommands.handlePerks(sender, args);
       default -> sender.sendMessage("§cUnknown subcommand. Use /align help");
     }
     return true;
@@ -84,6 +91,10 @@ public class AlignCommands implements CommandExecutor {
       sender.sendMessage("§e/align clear <player>§f - Remove a player's alignment");
       sender.sendMessage("§e/align info <player>§f - Detailed membership info");
       sender.sendMessage("§e/align reload§f - Reload alignment configuration");
+      sender.sendMessage("§e/align leaderboard [grand|season|player]§f - View leaderboards");
+      sender.sendMessage("§e/align season <info|end|reset|snapshot>§f - Manage seasons");
+      sender.sendMessage("§e/align reputation <add|remove|set> <player> <amount>§f");
+      sender.sendMessage("§e/align perks reload§f - Reload perk configuration");
     }
   }
 }

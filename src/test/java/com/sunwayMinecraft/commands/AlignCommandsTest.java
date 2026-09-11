@@ -1,6 +1,8 @@
 package com.sunwayMinecraft.commands;
 
 import com.sunwayMinecraft.alignments.config.AlignmentConfigManager;
+import com.sunwayMinecraft.alignments.config.AlignmentPerksConfig;
+import com.sunwayMinecraft.alignments.config.AlignmentProgressionConfig;
 import com.sunwayMinecraft.alignments.config.AlignmentSettingsConfig;
 import com.sunwayMinecraft.alignments.domain.AlignmentDefinition;
 import com.sunwayMinecraft.alignments.domain.AlignmentMembership;
@@ -71,7 +73,12 @@ class AlignCommandsTest {
         when(configManager.getAllianceDefinition(GrandAlliance.CONCORDAT_OF_THE_DAWN))
                 .thenReturn(Optional.of(new GrandAllianceDefinition(
                         "concordat_of_the_dawn", "Concordat of the Dawn", "desc", "&b")));
-        commands = new AlignCommands(service, configManager, settings, chatService, cache);
+        commands = new AlignCommands(service, configManager, settings, chatService, cache,
+            new AlignProgressionCommands(service, mock(AlignmentProgressionConfig.class),
+                mock(AlignmentPerksConfig.class),
+                mock(com.sunwayMinecraft.alignments.service.AlignmentRankService.class),
+                mock(com.sunwayMinecraft.alignments.service.AlignmentSeasonService.class),
+                mock(com.sunwayMinecraft.alignments.service.AlignmentScoreService.class)));
         tabCompleter = new AlignTabCompleter(configManager);
     }
 
