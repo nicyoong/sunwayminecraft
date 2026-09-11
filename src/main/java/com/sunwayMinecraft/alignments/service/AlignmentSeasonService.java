@@ -148,12 +148,21 @@ public class AlignmentSeasonService {
     return true;
   }
 
-  /** Reputation totals per alignment recorded for the current season. */
+  /**
+   * Reputation totals per alignment for the current season. Recorded
+   * season data only exists once a snapshot ran, so the view falls back to
+   * the live membership totals - the current season's standings are simply
+   * everyone's reputation right now.
+   */
   public Map<String, long[]> getSeasonAlignmentTotals() {
     String seasonId = seasonRepository.getSeasonState()
         .map(SeasonState::seasonId)
         .orElse(null);
-    return seasonId == null ? Map.of() : seasonRepository.getSeasonAlignmentTotals(seasonId);
+    if (seasonId == null) {
+      return Map.of();
+    }
+    Map<String, long[]> recorded = seasonRepository.getSeasonAlignmentTotals(seasonId);
+    return recorded.isEmpty() ? membershipRepository.getAlignmentTotals() : recorded;
   }
 
   private List<AlignmentSnapshot> snapshotCurrent(String seasonId) {
@@ -190,13 +199,15 @@ public class AlignmentSeasonService {
   }
 
   private String nextSeasonId(String current) {
-    try {
-      String prefix = "season-";
-      int number = Integer.parseInt(current.substring(prefix.length()));
-      return prefix + (number + 1);
-    } catch (NumberFormatException | IndexOutOfBoundsException e) {
-      return current + "-next";
+    String prefix = "season-";
+    if (current.startsWith(prefix)) {
+      try {
+        return prefix + (Integer.parseInt(current.substring(prefix.length())) + 1);
+      } catch (NumberFormatException ignored) {
+        // not a numbered season id; fall through to the suffix
+      }
     }
+    return current + "-next";
   }
 
   private void broadcastResults(String seasonId, List<AlignmentSnapshot> snapshots) {
