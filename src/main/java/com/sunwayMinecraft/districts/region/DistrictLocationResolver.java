@@ -18,6 +18,7 @@ import java.util.List;
  */
 public class DistrictLocationResolver {
     private static final Logger LOGGER = Logger.getLogger(DistrictLocationResolver.class.getName());
+    private final java.util.Set<String> warnedPairs = new java.util.HashSet<>();
     private final DistrictsConfigManager configManager;
 
     public DistrictLocationResolver(DistrictsConfigManager configManager) {
@@ -56,9 +57,12 @@ public class DistrictLocationResolver {
         if (typePriority(matches.get(0).getDistrictType())
                 == typePriority(matches.get(1).getDistrictType())) {
             // same priority tier and ordering already applied; report the ambiguity
-            LOGGER.warning("[Districts] Overlapping districts at the same priority: '"
-                    + matches.get(0).getId() + "' wins over '" + matches.get(1).getId()
-                    + "' (config order decides).");
+            String pair = matches.get(0).getId() + ">" + matches.get(1).getId();
+            if (warnedPairs.add(pair)) {
+                LOGGER.warning("[Districts] Overlapping districts at the same priority: '"
+                        + matches.get(0).getId() + "' wins over '" + matches.get(1).getId()
+                        + "' (config order decides).");
+            };
         }
         return matches.get(0);
     }

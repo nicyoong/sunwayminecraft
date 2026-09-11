@@ -51,6 +51,26 @@ public final class DistrictShape {
         return kind;
     }
 
+    public String getWorld() {
+        return world;
+    }
+
+    public double getCenterX() {
+        return centerX;
+    }
+
+    public double getCenterY() {
+        return centerY;
+    }
+
+    public double getCenterZ() {
+        return centerZ;
+    }
+
+    public double getRadius() {
+        return radius;
+    }
+
     /** The cuboid region, or null for point-radius shapes. */
     public Region3i getCuboid() {
         return cuboid;

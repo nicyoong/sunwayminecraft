@@ -9,6 +9,7 @@ import com.sunwayMinecraft.districts.event.DistrictControlChangeEvent;
 import com.sunwayMinecraft.districts.persistence.DistrictControlRepository;
 import com.sunwayMinecraft.districts.persistence.DistrictControlRepository.ControlStateRecord;
 import com.sunwayMinecraft.districts.region.DistrictLocationResolver;
+import com.sunwayMinecraft.districts.region.DistrictShape;
 import net.kyori.adventure.text.Component;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
@@ -267,6 +268,10 @@ public class DistrictControlService {
         repository.appendHistory(new DistrictControlRepository.ControlHistoryRecord(
                 0, state.districtId, previous, null,
                 state.state.name(), System.currentTimeMillis(), "neutral_reset"));
+        if (settings.isBroadcastControlChanges()) {
+            broadcast(settings.getContestEndMessage()
+                    .replace("{district}", district.getDisplayName()));
+        }
         LOGGER.info("[Districts] District '" + state.districtId + "' decayed to neutral");
     }
 
@@ -314,7 +319,7 @@ public class DistrictControlService {
                 continue; // unaligned players never count towards control
             }
             for (DistrictDefinition district : locationResolver.getDistrictsAt(player.getLocation())) {
-                if (!isContestActive(district)) {
+                if (!isContestActive(district) || !isInsidePresenceZone(player.getLocation(), district)) {
                     continue;
                 }
                 presence.computeIfAbsent(district.getId(), k -> new HashMap<>())
@@ -335,6 +340,33 @@ public class DistrictControlService {
             }
         }
     }
+    /**
+     * The contest zone for point-radius districts can be tightened with
+     * control_point_radius: presence counts only within the smaller of the
+     * district radius and the configured control point radius. Cuboid
+     * districts always use their full shape.
+     */
+    private boolean isInsidePresenceZone(Location location, DistrictDefinition district) {
+        double cap = effectiveControlPointRadius(district);
+        DistrictShape shape = district.getShape();
+        if (cap <= 0 || shape.getKind() != DistrictShape.Kind.POINT_RADIUS
+                || shape.getRadius() <= cap) {
+            return true;
+        }
+        if (!location.getWorld().getName().equals(shape.getWorld())) {
+            return false;
+        }
+        double dx = location.getX() - shape.getCenterX();
+        double dy = location.getY() - shape.getCenterY();
+        double dz = location.getZ() - shape.getCenterZ();
+        return dx * dx + dy * dy + dz * dz <= cap * cap;
+    }
+
+    private double effectiveControlPointRadius(DistrictDefinition district) {
+        double profileRadius = configManager.getControlProfile(district.getId()).controlPointRadius();
+        return profileRadius > 0 ? profileRadius : settings.getControlPointRadius();
+    }
+
     private boolean isContestActive(DistrictDefinition district) {
         DistrictControlProfile profile = configManager.getControlProfile(district.getId());
         if (profile.contestEnabled()) {
