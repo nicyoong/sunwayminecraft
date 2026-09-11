@@ -20,7 +20,6 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.Optional;
@@ -143,10 +142,6 @@ class DistrictProtectionListenerTest {
     }
 
     @Test
-    @Disabled("BUG-DIST4 (medium): access-denied players are only denied when the per-type "
-            + "interaction flag also denies the category. With the shipped all-true flags an "
-            + "alignment-denied player can still open chests in a district they are barred "
-            + "from. Access denial must deny every interaction category.")
     void interactionIsDeniedForPlayersTheAccessRuleDenies() {
         when(resolver.getDistrictAt(blockLocation))
                 .thenReturn(district(DistrictType.CAMPUS,
@@ -172,12 +167,6 @@ class DistrictProtectionListenerTest {
     }
 
     @Test
-    @Disabled("BUG-DIST3 (medium): onPlayerInteract returns early whenever the player "
-            + "passes the access check, so the per-type interaction flags (including the "
-            + "ARCHIVED allow_containers=false defaults) are never evaluated for players "
-            + "who are allowed to access the district. Archived read-only interaction "
-            + "protection is therefore dead code; the flag check must also run for "
-            + "access-allowed players.")
     void archivedInteractionFlagsApplyEvenToAccessAllowedPlayers() {
         when(resolver.getDistrictAt(blockLocation))
                 .thenReturn(district(DistrictType.ARCHIVED, DistrictOwnership.neutral()));

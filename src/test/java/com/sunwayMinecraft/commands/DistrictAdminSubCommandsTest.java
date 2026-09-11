@@ -8,7 +8,6 @@ import com.sunwayMinecraft.districts.domain.DistrictType;
 import com.sunwayMinecraft.districts.region.DistrictShape;
 import com.sunwayMinecraft.districts.region.Region3i;
 import org.bukkit.command.CommandSender;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -112,10 +111,6 @@ class DistrictAdminSubCommandsTest {
     }
 
     @Test
-    @Disabled("BUG-DIST1 (medium): /district admin toggle is never routed - handleAdmin has "
-            + "no toggle case, so the subcommand always falls through to the help text. "
-            + "When routed, handleToggle must read the toggle target from args[2] (it reads "
-            + "args[1], which is always 'toggle').")
     void toggleFlipsContestedAndTransitFlags() {
         when(districtManager.getDistrict("pyramid")).thenReturn(district("pyramid"));
 
