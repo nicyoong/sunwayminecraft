@@ -79,7 +79,7 @@ public class CommandRegistrar {
     // Districts / Zoning
     if (init.getDistrictManager() != null) {
       DistrictCommands districtCmds =
-              new DistrictCommands(init.getDistrictManager());
+              new DistrictCommands(init.getDistrictManager(), init.getDistrictAlignmentService());
       registerCommand("district", districtCmds);
 
       DistrictAdminCommands districtAdminCmds =

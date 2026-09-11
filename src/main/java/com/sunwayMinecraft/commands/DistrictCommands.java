@@ -2,6 +2,7 @@ package com.sunwayMinecraft.commands;
 
 import com.sunwayMinecraft.districts.DistrictManager;
 import com.sunwayMinecraft.districts.domain.DistrictDefinition;
+import com.sunwayMinecraft.districts.service.DistrictAlignmentService;
 import com.sunwayMinecraft.districts.util.DistrictFormatter;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -19,10 +20,14 @@ import java.util.Locale;
 
 public class DistrictCommands implements CommandExecutor, TabCompleter {
 
-    private final DistrictManager districtManager;
+    private static final int LIST_PAGE_SIZE = 8;
 
-    public DistrictCommands(DistrictManager districtManager) {
+    private final DistrictManager districtManager;
+    private final DistrictAlignmentService alignmentService;
+
+    public DistrictCommands(DistrictManager districtManager, DistrictAlignmentService alignmentService) {
         this.districtManager = districtManager;
+        this.alignmentService = alignmentService;
     }
 
     @Override
@@ -40,7 +45,7 @@ public class DistrictCommands implements CommandExecutor, TabCompleter {
 
         switch (sub) {
             case "list":
-                return handleList(sender);
+                return handleList(sender, args);
             case "info":
                 return handleInfo(sender, args);
             default:
@@ -78,7 +83,7 @@ public class DistrictCommands implements CommandExecutor, TabCompleter {
         return true;
     }
 
-    private boolean handleList(CommandSender sender) {
+    private boolean handleList(CommandSender sender, String[] args) {
         List<DistrictDefinition> districts = districtManager.getPublicDistricts();
 
         if (districts.isEmpty()) {
@@ -86,15 +91,32 @@ public class DistrictCommands implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        sender.sendMessage(Component.text("Public Districts:", NamedTextColor.GOLD));
+        // group by home campus when there is one, otherwise by district type;
+        // "list type" forces type grouping
+        boolean byCampus = !args[0].equalsIgnoreCase("list") || args.length < 2
+                || !args[1].equalsIgnoreCase("type");
 
-        for (DistrictDefinition district : districts) {
+        int totalPages = Math.max(1, (districts.size() + LIST_PAGE_SIZE - 1) / LIST_PAGE_SIZE);
+        int page = parsePage(args.length >= 3 ? args[2] : "1", totalPages);
+        sender.sendMessage(Component.text("Public Districts (page " + page + "/" + totalPages + "):",
+                NamedTextColor.GOLD));
+
+        String lastGroup = null;
+        int start = (page - 1) * LIST_PAGE_SIZE;
+        for (int i = start; i < Math.min(start + LIST_PAGE_SIZE, districts.size()); i++) {
+            DistrictDefinition district = districts.get(i);
+            String group = byCampus
+                    ? java.util.Optional.ofNullable(district.getOwnership().homeCampus())
+                        .orElseGet(() -> DistrictFormatter.formatDistrictType(district.getDistrictType()))
+                    : DistrictFormatter.formatDistrictType(district.getDistrictType());
+            if (!group.equals(lastGroup)) {
+                lastGroup = group;
+                sender.sendMessage(Component.text(group + ":", NamedTextColor.DARK_AQUA));
+            }
             sender.sendMessage(
                     Component.text("- ", NamedTextColor.YELLOW)
                             .append(Component.text(district.getDisplayName(), NamedTextColor.YELLOW))
                             .append(Component.text(" (", NamedTextColor.GRAY))
-                            .append(Component.text(DistrictFormatter.formatDistrictType(district.getDistrictType()), NamedTextColor.WHITE))
-                            .append(Component.text(", ", NamedTextColor.GRAY))
                             .append(Component.text(DistrictFormatter.formatPrestigeLabel(district.getPrestigeTier()), NamedTextColor.WHITE))
                             .append(Component.text(")", NamedTextColor.GRAY))
             );
@@ -108,6 +130,14 @@ public class DistrictCommands implements CommandExecutor, TabCompleter {
         }
 
         return true;
+    }
+
+    private int parsePage(String raw, int totalPages) {
+        try {
+            return Math.min(Math.max(1, Integer.parseInt(raw)), totalPages);
+        } catch (NumberFormatException e) {
+            return 1;
+        }
     }
 
     private boolean handleInfo(CommandSender sender, String[] args) {
@@ -157,11 +187,42 @@ public class DistrictCommands implements CommandExecutor, TabCompleter {
                         .append(Component.text(district.getPublicSummary(), NamedTextColor.WHITE))
         );
 
+        appendAllianceInfo(sender, district);
+
         if (!district.getTags().isEmpty()) {
             sender.sendMessage(
                     Component.text("Tags: ", NamedTextColor.GRAY)
                             .append(Component.text(String.join(", ", district.getTags()), NamedTextColor.WHITE))
             );
+        }
+    }
+
+    /** Campus, ownership, transit, contest and personal access lines. */
+    private void appendAllianceInfo(CommandSender sender, DistrictDefinition district) {
+        com.sunwayMinecraft.districts.domain.DistrictOwnership ownership = district.getOwnership();
+
+        if (ownership.homeCampus() != null) {
+            sender.sendMessage(Component.text("Campus: ", NamedTextColor.GRAY)
+                    .append(Component.text(ownership.homeCampus(), NamedTextColor.WHITE)));
+        }
+        String owner = ownership.alignmentOwner() != null
+                ? ownership.alignmentOwner()
+                : ownership.grandAllianceOwner();
+        sender.sendMessage(Component.text("Owner: ", NamedTextColor.GRAY)
+                .append(Component.text(owner != null ? owner : "Neutral", NamedTextColor.WHITE)));
+        if (ownership.contested()) {
+            sender.sendMessage(Component.text("Status: ", NamedTextColor.GRAY)
+                    .append(Component.text("CONTESTED", NamedTextColor.RED)));
+        }
+        if (ownership.transitConnected()) {
+            sender.sendMessage(Component.text("Transit: ", NamedTextColor.GRAY)
+                    .append(Component.text("Connected", NamedTextColor.AQUA)));
+        }
+        if (sender instanceof Player viewer) {
+            boolean allowed = alignmentService.canPlayerAccessDistrict(viewer, district);
+            sender.sendMessage(Component.text("Access: ", NamedTextColor.GRAY)
+                    .append(Component.text(allowed ? "Allowed" : "Denied",
+                            allowed ? NamedTextColor.GREEN : NamedTextColor.RED)));
         }
     }
 
@@ -173,6 +234,10 @@ public class DistrictCommands implements CommandExecutor, TabCompleter {
 
         if (args.length == 1) {
             return filterPrefix(args[0], List.of("list", "info"));
+        }
+
+        if (args.length == 2 && args[0].equalsIgnoreCase("list")) {
+            return filterPrefix(args[1], List.of("campus", "type"));
         }
 
         if (args.length == 2 && args[0].equalsIgnoreCase("info")) {
