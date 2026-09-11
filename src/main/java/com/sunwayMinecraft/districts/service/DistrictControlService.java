@@ -299,6 +299,210 @@ public class DistrictControlService {
     }
 
 
+    public void tick() {
+        if (!settings.isEnabled()) {
+            return;
+        }
+        Map<String, Map<String, Integer>> presence = new HashMap<>();
+        Map<String, List<UUID>> presentPlayers = new HashMap<>();
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            if (player.getGameMode() == GameMode.SPECTATOR) {
+                continue;
+            }
+            Optional<String> alignment = alignmentResolver.apply(player.getUniqueId());
+            if (alignment.isEmpty()) {
+                continue; // unaligned players never count towards control
+            }
+            for (DistrictDefinition district : locationResolver.getDistrictsAt(player.getLocation())) {
+                if (!isContestActive(district)) {
+                    continue;
+                }
+                presence.computeIfAbsent(district.getId(), k -> new HashMap<>())
+                        .merge(alignment.get(), 1, Integer::sum);
+                presentPlayers.computeIfAbsent(district.getId(), k -> new ArrayList<>())
+                        .add(player.getUniqueId());
+            }
+        }
+
+        Set<String> processed = new HashSet<>(presence.keySet());
+        processed.addAll(states.keySet());
+        for (String districtId : processed) {
+            try {
+                processDistrict(districtId, presence.get(districtId), presentPlayers.get(districtId));
+            } catch (Exception e) {
+                LOGGER.severe("[Districts] Control tick failed for district '" + districtId
+                        + "': " + e.getMessage());
+            }
+        }
+    }
+    private boolean isContestActive(DistrictDefinition district) {
+        DistrictControlProfile profile = configManager.getControlProfile(district.getId());
+        if (profile.contestEnabled()) {
+            return true;
+        }
+        ControlState state = states.get(district.getId());
+        return state != null && state.forceContest;
+    }
+
+    private void processDistrict(String districtId, Map<String, Integer> presence,
+                                 List<UUID> presentPlayers) {
+        DistrictDefinition district = configManager.getDistrict(districtId);
+        if (district == null || !district.isEnabled()) {
+            return;
+        }
+        DistrictControlProfile profile = configManager.getControlProfile(districtId);
+        ControlState state = states.computeIfAbsent(districtId, ControlState::new);
+
+        if (state.state == ContestState.LOCKED) {
+            return;
+        }
+        int required = profile.pointsRequiredToCapture() > 0
+                ? profile.pointsRequiredToCapture() : settings.getPointsRequiredToCapture();
+        int totalPresence = presence == null ? 0 : presence.values().stream().mapToInt(Integer::intValue).sum();
+
+        if (state.state == ContestState.COOLING_DOWN) {
+            if (totalPresence >= settings.getMinimumPlayersToContest()) {
+                return; // presence protects the district while it cools down
+            }
+            handleNoPresence(state, district); // the grip decays even while cooling down
+            if (state.state == ContestState.COOLING_DOWN
+                    && System.currentTimeMillis() >= state.cooldownUntil) {
+                state.state = ContestState.STABLE;
+                persist(state, "cooldown_elapsed");
+            }
+            return;
+        }
+        boolean contestActive = profile.contestEnabled() || state.forceContest;
+        if (!contestActive) {
+            return;
+        }
+        if (totalPresence < settings.getMinimumPlayersToContest()) {
+            handleNoPresence(state, district);
+            return;
+        }
+
+        if (presence.size() > 1) {
+            // multiple alignments present: the contest is paused, nobody scores
+            if (state.state != ContestState.CONTESTED) {
+                transitionToContested(state, district, null);
+            }
+            sendContestActionBar(presentPlayers, state, required);
+            return;
+        }
+
+        String leading = presence.keySet().iterator().next();
+        double points = settings.getPointsPerPlayerPerTick() * presence.get(leading);
+
+        if (leading.equals(state.controllerAlignmentId)) {
+            // the controller maintains its grip while present
+            state.state = ContestState.STABLE;
+            state.leadingAlignmentId = null;
+            state.progress = Math.min(settings.getMaximumControlPoints(), state.progress + points);
+            persist(state, "controller_holding");
+            return;
+        }
+
+        if (state.controllerAlignmentId != null) {
+            // an enemy alignment erodes the controller's grip; the district
+            // flips when the grip breaks
+            state.state = ContestState.CAPTURING;
+            state.leadingAlignmentId = leading;
+            state.progress -= points;
+            for (UUID contributor : presentPlayers) {
+                state.contributors.merge(contributor, points, Double::sum);
+            }
+            persist(state, "eroding");
+            sendContestActionBar(presentPlayers, state, required);
+            if (state.progress <= 0) {
+                capture(state, district, leading, required);
+            }
+            return;
+        }
+
+        // neutral district: capture progress builds toward the threshold
+        if (state.state != ContestState.CAPTURING) {
+            transitionToContested(state, district, leading);
+        }
+        state.state = ContestState.CAPTURING;
+        state.leadingAlignmentId = leading;
+        state.progress = Math.min(settings.getMaximumControlPoints(), state.progress + points);
+        for (UUID contributor : presentPlayers) {
+            state.contributors.merge(contributor, points, Double::sum);
+        }
+        persist(state, "capturing");
+        sendContestActionBar(presentPlayers, state, required);
+
+        if (state.progress >= required) {
+            capture(state, district, leading, required);
+        }
+    }
+
+    private void capture(ControlState state, DistrictDefinition district, String newAlignmentId,
+                         int required) {
+        String previous = state.controllerAlignmentId;
+        String alliance = configManager.allianceOfAlignment(newAlignmentId);
+        state.controllerAlignmentId = newAlignmentId;
+        state.controllerGrandAllianceId = alliance;
+        state.state = ContestState.COOLING_DOWN;
+        int cooldownSeconds = configManager.getControlProfile(district.getId()).contestCooldownSeconds();
+        if (cooldownSeconds <= 0) {
+            cooldownSeconds = settings.getCaptureCooldownSeconds();
+        }
+        state.cooldownUntil = System.currentTimeMillis() + cooldownSeconds * 1000L;
+        state.progress = required;
+        persist(state, "captured");
+        repository.appendHistory(new DistrictControlRepository.ControlHistoryRecord(
+                0, state.districtId, previous, newAlignmentId,
+                state.state.name(), System.currentTimeMillis(), "captured"));
+        applyOwnership(state.districtId, newAlignmentId, alliance, previous,
+                DistrictControlChangeEvent.ChangeReason.CAPTURE);
+        if (settings.isBroadcastCapture()) {
+            broadcast(settings.getCaptureMessage()
+                    .replace("{district}", district.getDisplayName())
+                    .replace("{alignment}", configManager.alignmentDisplayName(newAlignmentId))
+                    .replace("{alliance}", alliance == null ? "unknown" : alliance));
+        }
+        metrics().ifPresent(m -> m.accept("district_captures"));
+        rewardContributors(state, district, newAlignmentId);
+        state.contributors.clear();
+        LOGGER.info("[Districts] District '" + state.districtId + "' captured by " + newAlignmentId);
+    }
+
+    private void rewardContributors(ControlState state, DistrictDefinition district,
+                                    String newAlignmentId) {
+        if (!settings.isRewardControllersOnCapture()) {
+            state.contributors.clear();
+            return;
+        }
+        Economy economy = economySupplier.get();
+        boolean payMoney = economy != null && settings.getRewardMoney() > 0;
+        long now = System.currentTimeMillis();
+        for (Map.Entry<UUID, Double> entry : state.contributors.entrySet()) {
+            if (entry.getValue() < settings.getMinimumContributionPoints()) {
+                continue;
+            }
+            Long lastReward = lastRewardAt.get(entry.getKey());
+            if (lastReward != null
+                    && now - lastReward < settings.getRewardCooldownSeconds() * 1000L) {
+                continue;
+            }
+            Player contributor = Bukkit.getPlayer(entry.getKey());
+            if (contributor == null) {
+                continue;
+            }
+            lastRewardAt.put(entry.getKey(), now);
+            if (payMoney && settings.isRewardPlayersPresent()) {
+                economy.depositPlayer(contributor, settings.getRewardMoney());
+                contributor.sendMessage("§aCapture reward: §e" + settings.getRewardMoney());
+            }
+        }
+        if (settings.getRewardReputation() > 0 && reputationAwarder != null) {
+            reputationAwarder.accept(newAlignmentId);
+        }
+        state.contributors.clear();
+    }
+
+
     private java.util.Optional<Consumer<String>> metrics() {
         try {
             return java.util.Optional.ofNullable(metricsSupplier.get());
