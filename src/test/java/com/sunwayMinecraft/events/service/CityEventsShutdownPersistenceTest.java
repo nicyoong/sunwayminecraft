@@ -60,6 +60,12 @@ class CityEventsShutdownPersistenceTest {
             if (initializer.getDistrictControlRepository() != null) {
                 initializer.getDistrictControlRepository().close();
             }
+            if (initializer.getAlignmentRepository() != null) {
+                initializer.getAlignmentRepository().close();
+            }
+            if (initializer.getAlignmentSeasonRepository() != null) {
+                initializer.getAlignmentSeasonRepository().close();
+            }
         }
 
         org.bukkit.event.HandlerList.unregisterAll();

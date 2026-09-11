@@ -20,7 +20,24 @@ import com.sunwayMinecraft.districts.DistrictManager;
 import com.sunwayMinecraft.coinflip.*;
 import com.sunwayMinecraft.switches.*;
 import com.sunwayMinecraft.worldtravel.*;
+import com.sunwayMinecraft.alignments.config.AlignmentConfigManager;
+import com.sunwayMinecraft.alignments.config.AlignmentPerksConfig;
+import com.sunwayMinecraft.alignments.config.AlignmentProgressionConfig;
+import com.sunwayMinecraft.alignments.config.AlignmentSettingsConfig;
+import com.sunwayMinecraft.alignments.listener.AlignmentChatListener;
+import com.sunwayMinecraft.alignments.listener.AlignmentPlayerListener;
+import com.sunwayMinecraft.alignments.persistence.AlignmentRepository;
+import com.sunwayMinecraft.alignments.persistence.AlignmentSeasonRepository;
+import com.sunwayMinecraft.alignments.service.AlignmentChatService;
+import com.sunwayMinecraft.alignments.service.AlignmentCooldownManager;
+import com.sunwayMinecraft.alignments.service.AlignmentMembershipCache;
+import com.sunwayMinecraft.alignments.service.AlignmentPerkService;
+import com.sunwayMinecraft.alignments.service.AlignmentRankService;
+import com.sunwayMinecraft.alignments.service.AlignmentScoreService;
+import com.sunwayMinecraft.alignments.service.AlignmentSeasonService;
+import com.sunwayMinecraft.alignments.service.AlignmentService;
 import com.sunwayMinecraft.city.CityOverviewService;
+import com.sunwayMinecraft.districts.DistrictManager;
 import com.sunwayMinecraft.city.CityValidationService;
 import com.sunwayMinecraft.city.metrics.CityMetricsManager;
 import com.sunwayMinecraft.contracts.config.*;
@@ -101,6 +118,22 @@ public class PluginInitializer {
   private CityOverviewService cityOverviewService;
   private CityValidationService cityValidationService;
 
+  // Triple Alliance alignments
+  private AlignmentConfigManager alignmentConfigManager;
+  private AlignmentSettingsConfig alignmentSettings;
+  private AlignmentProgressionConfig alignmentProgression;
+  private AlignmentRepository alignmentRepository;
+  private AlignmentRankService alignmentRankService;
+  private AlignmentMembershipCache alignmentCache;
+  private AlignmentPerksConfig alignmentPerksConfig;
+  private AlignmentSeasonRepository alignmentSeasonRepository;
+  private AlignmentSeasonService alignmentSeasonService;
+  private AlignmentScoreService alignmentScoreService;
+  private AlignmentPerkService alignmentPerkService;
+  private AlignmentCooldownManager alignmentCooldownManager;
+  private AlignmentService alignmentService;
+  private AlignmentChatService alignmentChatService;
+
   public PluginInitializer(SunwayMinecraft plugin) {
     this.plugin = plugin;
 
@@ -123,6 +156,7 @@ public class PluginInitializer {
     initContractsSystem();
     initEventsSystem();
     initCityIntegration();
+    initAlignmentSystem();
   }
 
   private void initCityIntegration() {
@@ -259,6 +293,72 @@ public class PluginInitializer {
     }
   }
 
+  private void initAlignmentSystem() {
+    alignmentSettings = new AlignmentSettingsConfig(plugin);
+    alignmentSettings.load();
+    alignmentConfigManager = new AlignmentConfigManager(plugin);
+    alignmentConfigManager.load();
+    alignmentRepository = new AlignmentRepository(plugin);
+    if (!alignmentRepository.isAvailable()) {
+      plugin.getLogger()
+          .warning("Alignment membership storage is unavailable; alignment changes are disabled");
+    }
+    alignmentProgression = new AlignmentProgressionConfig(plugin);
+    alignmentProgression.load();
+    alignmentRankService = new AlignmentRankService(alignmentProgression);
+    alignmentCache =
+        new AlignmentMembershipCache(alignmentConfigManager, alignmentRepository, alignmentRankService);
+    alignmentCooldownManager = new AlignmentCooldownManager(alignmentRepository);
+    alignmentPerksConfig = new AlignmentPerksConfig(plugin);
+    alignmentPerksConfig.load();
+    alignmentPerkService =
+        new AlignmentPerkService(
+            plugin, alignmentPerksConfig, alignmentConfigManager, alignmentRankService,
+            alignmentCache, buildDistrictGate());
+    alignmentService =
+        new AlignmentService(
+            alignmentConfigManager, alignmentSettings, alignmentRepository,
+            alignmentCooldownManager, alignmentCache, alignmentPerkService);
+    alignmentChatService =
+        new AlignmentChatService(alignmentSettings, alignmentConfigManager, alignmentCache);
+    alignmentSeasonRepository = new AlignmentSeasonRepository(plugin);
+    alignmentSeasonService =
+        new AlignmentSeasonService(
+            plugin, alignmentProgression, alignmentSeasonRepository, alignmentRepository,
+            alignmentConfigManager, alignmentCache);
+    alignmentSeasonService.start();
+    alignmentScoreService =
+        new AlignmentScoreService(alignmentProgression, alignmentConfigManager, alignmentRepository);
+    alignmentPerkService.start();
+
+    new AlignmentPlayerListener(alignmentCache).register(plugin);
+    new AlignmentChatListener(
+            alignmentSettings, alignmentConfigManager, alignmentCache,
+            alignmentRankService, alignmentProgression)
+        .register(plugin);
+    alignmentCache.loadOnlinePlayers();
+
+    // hourly season check (aligned with the metrics save cadence)
+    plugin.getServer().getScheduler().runTaskTimer(
+        plugin, alignmentSeasonService::checkSeason, 6000L, 6000L);
+  }
+
+  /**
+   * District gate for perks: perks apply only inside enabled districts when
+   * apply_in_any_district is false. Null when the district system is absent.
+   */
+  private java.util.function.Predicate<org.bukkit.entity.Player> buildDistrictGate() {
+    DistrictManager districts = getDistrictManager();
+    if (districts == null) {
+      return null;
+    }
+    return player -> {
+      var district = districts.getDistrictAt(player.getLocation());
+      return district != null
+          && (alignmentPerksConfig.isApplyInDisabledDistricts() || district.isEnabled());
+    };
+  }
+
   private Economy getEconomy() {
     if (plugin.getServer().getPluginManager().getPlugin("Vault") == null) return null;
     RegisteredServiceProvider<Economy> registration =
@@ -385,5 +485,57 @@ public class PluginInitializer {
 
   public CityValidationService getCityValidationService() {
     return cityValidationService;
+  }
+
+  public AlignmentConfigManager getAlignmentConfigManager() {
+    return alignmentConfigManager;
+  }
+
+  public AlignmentSettingsConfig getAlignmentSettings() {
+    return alignmentSettings;
+  }
+
+  public AlignmentProgressionConfig getAlignmentProgression() {
+    return alignmentProgression;
+  }
+
+  public AlignmentRankService getAlignmentRankService() {
+    return alignmentRankService;
+  }
+
+  public AlignmentPerksConfig getAlignmentPerksConfig() {
+    return alignmentPerksConfig;
+  }
+
+  public AlignmentSeasonRepository getAlignmentSeasonRepository() {
+    return alignmentSeasonRepository;
+  }
+
+  public AlignmentSeasonService getAlignmentSeasonService() {
+    return alignmentSeasonService;
+  }
+
+  public AlignmentScoreService getAlignmentScoreService() {
+    return alignmentScoreService;
+  }
+
+  public AlignmentPerkService getAlignmentPerkService() {
+    return alignmentPerkService;
+  }
+
+  public AlignmentRepository getAlignmentRepository() {
+    return alignmentRepository;
+  }
+
+  public AlignmentMembershipCache getAlignmentCache() {
+    return alignmentCache;
+  }
+
+  public AlignmentChatService getAlignmentChatService() {
+    return alignmentChatService;
+  }
+
+  public AlignmentService getAlignmentService() {
+    return alignmentService;
   }
 }

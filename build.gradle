@@ -70,11 +70,15 @@ dependencies {
 
 test {
     useJUnitPlatform()
+    finalizedBy jacocoTestReport
     maxParallelForks = 1
     // MockBukkit suites leak native handles across many mock cycles on Windows;
     // a fresh JVM per class keeps runs deterministic on this machine
     forkEvery = 1
-    jvmArgs '-Xmx2g', '-Djdk.attach.allowAttachSelf=true' 
+    // Mockito's inline mock maker must attach an agent to the test JVM;
+    // without this flag Byte Buddy falls back to an external attach process,
+    // which fails under memory pressure
+    jvmArgs '-Xmx2g', '-Djdk.attach.allowAttachSelf=true'
     testLogging {
         events = ["passed", "skipped", "failed"]
         exceptionFormat = "full"

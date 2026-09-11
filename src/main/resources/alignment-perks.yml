@@ -1,0 +1,59 @@
+# Triple Alliance alignment perks configuration
+#
+# Lightweight, rank-gated potion perks for aligned players. Effects are
+# refreshed periodically and removed when a player loses eligibility.
+
+enabled: true
+
+# Seconds between perk refresh passes. Keep this at 5+ seconds; the task
+# only touches cached data and never queries the database.
+refresh_interval_seconds: 5
+
+# Seconds each applied effect lasts; refreshed on every pass, so a short
+# duration keeps effects from lingering after leaving a qualifying area.
+duration_seconds: 15
+
+# Hard cap on effect amplifiers, whatever the perk config says.
+max_amplifier: 1
+
+# true: perks apply anywhere. false: perks apply only inside a district
+# known to the district system (per-alignment district ownership is not
+# tracked by the district system yet, so any enabled district qualifies).
+apply_in_any_district: true
+
+# Whether perks may apply inside districts that are disabled in the
+# district system (getDistrictAt skips disabled districts anyway; this is
+# a belt-and-braces switch for future district states).
+apply_in_disabled_districts: false
+
+perks:
+  swiftness:
+    display_name: "Alignment Swiftness"
+    effect: speed          # speed | haste | regeneration | saturation
+    minimum_rank: fellow
+    amplifier: 0
+    enabled: true
+  diligence:
+    display_name: "Alignment Diligence"
+    effect: haste
+    minimum_rank: steward
+    amplifier: 0
+    enabled: true
+  vitality:
+    display_name: "Alignment Vitality"
+    effect: regeneration
+    minimum_rank: archon
+    amplifier: 0
+    enabled: true
+  #  bounty:
+  #    display_name: "Alignment Bounty"
+  #    effect: saturation
+  #    minimum_rank: archon
+  #    amplifier: 0
+  #    enabled: true
+
+# Higher-ranked members may switch alignments sooner.
+cooldown_reduction:
+  enabled: true
+  minimum_rank: steward
+  percent: 25              # reduced cooldown = base * (100 - percent) / 100
