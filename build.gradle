@@ -60,6 +60,8 @@ dependencies {
     // SQLite JDBC for CoinFlipDatabase; provided by Paper at runtime,
     // compileOnly so we don't shade a duplicate driver
     compileOnly 'org.xerial:sqlite-jdbc:3.53.4.0'
+    // Needed on the test classpath so repository tests run against real SQLite
+    testImplementation 'org.xerial:sqlite-jdbc:3.53.4.0'
 
     // Essentials
     // compileOnly ("net.essentialsx:EssentialsX:2.21.1")
