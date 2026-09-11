@@ -44,9 +44,22 @@ class DistrictCommandsTest {
         DistrictAlignmentService service = new DistrictAlignmentService(
                 mock(com.sunwayMinecraft.districts.config.DistrictsConfigManager.class),
                 uuid -> Optional.empty());
+        com.sunwayMinecraft.districts.config.DistrictControlSettingsConfig controlSettings =
+                mock(com.sunwayMinecraft.districts.config.DistrictControlSettingsConfig.class);
+        com.sunwayMinecraft.districts.persistence.DistrictControlRepository controlRepository =
+                mock(com.sunwayMinecraft.districts.persistence.DistrictControlRepository.class);
+        when(controlRepository.loadAllStates()).thenReturn(java.util.Map.of());
+        com.sunwayMinecraft.districts.service.DistrictControlService controlService =
+                new com.sunwayMinecraft.districts.service.DistrictControlService(
+                        null,
+                        mock(com.sunwayMinecraft.districts.config.DistrictsConfigManager.class),
+                        mock(com.sunwayMinecraft.districts.region.DistrictLocationResolver.class),
+                        controlSettings, controlRepository,
+                        uuid -> java.util.Optional.empty(), () -> null, null, () -> null);
         commands = new DistrictCommands(districtManager, service,
                 new com.sunwayMinecraft.commands.DistrictAdminSubCommands(districtManager,
-                        mock(com.sunwayMinecraft.districts.config.DistrictsConfigManager.class)));
+                        mock(com.sunwayMinecraft.districts.config.DistrictsConfigManager.class)),
+                new com.sunwayMinecraft.commands.DistrictControlCommands(controlService, controlSettings));
     }
 
     @AfterEach
