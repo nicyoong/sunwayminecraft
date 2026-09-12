@@ -10,6 +10,7 @@ public class ActiveContract {
     private final Instant expiryTime;
     private double progress; // 0.0 to 1.0
     private String progressState; // pipe-joined stage flags, e.g. "start"
+    private int activeId; // SQLite row id; 0 until persisted/reloaded
 
     public ActiveContract(UUID playerUuid, String contractId, Instant startTime, Instant expiryTime) {
         this.playerUuid = playerUuid;
@@ -21,6 +22,8 @@ public class ActiveContract {
 
     public UUID getPlayerUuid() { return playerUuid; }
     public String getContractId() { return contractId; }
+    public int getActiveId() { return activeId; }
+    public void setActiveId(int activeId) { this.activeId = activeId; }
     public Instant getStartTime() { return startTime; }
     public Instant getExpiryTime() { return expiryTime; }
     public double getProgress() { return progress; }
