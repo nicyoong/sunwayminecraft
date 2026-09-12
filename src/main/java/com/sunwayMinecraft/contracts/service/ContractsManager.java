@@ -190,6 +190,10 @@ public class ContractsManager {
 
         String alignmentId = alignmentLookup.apply(player.getUniqueId()).orElse(null);
         Reward reward = computeReward(def, alignmentId);
+        if (ac.hasStage("sabotaged")) {
+            // a successful sabotage halves the completion reward
+            reward = new Reward(reward.money() * 0.5, reward.reputation(), reward.boosted());
+        }
 
         double money = reward.money();
         if (money > 0) {
