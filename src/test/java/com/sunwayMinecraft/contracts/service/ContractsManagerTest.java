@@ -33,6 +33,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.*;
 
 class ContractsManagerTest {
@@ -258,5 +259,86 @@ class ContractsManagerTest {
                 startEndpoint, endEndpoint, Map.of(), "objective",
                 ContractObjectiveType.REACH_DESTINATION,
                 ContractAlignmentRule.OPEN, ContractCampusRoute.NONE, 0, true);
+    }
+
+    private ContractDefinition rewardDefinition(String id, double money, long rep,
+                                                ContractAlignmentRule rule, ContractCampusRoute route) {
+        return new ContractDefinition(id, ContractCategory.COURIER, "name", "description", money,
+                30, 10, "start", "end", Map.of(), "objective",
+                ContractObjectiveType.REACH_DESTINATION, rule, route, rep, true);
+    }
+
+    @Test
+    void recommendedAndCrossCampusBonusesAddToMoneyAndReputation() {
+        ContractDefinition def = rewardDefinition("bonus", 100, 0,
+                new ContractAlignmentRule(null, "lagoon_covenant", List.of()),
+                new ContractCampusRoute("sunway", "taylors", null, null));
+        when(definitions.getContract("bonus")).thenReturn(def);
+        when(settings.getRecommendedBonusMoney()).thenReturn(10.0);
+        when(settings.getRecommendedBonusReputation()).thenReturn(2L);
+        when(settings.getCrossCampusBonusMoney()).thenReturn(20.0);
+        when(settings.getCrossCampusBonusReputation()).thenReturn(3L);
+        manager.setAlignmentLookup(uuid -> Optional.of("lagoon_covenant"));
+        java.util.List<Integer> awarded = new ArrayList<>();
+        manager.setReputationRewarder((uuid, delta) -> awarded.add(delta));
+
+        ActiveContract ac = activeContract("bonus", playerId);
+        ac.completeObjective();
+        active.add(ac);
+
+        assertTrue(manager.completeContract(player, ac));
+        verify(economy).depositPlayer(player, 130.0);
+        assertEquals(List.of(5), awarded, "recommended (2) + cross-campus (3) reputation");
+    }
+
+    @Test
+    void completionWithoutEconomyStillAwardsReputationAndRecordsStats() {
+        manager = new ContractsManager(mock(JavaPlugin.class), definitions,
+                mock(EndpointConfigManager.class), settings, persistence, null);
+        ContractDefinition def = rewardDefinition("stats", 100, 4, ContractAlignmentRule.OPEN,
+                new ContractCampusRoute("sunway", null, null, null));
+        when(definitions.getContract("stats")).thenReturn(def);
+        manager.setAlignmentLookup(uuid -> Optional.of("lagoon_covenant"));
+        java.util.List<Integer> awarded = new ArrayList<>();
+        manager.setReputationRewarder((uuid, delta) -> awarded.add(delta));
+
+        ActiveContract ac = activeContract("stats", playerId);
+        ac.completeObjective();
+        active.add(ac);
+
+        assertTrue(manager.completeContract(player, ac), "a missing Vault must not block completion");
+        assertEquals(List.of(4), awarded);
+        verify(persistence).recordCompletion(eq(playerId), eq("stats"), eq("lagoon_covenant"),
+                eq("sunway"), any(Instant.class), eq(100.0), eq(4L));
+    }
+
+    @Test
+    void unalignedPlayerCompletesOpenContractWithoutReputation() {
+        when(definitions.getContract("contract")).thenReturn(
+                rewardDefinition("contract", 100, 5, ContractAlignmentRule.OPEN,
+                        ContractCampusRoute.NONE));
+        java.util.List<Integer> awarded = new ArrayList<>();
+        manager.setReputationRewarder((uuid, delta) -> awarded.add(delta));
+
+        ActiveContract ac = activeContract("contract", playerId);
+        ac.completeObjective();
+        active.add(ac);
+
+        assertTrue(manager.completeContract(player, ac));
+        verify(economy).depositPlayer(player, 100.0);
+        assertTrue(awarded.isEmpty(), "no alignment, so no reputation award");
+        verify(persistence).recordCompletion(eq(playerId), eq("contract"), isNull(), isNull(),
+                any(Instant.class), eq(100.0), eq(5L));
+    }
+
+    @Test
+    void repeatedCompletionCannotDoubleAward() {
+        ActiveContract ac = activeContract("contract", playerId);
+        ac.completeObjective();
+        active.add(ac);
+
+        assertTrue(manager.completeContract(player, ac));
+        assertFalse(manager.completeContract(player, ac), "the row is gone, so the second call no-ops");
+        verify(economy, times(1)).depositPlayer(eq(player), anyDouble());
     }
 }
