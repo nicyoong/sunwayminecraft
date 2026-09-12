@@ -60,10 +60,12 @@ public class ContractConfigManager {
                 if (definition.enabled()) {
                     contracts.put(key, definition);
                 } else {
-                    disableContract(key, "disabled in contracts.yml");
+                    disabledReasons.put(key, "disabled in contracts.yml");
+                    plugin.getLogger().warning("Contract '" + key + "' disabled: disabled in contracts.yml");
                 }
             } catch (ContractDisabledException e) {
-                disableContract(key, e.getMessage());
+                disabledReasons.put(key, e.getMessage());
+                plugin.getLogger().warning("Contract '" + key + "' disabled: " + e.getMessage());
             } catch (Exception e) {
                 plugin.getLogger().log(Level.SEVERE, "Failed to load contract: " + key, e);
             }
@@ -138,35 +140,36 @@ public class ContractConfigManager {
 
     private void validateAlignmentIds(String key, ContractAlignmentRule rule,
                                       ContractCampusRoute route) {
-        List<String> referenced = new ArrayList<>(List.of(
-                rule.requiredAlignment(), rule.recommendedAlignment(),
-                route.originAlignment(), route.destinationAlignment()));
+        List<String> referenced = new ArrayList<>();
+        if (rule.requiredAlignment() != null) referenced.add(rule.requiredAlignment());
+        if (rule.recommendedAlignment() != null) referenced.add(rule.recommendedAlignment());
+        if (route.originAlignment() != null) referenced.add(route.originAlignment());
+        if (route.destinationAlignment() != null) referenced.add(route.destinationAlignment());
         referenced.addAll(rule.forbiddenAlignments());
         for (String alignmentId : referenced) {
-            if (alignmentId != null && !alignmentIdValidator.test(alignmentId)) {
+            if (!alignmentIdValidator.test(alignmentId)) {
                 throw new ContractDisabledException("unknown alignment id: " + alignmentId);
             }
         }
     }
 
     private void validateCampusIds(String key, ContractCampusRoute route) {
-        for (String campusId : List.of(route.originCampus(), route.destinationCampus())) {
-            if (campusId != null && !campusIdValidator.test(campusId)) {
+        List<String> referenced = new ArrayList<>();
+        if (route.originCampus() != null) referenced.add(route.originCampus());
+        if (route.destinationCampus() != null) referenced.add(route.destinationCampus());
+        for (String campusId : referenced) {
+            if (!campusIdValidator.test(campusId)) {
                 throw new ContractDisabledException("unknown campus id: " + campusId);
             }
         }
     }
 
-    /** Moves a contract out of the usable pool, recording why for /contracts admin list. */
+    /** Moves a loaded contract out of the usable pool, recording why for /contracts admin list. */
     public void disableContract(String id, String reason) {
         ContractDefinition definition = contracts.remove(id);
-        if (definition == null) {
-            definition = disabledContracts.get(id);
+        if (definition != null) {
+            disabledContracts.put(id, definition);
         }
-        if (definition == null) {
-            return;
-        }
-        disabledContracts.put(id, definition);
         disabledReasons.put(id, reason);
         plugin.getLogger().warning("Contract '" + id + "' disabled: " + reason);
     }
