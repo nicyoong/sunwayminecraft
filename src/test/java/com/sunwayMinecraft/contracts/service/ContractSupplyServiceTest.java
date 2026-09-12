@@ -83,4 +83,14 @@ class ContractSupplyServiceTest {
         service.adminAdjustSupply("azure_hearth", -10);
         assertEquals(40, service.getSupplyPoints("azure_hearth"));
     }
+
+    @Test
+    void unknownAllianceAndNullDefAreSafe() {
+        service.recordCompletion(def(ContractCategory.HAULING), "azure_hearth");
+        assertEquals(0, service.getSupplyPointsForAlliance("no_such_alliance"));
+        assertEquals(0, service.getSupplyPointsForAlliance(null));
+        // null definition must not throw or mutate totals
+        assertEquals(0, service.recordCompletion(null, "azure_hearth"));
+        assertEquals(3, service.getSupplyPoints("azure_hearth"));
+    }
 }

@@ -135,4 +135,47 @@ class ContractDiplomacyServiceTest {
         svc.adminAdjustInfluence("lagoon_covenant", -5);
         assertEquals(20, svc.getInfluence("lagoon_covenant"));
     }
+
+    @Test
+    void unalignedCompleterFallsBackToTheContractOriginAlignment() throws Exception {
+        ContractDiplomacyService svc = service("influence_per_completion: 6\n");
+        ContractCampusRoute originOnly = new ContractCampusRoute(null, null,
+                "pyramid_ascendancy", null);
+        // completer is unaligned (null), so influence is credited to the origin alignment
+        int granted = svc.recordCompletion(def(ContractCategory.COURIER, originOnly),
+                UUID.randomUUID(), null);
+        assertEquals(6, granted);
+        assertEquals(6, svc.getInfluence("pyramid_ascendancy"));
+    }
+
+    @Test
+    void fullyUnalignedAwardGrantsInfluenceButCreditsNoTotal() throws Exception {
+        ContractDiplomacyService svc = service("influence_per_completion: 6\n");
+        int granted = svc.recordCompletion(def(ContractCategory.COURIER, ContractCampusRoute.NONE),
+                UUID.randomUUID(), null);
+        assertEquals(6, granted, "influence is still computed");
+        // nothing to credit: no alignment resolved, so no total changes
+        assertEquals(0, svc.getInfluence("azure_hearth"));
+    }
+
+    @Test
+    void singleSidedAllianceYieldsNoCrossAllianceBonus() throws Exception {
+        ContractDiplomacyService svc = service("influence_per_completion: 8\n");
+        // origin resolves to an alliance, destination is null -> no cross-alliance row
+        ContractCampusRoute route = new ContractCampusRoute("sunway", "sunway",
+                "azure_hearth", null);
+        int granted = svc.recordCompletion(def(ContractCategory.COURIER, route), null, "azure_hearth");
+        assertEquals(8, granted, "same-campus, single-alliance: base only");
+        assertEquals(0, svc.getRecentInfluence(50).stream()
+                .filter(r -> r.influenceType().equals("CROSS_ALLIANCE")).count());
+    }
+
+    @Test
+    void nullLookupsAreSafe() throws Exception {
+        ContractDiplomacyService svc = service("influence_per_completion: 5\n");
+        assertEquals(0, svc.getInfluence(null));
+        assertEquals(0, svc.getInfluenceBetween(null, "azure_hearth"));
+        assertEquals(0, svc.getInfluenceBetween("azure_hearth", null));
+        svc.adminAdjustInfluence(null, 10); // must not throw
+    }
 }
