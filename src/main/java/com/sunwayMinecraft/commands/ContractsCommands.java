@@ -197,15 +197,9 @@ public class ContractsCommands implements CommandExecutor, TabCompleter {
         if (manager.acceptContract(player, id)) {
             player.sendMessage(Component.text("Contract accepted: " + id, NamedTextColor.GREEN));
         } else {
-            ContractDefinition def = manager.getContractConfig().getContract(id);
-            if (def != null && !manager.canAlignmentAcceptContract(
-                    manager.getAlignmentFor(player), def)) {
-                player.sendMessage(Component.text("Your alignment cannot accept this contract.",
-                        NamedTextColor.RED));
-            } else {
-                player.sendMessage(Component.text("Failed to accept contract. Check limits or cooldowns.",
-                        NamedTextColor.RED));
-            }
+            String problem = manager.acceptanceProblem(player, id);
+            player.sendMessage(Component.text(
+                    problem != null ? problem : "Failed to accept contract.", NamedTextColor.RED));
         }
     }
 

@@ -128,31 +128,49 @@ public class ContractsManager {
     }
 
     public boolean acceptContract(Player player, String contractId) {
+        if (acceptanceProblem(player, contractId) != null) return false;
         ContractDefinition def = contractConfig.getContract(contractId);
-        if (def == null) return false;
-
         UUID uuid = player.getUniqueId();
-        List<ActiveContract> active = persistence.getPlayerContracts(uuid);
-        
-        if (active.size() >= settingsConfig.getMaxActiveContracts()) return false;
-        if (active.stream().anyMatch(contract -> contract.getContractId().equals(contractId))) return false;
-        
-        // Check cooldown
-        Instant cooldownUntil = persistence.getPlayerCooldowns(uuid).get(contractId);
-        if (cooldownUntil != null && Instant.now().isBefore(cooldownUntil)) return false;
-
-        if (!def.alignmentRule().canAccept(alignmentLookup.apply(uuid).orElse(null))) return false;
-
         Instant expiry = Instant.now().plus(Duration.ofMinutes(def.durationMinutes()));
         ActiveContract newContract = new ActiveContract(uuid, contractId, Instant.now(), expiry);
-        active.add(newContract);
+        persistence.getPlayerContracts(uuid).add(newContract);
         persistence.save();
-        
+
         if (metricsManager != null) {
             metricsManager.increment(CityMetricKeys.CONTRACTS_ACCEPTED);
         }
-        
         return true;
+    }
+
+    /**
+     * The reason a player cannot accept the contract, or null when they can.
+     * Covers enabled-ness (unknown id), the active limit, the same-contract
+     * duplicate rule, cooldowns and the alignment requirement.
+     */
+    public String acceptanceProblem(Player player, String contractId) {
+        ContractDefinition def = contractConfig.getContract(contractId);
+        if (def == null || !def.enabled()) return "Contract unavailable.";
+
+        UUID uuid = player.getUniqueId();
+        List<ActiveContract> active = persistence.getPlayerContracts(uuid);
+
+        if (active.size() >= settingsConfig.getMaxActiveContracts()) {
+            return "You already have the maximum number of active contracts.";
+        }
+        if (!settingsConfig.isAllowMultipleSameContract()
+                && active.stream().anyMatch(c -> c.getContractId().equals(contractId))) {
+            return "You already have this contract active.";
+        }
+
+        Instant cooldownUntil = persistence.getPlayerCooldowns(uuid).get(contractId);
+        if (cooldownUntil != null && Instant.now().isBefore(cooldownUntil)) {
+            return "This contract is on cooldown.";
+        }
+
+        if (!def.alignmentRule().canAccept(alignmentLookup.apply(uuid).orElse(null))) {
+            return "Your alignment cannot accept this contract.";
+        }
+        return null;
     }
 
     public boolean completeContract(Player player, ActiveContract ac) {
