@@ -34,3 +34,88 @@ contracts:
     end_endpoint: lamp_plaza
     objective_description: "Interact with the lamp at the plaza."
     objective_type: INTERACT_AT_DESTINATION
+  alliance_supply_haul:
+    contract_type: HAULING
+    display_name: "Lakeside to Pyramid Supply Run"
+    description: "Haul construction supplies from Taylors Lakeside to the Sunway Pyramid works."
+    origin_campus: taylors
+    destination_campus: sunway
+    origin_alignment: azure_hearth
+    reward_money: 650.0
+    reward_reputation: 5
+    duration_minutes: 90
+    cooldown_minutes: 45
+    start_endpoint: taylors_lakeside_depot
+    end_endpoint: sunway_pyramid_depot
+    objective_description: "Deliver 32 Oak Logs from the Taylors Lakeside Depot to the Sunway Pyramid Depot."
+    objective_type: DELIVER_MATERIALS
+    required_materials:
+      OAK_LOG: 32
+    enabled: true
+  research_courier:
+    contract_type: DELIVERY
+    display_name: "Monash Research Courier"
+    description: "Deliver sensitive research materials from the Monash campus to Sunway University."
+    origin_campus: monash
+    destination_campus: sunway
+    origin_alignment: zenith_collective
+    required_alignment: zenith_collective
+    reward_money: 400.0
+    reward_reputation: 3
+    duration_minutes: 45
+    cooldown_minutes: 30
+    start_endpoint: monash_campus_depot
+    end_endpoint: sunway_pyramid_depot
+    objective_description: "Carry the research satchel from the Monash Campus Depot to the Sunway Pyramid Depot."
+    objective_type: REACH_DESTINATION
+    enabled: true
+  campus_diplomatic_escort:
+    contract_type: DIPLOMATIC
+    display_name: "Inter-Campus Diplomatic Escort"
+    description: "Escort the Triple Alliance delegation between the Sunway and Taylors campuses."
+    origin_campus: sunway
+    destination_campus: taylors
+    recommended_alignment: lagoon_covenant
+    reward_money: 500.0
+    reward_reputation: 10
+    duration_minutes: 60
+    cooldown_minutes: 60
+    start_endpoint: triple_alliance_transit_hub
+    end_endpoint: taylors_lakeside_depot
+    objective_description: "Travel with the delegation from the BRT Transit Hub to the Taylors Lakeside campus gate."
+    objective_type: REACH_DESTINATION
+    enabled: true
+  campus_build_supplies:
+    contract_type: CONSTRUCTION
+    display_name: "Campus Build Project Supplies"
+    description: "The Sunway campus expansion needs sandstone for its new lecture halls."
+    origin_campus: sunway
+    destination_campus: sunway
+    origin_alignment: pyramid_ascendancy
+    forbidden_alignment: zenith_collective
+    reward_money: 550.0
+    duration_minutes: 120
+    cooldown_minutes: 60
+    start_endpoint: sunway_pyramid_depot
+    end_endpoint: sunway_pyramid_depot
+    objective_description: "Turn in 64 Sandstone to the Sunway Pyramid Depot."
+    objective_type: DELIVER_MATERIALS
+    required_materials:
+      SANDSTONE: 64
+    enabled: true
+  emergency_medical_delivery:
+    contract_type: EMERGENCY
+    display_name: "Emergency Medical Delivery"
+    description: "A student at the Taylors Lakeside campus needs medical supplies urgently."
+    destination_campus: taylors
+    reward_money: 300.0
+    reward_reputation: 8
+    duration_minutes: 20
+    cooldown_minutes: 15
+    start_endpoint: city_depot
+    end_endpoint: taylors_lakeside_depot
+    objective_description: "Deliver 4 Golden Apples to the Taylors Lakeside Depot."
+    objective_type: DELIVER_MATERIALS
+    required_materials:
+      GOLDEN_APPLE: 4
+    enabled: true
