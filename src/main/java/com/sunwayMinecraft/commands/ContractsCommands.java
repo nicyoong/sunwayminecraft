@@ -79,7 +79,7 @@ public class ContractsCommands implements CommandExecutor, TabCompleter {
         // value; a trailing number selects the page
         int pageArg = args.length > 1 && args[args.length - 1].matches("\\d+")
                 ? args.length - 1 : args.length;
-        if (args.length >= 2) {
+        if (args.length >= 2 && !args[1].matches("\\d+")) {
             String keyword = args[1].toLowerCase(Locale.ROOT);
             if (keyword.equals("alignment") || keyword.equals("type")) {
                 if (pageArg < 3) {
