@@ -357,4 +357,16 @@ class ContractsManagerTest {
         verify(diplomacy).recordCompletion(eq(definitions.getContract("contract")), eq(playerId), isNull());
         verify(supply).recordCompletion(any(), isNull());
     }
+
+    @Test
+    void sabotagedContractPaysHalfRewardOnCompletion() {
+        ActiveContract ac = activeContract("contract", playerId);
+        ac.completeObjective();
+        ac.markStage("sabotaged");
+        active.add(ac);
+
+        // base reward 50, no bonuses/event -> halved to 25
+        assertTrue(manager.completeContract(player, ac));
+        verify(economy).depositPlayer(player, 25.0);
+    }
 }

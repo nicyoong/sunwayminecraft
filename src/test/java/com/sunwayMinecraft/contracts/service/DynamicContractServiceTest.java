@@ -179,6 +179,35 @@ class DynamicContractServiceTest {
         org.junit.jupiter.api.Assertions.assertNull(contractConfig.getContract(b));
     }
 
+    @Test
+    void expireOverdueDropsAnExpiredContractFromRuntimeAndStorage() throws Exception {
+        DynamicContractService svc = service(5);
+        String id = svc.generate("supply_drop").orElseThrow();
+        // force the persisted row's expiry into the past
+        database.saveDynamicContract(id, "supply_drop", Instant.now().minusSeconds(60).toEpochMilli());
+
+        svc.expireOverdue();
+
+        assertTrue(!svc.liveIds().contains(id), "live set updated");
+        org.junit.jupiter.api.Assertions.assertNull(contractConfig.getContract(id), "removed from the board");
+        assertEquals(0, database.loadDynamicContracts(Instant.now().minusSeconds(3600).toEpochMilli()).stream()
+                .filter(r -> r.contractId().equals(id)).count(), "purged from storage");
+    }
+
+    @Test
+    void capCountsRebuiltContractsAfterARestart() throws Exception {
+        DynamicContractService svc = service(1);
+        String id = svc.generate("supply_drop").orElseThrow();
+        contractConfig.removeRuntimeContract(id); // simulate runtime loss on shutdown
+
+        DynamicContractService rebuilt = new DynamicContractService(contractConfig, templates(),
+                endpoints(), database, settings(), plugin);
+        rebuilt.loadPersisted();
+        // the rebuilt live contract occupies the cap of one
+        assertTrue(rebuilt.liveIds().contains(id));
+        assertTrue(rebuilt.generate("supply_drop").isEmpty(), "cap already consumed by the rebuilt id");
+    }
+
     // --- small loaders reused across service instances --------------------
 
     private EndpointConfigManager endpoints() {
