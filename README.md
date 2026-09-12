@@ -117,6 +117,26 @@ This helps preserve the quality of the permanent world while still giving player
 - `/residency guests` - Manage access for other players
 - `/storefront list` - List available commercial storefronts
 
+#### ⚔️ Triple Alliance Alignments
+*Pledge to one of six campus alignments and rise through its ranks*
+
+**How It Works**:
+1. **Browse**: Use `/align list` to see the six alignments, grouped under the two grand alliances (Concordat of the Dawn vs Ironclad Syndicate), each tied to the Taylors, Sunway or Monash campus.
+2. **Pledge**: Use `/align join <alignment>` (e.g. `/align join azure hearth`) - you can hold one alignment at a time and switch later.
+3. **Identity**: Your alignment appears in global chat (`[Concordat | Azure Hearth] PlayerName`) and unlocks alignment-only chat via `/align chat <message>` (or `/ac <message>`).
+4. **Rise**: Earn reputation to climb the ranks from Initiate to Archon - higher ranks show a suffix in chat, unlock small perks (speed, haste, regeneration) and reduce your switch cooldown.
+5. **Compete**: Seasons run on a timer; check `/align leaderboard`, `/align leaderboard grand` and `/align leaderboard season` to see who is winning, and `/align leaderboard player` for your own standing.
+
+**Commands**:
+- `/align join <alignment>` - Pledge to an alignment
+- `/align leave` - Leave your alignment
+- `/align show` - Show your alignment details
+- `/align chat <message>` - Chat with your alignment
+- `/ac <message>` - Shortcut for alignment chat
+- `/align leaderboard [grand|season|player]` - View the standings
+
+Full guides: [player](docs/alignmentplayer.md), [admin](docs/admin/alignmentadmin.md), [developer](docs/admin/alignmentdev.md).
+
 ---
 
 ## 🛠 For Server Admins & Developers  
@@ -138,6 +158,7 @@ This helps preserve the quality of the permanent world while still giving player
 | **Coin Flip**        | Player item/money wager system               | `CoinFlipSystem`, `CoinFlipCommands` |
 | **World Travel**     | Player-facing travel between permanent and mining worlds | `WorldTravelCommands` |
 | **Residency & Storefronts** | Municipal premises engine for rentable housing and commercial city units | `ResidencyManager`, `ResidencyBootstrap`, `PremisesAccessService`, `BillingService` |
+| **Triple Alliance Alignments** | Campus alignments with reputation ranks, chat identity, perks and seasons | `AlignmentService`, `AlignmentMembershipCache`, `AlignmentRankService`, `AlignmentSeasonService`, `AlignmentPerkService` |
 
 ### Configuration  
 *Handled via YAML files in `/plugins/SunwayMinecraft/`*:  
@@ -148,6 +169,11 @@ This helps preserve the quality of the permanent world while still giving player
 - `contracts.yml` - Definitions for all available City Contracts  
 - `contract-endpoints.yml` - Registered locations for pickup, dropoff, and task points  
 - `contract-settings.yml` - Global module settings for City Contracts  
+- `alignments.yml` - Grand alliance and alignment definitions
+- `alignments-settings.yml` - Alignment chat, cooldown and broadcast settings
+- `alignment-progression.yml` - Reputation ranks, seasons and score weights
+- `alignment-perks.yml` - Rank-gated perk effects and cooldown reduction
+- `alignments.db` - SQLite storage for memberships, cooldowns and seasons
 ...
 
 **Reload safely with**:  
@@ -155,6 +181,9 @@ This helps preserve the quality of the permanent world while still giving player
 - `/cityadmin stats` - View real-time activity metrics
 - `/eventadmin reload` - Event configurations
 - `/contractadmin reload` - Contract configurations  
+- `/align reload` - Alignment definitions and chat settings  
+- `/align leaderboard reload` - Ranks, seasons, score weights and perks  
+- `/align perks reload` - Perk configuration  
 - `/reloadsunwayconfig` - Main settings  
 ...
 

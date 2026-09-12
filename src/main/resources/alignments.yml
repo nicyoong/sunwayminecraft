@@ -1,0 +1,71 @@
+# Triple Alliance alignments configuration
+#
+# Two grand alliances divide the six campus alignments. Players may align with
+# exactly one alignment at a time. Alignment ids are stable lowercase snake_case
+# identifiers used by /align and persisted in the database - do not rename them.
+
+grand_alliances:
+  concordat_of_the_dawn:
+    display_name: "Concordat of the Dawn"
+    description: "An alliance of hearths, lagoons and sanctuaries - builders who believe the city shines brightest at first light."
+    chat_color: "&b"
+
+  ironclad_syndicate:
+    display_name: "Ironclad Syndicate"
+    description: "An alliance of spires, pyramids and zeniths - industrialists who believe the city is forged, not wished, into greatness."
+    chat_color: "&6"
+
+alignments:
+  azure_hearth:
+    display_name: "Azure Hearth"
+    grand_alliance: concordat_of_the_dawn
+    home_campus: taylors
+    description: "Lakeside keepers of the eternal flame - hospitality, warmth and steady hands."
+    chat_prefix: "[Azure Hearth]"
+    chat_color: "&9"
+    enabled: true
+
+  spirewrights:
+    display_name: "Spirewrights"
+    grand_alliance: ironclad_syndicate
+    home_campus: taylors
+    description: "Riggers of the high towers - precision, ambition and a head for heights."
+    chat_prefix: "[Spirewrights]"
+    chat_color: "&e"
+    enabled: true
+
+  lagoon_covenant:
+    display_name: "Lagoon Covenant"
+    grand_alliance: concordat_of_the_dawn
+    home_campus: sunway
+    description: "Wardens of the sunlit waters - trade, tides and promises kept."
+    chat_prefix: "[Lagoon Covenant]"
+    chat_color: "&3"
+    enabled: true
+
+  pyramid_ascendancy:
+    display_name: "Pyramid Ascendancy"
+    grand_alliance: ironclad_syndicate
+    home_campus: sunway
+    description: "Stonemasons of the great pyramid - order, scale and unyielding foundations."
+    chat_prefix: "[Pyramid Ascendancy]"
+    chat_color: "&6"
+    enabled: true
+
+  australis_sanctum:
+    display_name: "Australis Sanctum"
+    grand_alliance: concordat_of_the_dawn
+    home_campus: monash
+    description: "Scholars under the southern lights - wisdom, wonder and quiet resolve."
+    chat_prefix: "[Australis Sanctum]"
+    chat_color: "&a"
+    enabled: true
+
+  zenith_collective:
+    display_name: "Zenith Collective"
+    grand_alliance: ironclad_syndicate
+    home_campus: monash
+    description: "Engineers of the highest point - momentum, machinery and the climb that never ends."
+    chat_prefix: "[Zenith Collective]"
+    chat_color: "&d"
+    enabled: true

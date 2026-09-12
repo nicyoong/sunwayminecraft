@@ -66,10 +66,23 @@ class CityMetricsPersistenceTest {
 
         server = MockBukkit.mock();
         PluginInitializer restarted = new PluginInitializer(pluginMock());
-        assertEquals(3.0, restarted.getCityMetricsManager().getSnapshot().getMetric("contracts.completed"),
-                "counter saved by the periodic task must survive a restart");
-        assertEquals(2.0, restarted.getCityMetricsManager().getSnapshot().getMetric("events.started"),
-                "counter saved on shutdown must survive a restart");
+        try {
+            assertEquals(3.0, restarted.getCityMetricsManager().getSnapshot().getMetric("contracts.completed"),
+                    "counter saved by the periodic task must survive a restart");
+            assertEquals(2.0, restarted.getCityMetricsManager().getSnapshot().getMetric("events.started"),
+                    "counter saved on shutdown must survive a restart");
+        } finally {
+            // SQLite connections keep the db files locked on Windows; close so @TempDir can delete them
+            if (restarted.getCoinFlipDatabase() != null) {
+                restarted.getCoinFlipDatabase().close();
+            }
+            if (restarted.getAlignmentRepository() != null) {
+                restarted.getAlignmentRepository().close();
+            }
+            if (restarted.getAlignmentSeasonRepository() != null) {
+                restarted.getAlignmentSeasonRepository().close();
+            }
+        }
     }
 
     // MockBukkit's PluginManagerMock.registerEvents resolves listeners through

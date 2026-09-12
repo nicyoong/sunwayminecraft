@@ -54,16 +54,31 @@ class PluginInitializerEconomyGuardTest {
         SunwayMinecraft plugin = pluginMock();
 
         PluginInitializer initializer = new PluginInitializer(plugin);
+        try {
+            assertNull(initializer.getCoinFlipSystem(),
+                    "coinflip must disable itself when no economy provider is registered");
+            assertNotNull(initializer.getResidencyManager(),
+                    "residency must initialize without an economy provider");
+            assertNotNull(initializer.getContractsManager(),
+                    "contracts must initialize without an economy provider");
+            assertTrue(severeRecords.stream().anyMatch(record ->
+                            record.getMessage().contains("no economy provider is registered")),
+                    "expected a severe log explaining the missing economy registration");
+        } finally {
+            closeDatabases(initializer);
+        }
+    }
 
-        assertNull(initializer.getCoinFlipSystem(),
-                "coinflip must disable itself when no economy provider is registered");
-        assertNotNull(initializer.getResidencyManager(),
-                "residency must initialize without an economy provider");
-        assertNotNull(initializer.getContractsManager(),
-                "contracts must initialize without an economy provider");
-        assertTrue(severeRecords.stream().anyMatch(record ->
-                        record.getMessage().contains("no economy provider is registered")),
-                "expected a severe log explaining the missing economy registration");
+    private void closeDatabases(PluginInitializer initializer) {
+        if (initializer.getCoinFlipDatabase() != null) {
+            initializer.getCoinFlipDatabase().close();
+        }
+        if (initializer.getAlignmentRepository() != null) {
+            initializer.getAlignmentRepository().close();
+        }
+        if (initializer.getAlignmentSeasonRepository() != null) {
+            initializer.getAlignmentSeasonRepository().close();
+        }
     }
 
     private final List<LogRecord> severeRecords = new ArrayList<>();

@@ -1,0 +1,51 @@
+# Triple Alliance alignment runtime settings
+#
+# Controls chat display, alignment-only chat, and switching behaviour.
+# Safe defaults are used for any missing or invalid value.
+
+# Master switches
+allow_alignment_chat: true
+allow_global_chat_prefix: true
+
+# Global chat prefix. Placeholders:
+#   {grand_alliance}        full grand alliance display name
+#   {grand_alliance_short}  first word of the grand alliance display name
+#   {alignment}             alignment display name (in the alignment's chat colour)
+#   {campus}                home campus id
+# Players without an alignment never get a prefix.
+chat_prefix_format: "&7[{grand_alliance_short} | {alignment}&7] &r"
+
+# Reputation rank suffix shown after the alignment prefix, e.g.
+# [Concordat | Azure Hearth] [Steward] PlayerName. Requires a rank with
+# a non-empty chat_suffix in alignment-progression.yml.
+allow_chat_rank_suffix: true
+chat_rank_suffix_format: "&7[{rank_suffix}&7] &r"
+
+# Alignment-only chat (/align chat or /ac). Placeholders:
+#   {alignment}, {grand_alliance}, {grand_alliance_short}, {player}, {message}
+alignment_chat_format: "&7[{alignment}&7] &f{player}&7: &f{message}"
+
+# Fallback colour for the {alignment} placeholder and spy messages.
+alignment_chat_color: "&b"
+
+# Seconds a player must wait after joining/switching before joining again.
+# 0 disables the cooldown entirely.
+switch_cooldown_seconds: 0
+
+# Whether leaving an alignment also starts a switch cooldown.
+cooldown_applies_to_leave: false
+
+# Whether sunway.align.admin holders bypass the switch cooldown.
+allow_admin_bypass: true
+
+# Announce pledges and departures to the whole server.
+show_join_message: true
+show_leave_message: true
+
+# What global chat shows for a cached alignment that is disabled or no
+# longer configured: hide (no prefix) or neutral (a plain [Unaligned] tag).
+disabled_alignment_prefix_mode: hide
+
+# After /align reload, cached players whose alignment vanished or was
+# disabled: keep (mark membership inactive) or unalign (remove membership).
+stale_membership_action: keep
