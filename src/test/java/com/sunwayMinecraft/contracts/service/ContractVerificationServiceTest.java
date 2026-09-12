@@ -104,7 +104,7 @@ class ContractVerificationServiceTest {
         ContractVerificationService.VerificationResult result = fixture.service.verifyCompletion(fixture.player, expired);
 
         assertFalse(result.success());
-        assertEquals("Contract has expired.", result.message());
+        assertEquals("Contract expired.", result.message());
         verify(fixture.manager).failContract(fixture.player, expired);
     }
 
@@ -116,11 +116,11 @@ class ContractVerificationServiceTest {
 
         when(fixture.definitions.getContract("contract")).thenReturn(fixture.definition(ContractObjectiveType.REACH_DESTINATION, Map.of()));
         when(fixture.endpoints.getEndpoint("end")).thenReturn(null);
-        assertEquals("Destination endpoint not found.", fixture.service.verifyCompletion(fixture.player, fixture.active).message());
+        assertEquals("Destination endpoint unavailable.", fixture.service.verifyCompletion(fixture.player, fixture.active).message());
 
         when(fixture.endpoints.getEndpoint("end")).thenReturn(new ContractEndpoint("end", "Destination",
                 ContractEndpoint.EndpointType.DROPOFF, new Location(fixture.world, 100, 64, 100), 2));
-        assertTrue(fixture.service.verifyCompletion(fixture.player, fixture.active).message().contains("must be at"));
+        assertTrue(fixture.service.verifyCompletion(fixture.player, fixture.active).message().contains("Wrong endpoint"));
     }
 
     private static final class Fixture {

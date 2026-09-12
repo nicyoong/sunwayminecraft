@@ -255,4 +255,5 @@ public class ContractsManager {
     public EndpointConfigManager getEndpointConfig() { return endpointConfig; }
     public SettingsConfigManager getSettingsConfig() { return settingsConfig; }
     public ContractPersistenceService getPersistence() { return persistence; }
+    public java.util.logging.Logger getLogger() { return plugin.getLogger(); }
 }
