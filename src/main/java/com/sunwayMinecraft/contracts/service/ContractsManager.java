@@ -274,16 +274,39 @@ public class ContractsManager {
         ContractDefinition def = contractConfig.getContract(ac.getContractId());
         if (def == null) return;
 
-        // Set cooldown
-        Instant cooldownUntil = Instant.now().plus(Duration.ofMinutes(def.cooldownMinutes()));
+        // Cooldown: settings seconds override when configured, else per-contract minutes
+        long cooldownSeconds = settingsConfig.getAbandonmentCooldownSeconds();
+        Instant cooldownUntil = cooldownSeconds > 0
+                ? Instant.now().plusSeconds(cooldownSeconds)
+                : Instant.now().plus(Duration.ofMinutes(def.cooldownMinutes()));
         persistence.getPlayerCooldowns(player.getUniqueId()).put(ac.getContractId(), cooldownUntil);
-        
+
         persistence.getPlayerContracts(player.getUniqueId()).remove(ac);
         persistence.save();
 
+        applyAbandonmentPenalty(player, def);
+
+        if (pluginLog() != null) {
+            pluginLog().info("Contract '" + def.id() + "' abandoned by " + player.getName());
+        }
         if (metricsManager != null) {
             metricsManager.increment(CityMetricKeys.CONTRACTS_ABANDONED);
         }
+    }
+
+    /** Charges the configured reputation penalty, doubled for diplomatic/emergency. */
+    private void applyAbandonmentPenalty(Player player, ContractDefinition def) {
+        int penalty = isHighStakes(def)
+                ? settingsConfig.getDiplomaticEmergencyReputationPenalty()
+                : settingsConfig.getAbandonmentReputationPenalty();
+        if (penalty > 0) {
+            reputationRewarder.accept(player.getUniqueId(), -penalty);
+        }
+    }
+
+    private boolean isHighStakes(ContractDefinition def) {
+        return def.category() == ContractCategory.DIPLOMATIC
+                || def.category() == ContractCategory.EMERGENCY;
     }
 
     public void failContract(Player player, ActiveContract ac) {
