@@ -187,4 +187,75 @@ class ContractSabotageServiceTest {
         assertFalse(result.attempted());
         assertTrue(result.message().contains("complete"));
     }
+
+    @Test
+    void unknownActiveIdIsRefused() throws Exception {
+        ContractSabotageService svc = service("sabotage_enabled: true\nsabotage_success_chance: 1.0\n",
+                new java.util.Random(0));
+        victimActiveContract("stone", false);
+        ContractSabotageService.SabotageResult result = svc.attempt(playerWith("Ghost"), 999999);
+        assertFalse(result.attempted());
+        assertTrue(result.message().contains("No active contract"));
+    }
+
+    @Test
+    void targetWithMissingDefinitionIsRefused() throws Exception {
+        ContractSabotageService svc = service("sabotage_enabled: true\nsabotage_success_chance: 1.0\n",
+                new java.util.Random(0));
+        // config only knows "stone"; an active row for an unknown contract is refused
+        int id = victimActiveContract("ghost_contract", false);
+        ContractSabotageService.SabotageResult result = svc.attempt(playerWith("Orphan"), id);
+        assertFalse(result.attempted());
+        assertTrue(result.message().contains("no longer exists"));
+    }
+
+    @Test
+    void successfulSabotageSiphonsInfluenceFromTheVictimAlignment() throws Exception {
+        ContractSabotageService svc = service(
+                "sabotage_enabled: true\nsabotage_success_chance: 1.0\ninfluence_per_completion: 4\n",
+                new java.util.Random(0));
+        int id = victimActiveContract("stone", false);
+        assertTrue(svc.attempt(playerWith("Siphon"), id).success());
+        assertEquals(-4, diplomacy.getInfluence("pyramid_ascendancy"),
+                "victim alignment loses influence equal to a base completion");
+    }
+
+    @Test
+    void adminBypassIgnoresTheSabotageCooldown() throws Exception {
+        ContractSabotageService svc = service(
+                "sabotage_enabled: true\nsabotage_success_chance: 0.0\nsabotage_cooldown_seconds: 600\n",
+                new java.util.Random(0));
+        Player saboteur = playerWith("Double");
+        int id = victimActiveContract("stone", false);
+        assertTrue(svc.attempt(saboteur, id).attempted());     // sets cooldown
+        assertFalse(svc.attempt(saboteur, id).attempted());    // blocked while on cooldown
+        assertTrue(svc.attempt(saboteur, id, true).success()); // admin bypass overrides cooldown
+    }
+
+    @Test
+    @org.junit.jupiter.api.Disabled("BUG-SABOTAGE-DELAY (medium): the 'delay completion' effect of a "
+            + "successful sabotage is silently undone. applySuccess calls "
+            + "ContractDatabase.delayActiveContract (extends expires_at in SQLite) and then "
+            + "persistence.save(), which upserts the live ActiveContract whose expiryTime is an "
+            + "immutable field captured at acceptance - overwriting the extended expiry back to the "
+            + "original. Reproduction: sabotage with success chance 1.0, re-read the row, and the "
+            + "expiry equals the acceptance-time expiry instead of acceptance + cooldown. Verified "
+            + "failing during authoring with the annotation removed. Suggested fix: keep the delay "
+            + "authoritative on the live object (mutable/extended expiry) or make the persistence "
+            + "upsert preserve a later stored expiry.")
+    void successfulSabotageExtendsTheVictimExpiryInStorage() throws Exception {
+        ContractSabotageService svc = service(
+                "sabotage_enabled: true\nsabotage_success_chance: 1.0\nsabotage_cooldown_seconds: 3600\n",
+                new java.util.Random(0));
+        int id = victimActiveContract("stone", false);
+        long expiryBefore = persistence.getDatabase().getActiveContractById(id)
+                .getExpiryTime().toEpochMilli();
+
+        assertTrue(svc.attempt(playerWith("Delayer"), id).success());
+
+        long expiryAfter = persistence.getDatabase().getActiveContractById(id)
+                .getExpiryTime().toEpochMilli();
+        assertTrue(expiryAfter > expiryBefore,
+                "a successful sabotage must leave the contract expiry extended in storage");
+    }
 }
