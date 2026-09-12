@@ -96,6 +96,7 @@ public class PluginInitializer {
   // City Contracts
   private ContractsManager contractsManager;
   private ContractVerificationService contractVerificationService;
+  private ContractPersistenceService contractPersistence;
 
   // City Events
   private CityEventsManager cityEventsManager;
@@ -244,10 +245,10 @@ public class PluginInitializer {
     endpointConfig.load();
     SettingsConfigManager settingsConfig = new SettingsConfigManager(plugin);
     settingsConfig.load();
-    ContractPersistenceService persistence = new ContractPersistenceService(plugin);
-    
+    contractPersistence = new ContractPersistenceService(plugin);
+
     Economy econ = getEconomy();
-    contractsManager = new ContractsManager(plugin, contractConfig, endpointConfig, settingsConfig, persistence, econ);
+    contractsManager = new ContractsManager(plugin, contractConfig, endpointConfig, settingsConfig, contractPersistence, econ);
     contractsManager.setAlignmentLookup(uuid -> alignmentService != null
             ? alignmentService.getAlignmentId(uuid) : java.util.Optional.empty());
     contractsManager.validateEndpointReferences();
@@ -304,6 +305,13 @@ public class PluginInitializer {
         new AlignmentService(
             alignmentConfigManager, alignmentSettings, alignmentRepository,
             alignmentCooldownManager, alignmentCache, alignmentPerkService);
+    if (contractsManager != null) {
+      contractsManager.setReputationRewarder((uuid, delta) -> {
+        if (delta != 0) {
+          alignmentService.adjustReputation(uuid, delta);
+        }
+      });
+    }
     alignmentChatService =
         new AlignmentChatService(alignmentSettings, alignmentConfigManager, alignmentCache);
     alignmentSeasonRepository = new AlignmentSeasonRepository(plugin);
@@ -430,6 +438,10 @@ public class PluginInitializer {
 
   public ContractVerificationService getContractVerificationService() {
     return contractVerificationService;
+  }
+
+  public ContractPersistenceService getContractPersistence() {
+    return contractPersistence;
   }
 
   public CityEventsManager getCityEventsManager() {

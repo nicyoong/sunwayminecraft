@@ -1,99 +1,69 @@
 package com.sunwayMinecraft.contracts.persistence;
 
 import com.sunwayMinecraft.contracts.domain.ActiveContract;
-import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.io.File;
-import java.io.IOException;
 import java.time.Instant;
-import java.util.*;
-import java.util.logging.Level;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
+/**
+ * In-memory facade over the SQLite contract store. Callers mutate the
+ * returned live lists/maps (accept, complete, abandon) and then call
+ * {@link #save()}, which rewrites the active-contract and cooldown tables.
+ * Immediate repository operations (progress state, expiries, stats) go
+ * through the {@link ContractDatabase} accessors.
+ */
 public class ContractPersistenceService {
-    private final JavaPlugin plugin;
-    private final File dataFile;
+    private final ContractDatabase database;
     private final Map<UUID, List<ActiveContract>> activeContracts = new HashMap<>();
     private final Map<UUID, Map<String, Instant>> cooldowns = new HashMap<>();
 
     public ContractPersistenceService(JavaPlugin plugin) {
-        this.plugin = plugin;
-        this.dataFile = new File(plugin.getDataFolder(), "contracts-data.yml");
+        this.database = new ContractDatabase(plugin);
         load();
     }
 
     public void load() {
         activeContracts.clear();
+        for (ActiveContract contract : database.getActiveContracts()) {
+            activeContracts.computeIfAbsent(contract.getPlayerUuid(), k -> new ArrayList<>())
+                    .add(contract);
+        }
         cooldowns.clear();
-        if (!dataFile.exists()) return;
-        YamlConfiguration config = YamlConfiguration.loadConfiguration(dataFile);
-
-        // Load Active Contracts
-        ConfigurationSection activeSection = config.getConfigurationSection("active");
-        if (activeSection != null) {
-            for (String uuidStr : activeSection.getKeys(false)) {
-                UUID uuid = UUID.fromString(uuidStr);
-                List<ActiveContract> list = new ArrayList<>();
-                ConfigurationSection playerSection = activeSection.getConfigurationSection(uuidStr);
-                if (playerSection != null) {
-                    for (String key : playerSection.getKeys(false)) {
-                        String contractId = playerSection.getString(key + ".id");
-                        Instant start = Instant.parse(playerSection.getString(key + ".start"));
-                        Instant expiry = Instant.parse(playerSection.getString(key + ".expiry"));
-                        ActiveContract ac = new ActiveContract(uuid, contractId, start, expiry);
-                        ac.setProgress(playerSection.getDouble(key + ".progress"));
-                        list.add(ac);
-                    }
-                }
-                activeContracts.put(uuid, list);
-            }
-        }
-
-        // Load Cooldowns
-        ConfigurationSection cooldownSection = config.getConfigurationSection("cooldowns");
-        if (cooldownSection != null) {
-            for (String uuidStr : cooldownSection.getKeys(false)) {
-                UUID uuid = UUID.fromString(uuidStr);
-                Map<String, Instant> map = new HashMap<>();
-                ConfigurationSection playerSection = cooldownSection.getConfigurationSection(uuidStr);
-                if (playerSection != null) {
-                    for (String contractId : playerSection.getKeys(false)) {
-                        map.put(contractId, Instant.parse(playerSection.getString(contractId)));
-                    }
-                }
-                cooldowns.put(uuid, map);
-            }
-        }
+        cooldowns.putAll(database.loadCooldowns());
     }
 
     public void save() {
-        YamlConfiguration config = new YamlConfiguration();
-
-        // Save Active Contracts
-        for (Map.Entry<UUID, List<ActiveContract>> entry : activeContracts.entrySet()) {
-            int i = 0;
-            for (ActiveContract ac : entry.getValue()) {
-                String path = "active." + entry.getKey() + "." + i++;
-                config.set(path + ".id", ac.getContractId());
-                config.set(path + ".start", ac.getStartTime().toString());
-                config.set(path + ".expiry", ac.getExpiryTime().toString());
-                config.set(path + ".progress", ac.getProgress());
+        for (List<ActiveContract> playerContracts : activeContracts.values()) {
+            for (ActiveContract contract : playerContracts) {
+                database.addActiveContract(contract);
             }
         }
-
-        // Save Cooldowns
-        for (Map.Entry<UUID, Map<String, Instant>> entry : cooldowns.entrySet()) {
-            for (Map.Entry<String, Instant> cooldownEntry : entry.getValue().entrySet()) {
-                config.set("cooldowns." + entry.getKey() + "." + cooldownEntry.getKey(), cooldownEntry.getValue().toString());
+        // rows still active in SQLite but gone from the live lists must disappear
+        for (Map.Entry<UUID, List<ActiveContract>> entry : staleEntries().entrySet()) {
+            for (ActiveContract ghost : entry.getValue()) {
+                database.removeActiveContract(ghost.getPlayerUuid(), ghost.getContractId());
             }
         }
+        database.saveCooldowns(cooldowns);
+    }
 
-        try {
-            config.save(dataFile);
-        } catch (IOException e) {
-            plugin.getLogger().log(Level.SEVERE, "Could not save contract data!", e);
+    /** Rows still marked active in SQLite but gone from the in-memory lists. */
+    private Map<UUID, List<ActiveContract>> staleEntries() {
+        Map<UUID, List<ActiveContract>> stale = new HashMap<>();
+        for (ActiveContract stored : database.getActiveContracts()) {
+            List<ActiveContract> live = activeContracts.get(stored.getPlayerUuid());
+            boolean present = live != null && live.stream()
+                    .anyMatch(contract -> contract.getContractId().equals(stored.getContractId()));
+            if (!present) {
+                stale.computeIfAbsent(stored.getPlayerUuid(), k -> new ArrayList<>()).add(stored);
+            }
         }
+        return stale;
     }
 
     public List<ActiveContract> getPlayerContracts(UUID uuid) {
@@ -103,6 +73,37 @@ public class ContractPersistenceService {
     public Map<String, Instant> getPlayerCooldowns(UUID uuid) {
         return cooldowns.computeIfAbsent(uuid, k -> new HashMap<>());
     }
+
+    public boolean hasActiveContract(UUID uuid, String contractId) {
+        return getPlayerContracts(uuid).stream()
+                .anyMatch(contract -> contract.getContractId().equals(contractId));
+    }
+
+    /** Persists one contract's progress stages without rewriting the whole store. */
+    public void updateProgressState(ActiveContract contract) {
+        database.updateProgressState(contract.getPlayerUuid(), contract.getContractId(),
+                contract.getProgressState());
+    }
+
+    /** Flips overdue rows to expired in SQLite and drops them from memory. */
+    public int expireContracts() {
+        int expired = database.expireContracts(System.currentTimeMillis());
+        for (List<ActiveContract> playerContracts : activeContracts.values()) {
+            playerContracts.removeIf(ActiveContract::isExpired);
+        }
+        return expired;
+    }
+
+    public void recordCompletion(UUID playerUuid, String contractId, String alignmentId,
+                                 String campusId, Instant completedAt,
+                                 double rewardAmount, long reputationAwarded) {
+        database.recordCompletion(playerUuid, contractId, alignmentId, campusId, completedAt,
+                rewardAmount, reputationAwarded);
+    }
+
+    public ContractDatabase getDatabase() { return database; }
+
+    public void close() { database.close(); }
 
     /** Exposes active contracts for cleanup and reporting; callers may mutate the contained lists. */
     public Map<UUID, List<ActiveContract>> getAllPlayerContracts() {

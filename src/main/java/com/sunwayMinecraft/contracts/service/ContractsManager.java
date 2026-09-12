@@ -30,6 +30,13 @@ public class ContractsManager {
     private EventModifierService eventModifierService;
     private CityMetricsManager metricsManager;
     private Function<UUID, Optional<String>> alignmentLookup = uuid -> Optional.empty();
+    private java.util.function.ObjIntConsumer<UUID> reputationRewarder = (uuid, amount) -> { };
+
+    /** Applies a signed reputation delta to the player's alignment membership. */
+    public void setReputationRewarder(java.util.function.ObjIntConsumer<UUID> reputationRewarder) {
+        this.reputationRewarder = reputationRewarder != null
+                ? reputationRewarder : (uuid, amount) -> { };
+    }
 
     public ContractsManager(JavaPlugin plugin, ContractConfigManager contractConfig, 
                             EndpointConfigManager endpointConfig, SettingsConfigManager settingsConfig,
