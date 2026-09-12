@@ -268,7 +268,12 @@ public class ContractsManager {
         return new Reward(money, reputation, boosted);
     }
 
-    record Reward(double money, long reputation, boolean boosted) {}
+    public record Reward(double money, long reputation, boolean boosted) {}
+
+    /** Estimated money/reputation a viewing alignment would receive, for board listings. */
+    public Reward estimateReward(String alignmentId, ContractDefinition def) {
+        return computeReward(def, alignmentId);
+    }
 
     public void abandonContract(Player player, ActiveContract ac) {
         ContractDefinition def = contractConfig.getContract(ac.getContractId());

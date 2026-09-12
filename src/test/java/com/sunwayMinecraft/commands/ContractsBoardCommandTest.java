@@ -48,18 +48,32 @@ class ContractsBoardCommandTest {
         ContractsManager manager = mock(ContractsManager.class);
         config = mock(ContractConfigManager.class);
         when(manager.getContractConfig()).thenReturn(config);
+        when(manager.getAlignmentFor(player)).thenReturn("zenith_collective");
+        when(manager.estimateReward(any(), any())).thenAnswer(invocation ->
+                new ContractsManager.Reward(100.0, 0, false));
         commands = new ContractsCommands(manager, mock(ContractVerificationService.class));
         events = mock(EventModifierService.class);
         commands.setEventModifierService(events);
 
         Map<String, ContractDefinition> contracts = new LinkedHashMap<>();
         contracts.put("haul", definition("haul", ContractCategory.HAULING,
-                "Lakeside Haul", ContractAlignmentRule.OPEN, new ContractCampusRoute("taylors", "sunway", null, null)));
+                "Lakeside Haul", new ContractAlignmentRule(null, "azure_hearth", List.of()),
+                new ContractCampusRoute("taylors", "sunway", null, null)));
         contracts.put("courier", definition("courier", ContractCategory.DELIVERY,
                 "Research Courier",
                 new ContractAlignmentRule("zenith_collective", null, List.of()),
                 new ContractCampusRoute("monash", "sunway", null, null)));
+        contracts.put("restricted", definition("restricted", ContractCategory.ESCORT,
+                "Azure Escort",
+                new ContractAlignmentRule("azure_hearth", null, List.of()),
+                new ContractCampusRoute("taylors", "taylors", null, null)));
         when(config.getContracts()).thenReturn(contracts);
+        // faithful alignment-accessible filtering, reading the current board each call
+        when(manager.getContractsForAlignment(any())).thenAnswer(invocation -> {
+            String alignment = invocation.getArgument(0);
+            return config.getContracts().values().stream()
+                    .filter(def -> def.alignmentRule().canAccept(alignment)).toList();
+        });
     }
 
     @AfterEach
@@ -147,6 +161,41 @@ class ContractsBoardCommandTest {
 
         List<String> none = run("board", "type", "sabotage");
         assertTrue(anyContains(none, "No contracts match this filter."));
+    }
+
+    @Test
+    void defaultBoardHidesContractsTheViewerCannotAccept() {
+        // viewer is zenith_collective, so the azure_hearth-only escort is hidden
+        List<String> messages = run("board");
+        assertTrue(anyContains(messages, "Research Courier"));
+        assertTrue(!anyContains(messages, "Azure Escort"),
+                "not-accessible contracts are hidden by default");
+    }
+
+    @Test
+    void adminAllFlagRevealsEveryContractAndMarksTheHeader() {
+        List<String> messages = run("board", "--all");
+        assertTrue(anyContains(messages, "[ALL]"), "header notes the unrestricted view");
+        assertTrue(anyContains(messages, "Azure Escort"), "--all shows not-accessible contracts");
+    }
+
+    @Test
+    void campusKeywordFilterMatchesThePositionalForm() {
+        List<String> monash = run("board", "campus", "monash");
+        assertTrue(anyContains(monash, "campus monash"));
+        assertTrue(anyContains(monash, "Research Courier"));
+        assertTrue(!anyContains(monash, "Lakeside Haul"));
+
+        assertTrue(anyContains(run("board", "campus"),
+                "Usage: /contracts board campus <campus> [page]"));
+    }
+
+    @Test
+    void boardShowsRecommendedAlignmentAndRewardEstimate() {
+        List<String> messages = run("board", "--all");
+        assertTrue(anyContains(messages, "(rec. azure_hearth)"),
+                "entries surface the recommended alignment");
+        assertTrue(anyContains(messages, "~$100"), "entries show a reward estimate");
     }
 
     @Test

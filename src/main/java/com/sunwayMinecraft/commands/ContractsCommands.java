@@ -71,16 +71,28 @@ public class ContractsCommands implements CommandExecutor, TabCompleter {
     }
 
     private void showBoard(Player player, String[] args) {
-        List<ContractDefinition> contracts =
-                new ArrayList<>(manager.getContractConfig().getContracts().values());
+        // a trailing "--all" (admin) widens the board beyond the viewer's alignment
+        boolean showAll = false;
+        List<String> effective = new ArrayList<>();
+        for (String arg : args) {
+            if (arg.equals("--all")) showAll = true; else effective.add(arg);
+        }
+        String[] filtered = effective.toArray(new String[0]);
+
+        String viewerAlignment = manager.getAlignmentFor(player);
+        boolean unrestricted = showAll
+                && player.hasPermission("sunway.contracts.admin");
+        List<ContractDefinition> contracts = unrestricted
+                ? new ArrayList<>(manager.getContractConfig().getContracts().values())
+                : new ArrayList<>(manager.getContractsForAlignment(viewerAlignment));
         String filterDescription = null;
 
         // "/contracts board <campus>", or an alignment/type keyword filter with a
         // value; a trailing number selects the page
-        int pageArg = args.length > 1 && args[args.length - 1].matches("\\d+")
-                ? args.length - 1 : args.length;
-        if (args.length >= 2 && !args[1].matches("\\d+")) {
-            String keyword = args[1].toLowerCase(Locale.ROOT);
+        int pageArg = filtered.length > 1 && filtered[filtered.length - 1].matches("\\d+")
+                ? filtered.length - 1 : filtered.length;
+        if (filtered.length >= 2 && !filtered[1].matches("\\d+")) {
+            String keyword = filtered[1].toLowerCase(Locale.ROOT);
             if (keyword.equals("alignment") || keyword.equals("type")) {
                 if (pageArg < 3) {
                     player.sendMessage(Component.text(
@@ -88,26 +100,35 @@ public class ContractsCommands implements CommandExecutor, TabCompleter {
                             NamedTextColor.RED));
                     return;
                 }
-                String value = args[2].toLowerCase(Locale.ROOT);
+                String value = filtered[2].toLowerCase(Locale.ROOT);
                 if (keyword.equals("alignment")) {
                     contracts.removeIf(def -> !def.alignmentRule().canAccept(value));
                 } else {
                     contracts.removeIf(def -> !def.category().name().equalsIgnoreCase(value));
                 }
                 filterDescription = keyword + " " + value;
+            } else if (keyword.equals("campus")) {
+                if (pageArg < 3) {
+                    player.sendMessage(Component.text(
+                            "Usage: /contracts board campus <campus> [page]", NamedTextColor.RED));
+                    return;
+                }
+                String campus = filtered[2].toLowerCase(Locale.ROOT);
+                contracts.removeIf(def -> !def.campusRoute().touchesCampus(campus));
+                filterDescription = "campus " + campus;
             } else {
-                String campus = args[1].toLowerCase(Locale.ROOT);
+                String campus = keyword;
                 contracts.removeIf(def -> !def.campusRoute().touchesCampus(campus));
                 filterDescription = "campus " + campus;
             }
         }
 
         int totalPages = Math.max(1, (contracts.size() + BOARD_PAGE_SIZE - 1) / BOARD_PAGE_SIZE);
-        int page = parsePage(pageArg < args.length ? args[pageArg] : "1", totalPages);
+        int page = parsePage(pageArg < filtered.length ? filtered[pageArg] : "1", totalPages);
 
         player.sendMessage(Component.text("=== City Contracts Board (page " + page + "/"
                 + totalPages + ")" + (filterDescription != null ? " [" + filterDescription + "]" : "")
-                + " ===", NamedTextColor.GOLD, TextDecoration.BOLD));
+                + (unrestricted ? " [ALL]" : "") + " ===", NamedTextColor.GOLD, TextDecoration.BOLD));
 
         if (contracts.isEmpty()) {
             player.sendMessage(Component.text("No contracts match this filter.", NamedTextColor.GRAY));
@@ -117,13 +138,13 @@ public class ContractsCommands implements CommandExecutor, TabCompleter {
         int start = (page - 1) * BOARD_PAGE_SIZE;
         for (ContractDefinition def : contracts.subList(start,
                 Math.min(start + BOARD_PAGE_SIZE, contracts.size()))) {
-            player.sendMessage(boardEntry(def));
+            player.sendMessage(boardEntry(def, viewerAlignment));
         }
         player.sendMessage(Component.text("Use /contracts info <id> for details.", NamedTextColor.GRAY));
     }
 
-    /** One board line: name, type, route, required alignment and boosted status. */
-    private Component boardEntry(ContractDefinition def) {
+    /** Board line: name, type, route, required/recommended alignment, reward, boosted status. */
+    private Component boardEntry(ContractDefinition def, String viewerAlignment) {
         Component msg = Component.text("- ", NamedTextColor.GRAY)
                 .append(Component.text(def.name(), NamedTextColor.YELLOW))
                 .append(Component.text(" [" + def.category().name() + "]", NamedTextColor.WHITE));
@@ -134,6 +155,16 @@ public class ContractsCommands implements CommandExecutor, TabCompleter {
         if (def.alignmentRule().requiredAlignment() != null) {
             msg = msg.append(Component.text(" requires " + def.alignmentRule().requiredAlignment(),
                     NamedTextColor.LIGHT_PURPLE));
+        }
+        if (def.alignmentRule().recommendedAlignment() != null) {
+            msg = msg.append(Component.text(" (rec. " + def.alignmentRule().recommendedAlignment() + ")",
+                    NamedTextColor.DARK_PURPLE));
+        }
+
+        ContractsManager.Reward estimate = manager.estimateReward(viewerAlignment, def);
+        msg = msg.append(Component.text(" ~$" + estimate.money(), NamedTextColor.GREEN));
+        if (estimate.reputation() > 0) {
+            msg = msg.append(Component.text(" +" + estimate.reputation() + "rep", NamedTextColor.DARK_GREEN));
         }
 
         if (eventModifierService != null) {
