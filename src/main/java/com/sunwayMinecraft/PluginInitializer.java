@@ -38,6 +38,7 @@ import com.sunwayMinecraft.city.CityValidationService;
 import com.sunwayMinecraft.city.metrics.CityMetricsManager;
 import com.sunwayMinecraft.contracts.config.*;
 import com.sunwayMinecraft.contracts.persistence.ContractPersistenceService;
+import com.sunwayMinecraft.contracts.persistence.ContractDatabase;
 import com.sunwayMinecraft.contracts.service.*;
 import com.sunwayMinecraft.contracts.listener.ContractObjectiveListener;
 import com.sunwayMinecraft.events.config.*;
@@ -97,6 +98,12 @@ public class PluginInitializer {
   private ContractsManager contractsManager;
   private ContractVerificationService contractVerificationService;
   private ContractPersistenceService contractPersistence;
+  private ContractDiplomacySettings contractDiplomacySettings;
+  private ContractTemplateConfigManager contractTemplateConfig;
+  private ContractDiplomacyService contractDiplomacyService;
+  private ContractSupplyService contractSupplyService;
+  private ContractSabotageService contractSabotageService;
+  private DynamicContractService dynamicContractService;
 
   // City Events
   private CityEventsManager cityEventsManager;
@@ -148,6 +155,7 @@ public class PluginInitializer {
     initEventsSystem();
     initCityIntegration();
     initAlignmentSystem();
+    initContractsStrategicSystem();
   }
 
   private void initCityIntegration() {
@@ -335,6 +343,63 @@ public class PluginInitializer {
     plugin.getServer().getScheduler().runTaskTimer(
         plugin, alignmentSeasonService::checkSeason, 6000L, 6000L);
   }
+
+  /**
+   * Builds the contract strategic layer after the alignment system, so the
+   * alignment -> grand-alliance and reputation hooks resolve against live
+   * services. No-op if the contracts system failed to initialise.
+   */
+  private void initContractsStrategicSystem() {
+    if (contractsManager == null) return;
+    contractDiplomacySettings = new ContractDiplomacySettings(plugin);
+    contractDiplomacySettings.load();
+    contractTemplateConfig = new ContractTemplateConfigManager(plugin);
+    contractTemplateConfig.load();
+    ContractDatabase contractsDb = contractsManager.getPersistence().getDatabase();
+
+    java.util.function.Function<String, String> allianceResolver = alignmentId ->
+        (alignmentConfigManager == null || alignmentId == null) ? null
+            : alignmentConfigManager.getAlignment(alignmentId)
+                .map(def -> def.grandAlliance().getId()).orElse(null);
+
+    contractDiplomacyService =
+        new ContractDiplomacyService(contractsDb, contractDiplomacySettings, allianceResolver);
+    contractSupplyService = new ContractSupplyService(contractsDb, allianceResolver);
+    contractSabotageService = new ContractSabotageService(
+        contractsDb, contractsManager.getPersistence(), contractsManager.getContractConfig(),
+        contractDiplomacySettings, contractDiplomacyService, getEconomy(),
+        uuid -> alignmentService != null ? alignmentService.getAlignmentId(uuid)
+            : java.util.Optional.empty(),
+        (uuid, delta) -> {
+          if (alignmentService != null && delta != 0) alignmentService.adjustReputation(uuid, delta);
+        },
+        plugin);
+    dynamicContractService = new DynamicContractService(
+        contractsManager.getContractConfig(), contractTemplateConfig,
+        contractsManager.getEndpointConfig(), contractsDb, contractDiplomacySettings, plugin);
+    dynamicContractService.loadPersisted();
+
+    contractsManager.setDiplomacyService(contractDiplomacyService);
+    contractsManager.setSupplyService(contractSupplyService);
+
+    // periodically retire expired dynamic contracts (aligned with cleanup cadence)
+    plugin.getServer().getScheduler().runTaskTimer(
+        plugin, dynamicContractService::expireOverdue, 600L, 1200L);
+    // optional scheduled emergency generation
+    long intervalMinutes = contractDiplomacySettings.getEmergencyIntervalMinutes();
+    String template = contractDiplomacySettings.getEmergencyTemplate();
+    if (intervalMinutes > 0 && template != null && !template.isBlank()) {
+      long ticks = intervalMinutes * 60L * 20L;
+      plugin.getServer().getScheduler().runTaskTimer(plugin,
+          () -> dynamicContractService.generate(template), ticks, ticks);
+    }
+  }
+
+  public ContractDiplomacySettings getContractDiplomacySettings() { return contractDiplomacySettings; }
+  public ContractDiplomacyService getContractDiplomacyService() { return contractDiplomacyService; }
+  public ContractSupplyService getContractSupplyService() { return contractSupplyService; }
+  public ContractSabotageService getContractSabotageService() { return contractSabotageService; }
+  public DynamicContractService getDynamicContractService() { return dynamicContractService; }
 
   /**
    * District gate for perks: perks apply only inside enabled districts when

@@ -109,6 +109,11 @@ public class CommandRegistrar {
     // City Contracts
     ContractsCommands contractsCmds = new ContractsCommands(init.getContractsManager(), init.getContractVerificationService());
     contractsCmds.setEventModifierService(init.getEventModifierService());
+    ContractsStrategicCommands strategicCmds = new ContractsStrategicCommands(init.getContractsManager());
+    strategicCmds.setServices(init.getContractDiplomacyService(), init.getContractSupplyService(),
+            init.getContractSabotageService(), init.getDynamicContractService(),
+            init.getContractDiplomacySettings());
+    contractsCmds.setStrategicCommands(strategicCmds);
     registerCommand("contracts", contractsCmds);
     plugin.getCommand("contracts").setTabCompleter(contractsCmds);
 
