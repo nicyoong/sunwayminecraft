@@ -60,6 +60,11 @@ public class ContractsManager {
         return contract != null && contract.alignmentRule().canAccept(alignmentId);
     }
 
+    /** The player's current alignment id, or null when unaligned or unresolvable. */
+    public String getAlignmentFor(Player player) {
+        return alignmentLookup.apply(player.getUniqueId()).orElse(null);
+    }
+
     /** Enabled contracts the given alignment may accept. */
     public List<ContractDefinition> getContractsForAlignment(String alignmentId) {
         return contractConfig.getContracts().values().stream()

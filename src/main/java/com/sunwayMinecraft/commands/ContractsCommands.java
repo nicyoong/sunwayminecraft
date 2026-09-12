@@ -22,10 +22,13 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 public class ContractsCommands implements CommandExecutor, TabCompleter {
+    private static final int BOARD_PAGE_SIZE = 8;
+
     private final ContractsManager manager;
     private final ContractVerificationService verificationService;
     private EventModifierService eventModifierService;
@@ -51,14 +54,15 @@ public class ContractsCommands implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        switch (args[0].toLowerCase()) {
-            case "board", "list" -> showBoard(player);
+        switch (args[0].toLowerCase(Locale.ROOT)) {
+            case "board", "list" -> showBoard(player, args);
             case "accept" -> acceptContract(player, args);
             case "active" -> listActive(player);
             case "progress" -> showProgress(player, args);
             case "info" -> showInfo(player, args);
             case "complete" -> completeContract(player, args);
             case "abandon" -> abandonContract(player, args);
+            case "admin" -> handleAdmin(player, args);
             case "help" -> sendHelp(player);
             default -> sendHelp(player);
         }
@@ -66,27 +70,122 @@ public class ContractsCommands implements CommandExecutor, TabCompleter {
         return true;
     }
 
-    private void showBoard(Player player) {
-        player.sendMessage(Component.text("=== City Contracts Board ===", NamedTextColor.GOLD, TextDecoration.BOLD));
-        for (ContractDefinition def : manager.getContractConfig().getContracts().values()) {
-            Component msg = Component.text("- ", NamedTextColor.GRAY)
-                .append(Component.text(def.name(), NamedTextColor.YELLOW));
-            
-            if (eventModifierService != null) {
-                var eventOpt = eventModifierService.getPrimaryEventForCategory(def.category());
-                if (eventOpt.isPresent()) {
-                    msg = msg.append(Component.text(" [BOOSTED: " + eventOpt.get().name() + "]", NamedTextColor.AQUA, TextDecoration.BOLD));
-                }
-            }
+    private void showBoard(Player player, String[] args) {
+        List<ContractDefinition> contracts =
+                new ArrayList<>(manager.getContractConfig().getContracts().values());
+        String filterDescription = null;
 
-            msg = msg.append(Component.text(" (ID: " + def.id() + ")", NamedTextColor.DARK_GRAY));
-            player.sendMessage(msg);
+        // "/contracts board <campus>", or an alignment/type keyword filter with a
+        // value; a trailing number selects the page
+        int pageArg = args.length > 1 && args[args.length - 1].matches("\\d+")
+                ? args.length - 1 : args.length;
+        if (args.length >= 2) {
+            String keyword = args[1].toLowerCase(Locale.ROOT);
+            if (keyword.equals("alignment") || keyword.equals("type")) {
+                if (pageArg < 3) {
+                    player.sendMessage(Component.text(
+                            "Usage: /contracts board " + keyword + " <" + keyword + "> [page]",
+                            NamedTextColor.RED));
+                    return;
+                }
+                String value = args[2].toLowerCase(Locale.ROOT);
+                if (keyword.equals("alignment")) {
+                    contracts.removeIf(def -> !def.alignmentRule().canAccept(value));
+                } else {
+                    contracts.removeIf(def -> !def.category().name().equalsIgnoreCase(value));
+                }
+                filterDescription = keyword + " " + value;
+            } else {
+                String campus = args[1].toLowerCase(Locale.ROOT);
+                contracts.removeIf(def -> !def.campusRoute().touchesCampus(campus));
+                filterDescription = "campus " + campus;
+            }
+        }
+
+        int totalPages = Math.max(1, (contracts.size() + BOARD_PAGE_SIZE - 1) / BOARD_PAGE_SIZE);
+        int page = parsePage(pageArg < args.length ? args[pageArg] : "1", totalPages);
+
+        player.sendMessage(Component.text("=== City Contracts Board (page " + page + "/"
+                + totalPages + ")" + (filterDescription != null ? " [" + filterDescription + "]" : "")
+                + " ===", NamedTextColor.GOLD, TextDecoration.BOLD));
+
+        if (contracts.isEmpty()) {
+            player.sendMessage(Component.text("No contracts match this filter.", NamedTextColor.GRAY));
+            return;
+        }
+
+        int start = (page - 1) * BOARD_PAGE_SIZE;
+        for (ContractDefinition def : contracts.subList(start,
+                Math.min(start + BOARD_PAGE_SIZE, contracts.size()))) {
+            player.sendMessage(boardEntry(def));
         }
         player.sendMessage(Component.text("Use /contracts info <id> for details.", NamedTextColor.GRAY));
     }
 
-    private void listAvailable(Player player) {
-        showBoard(player);
+    /** One board line: name, type, route, required alignment and boosted status. */
+    private Component boardEntry(ContractDefinition def) {
+        Component msg = Component.text("- ", NamedTextColor.GRAY)
+                .append(Component.text(def.name(), NamedTextColor.YELLOW))
+                .append(Component.text(" [" + def.category().name() + "]", NamedTextColor.WHITE));
+
+        if (def.campusRoute().originCampus() != null || def.campusRoute().destinationCampus() != null) {
+            msg = msg.append(Component.text(" " + routeLabel(def.campusRoute()), NamedTextColor.DARK_AQUA));
+        }
+        if (def.alignmentRule().requiredAlignment() != null) {
+            msg = msg.append(Component.text(" requires " + def.alignmentRule().requiredAlignment(),
+                    NamedTextColor.LIGHT_PURPLE));
+        }
+
+        if (eventModifierService != null) {
+            var eventOpt = eventModifierService.getPrimaryEventForCategory(def.category());
+            if (eventOpt.isPresent()) {
+                msg = msg.append(Component.text(" [BOOSTED: " + eventOpt.get().name() + "]",
+                        NamedTextColor.AQUA, TextDecoration.BOLD));
+            }
+        }
+
+        return msg.append(Component.text(" (ID: " + def.id() + ")", NamedTextColor.DARK_GRAY));
+    }
+
+    private String routeLabel(com.sunwayMinecraft.contracts.domain.ContractCampusRoute route) {
+        String origin = route.originCampus() != null ? route.originCampus() : "?";
+        String destination = route.destinationCampus() != null ? route.destinationCampus() : "?";
+        return origin + " -> " + destination;
+    }
+
+    private int parsePage(String raw, int totalPages) {
+        try {
+            return Math.min(Math.max(1, Integer.parseInt(raw)), totalPages);
+        } catch (NumberFormatException e) {
+            return 1;
+        }
+    }
+
+    private void handleAdmin(Player player, String[] args) {
+        if (!player.hasPermission("sunway.contracts.admin")) {
+            player.sendMessage(Component.text("You do not have permission to use contract admin commands.",
+                    NamedTextColor.RED));
+            return;
+        }
+        if (args.length >= 2 && args[1].equalsIgnoreCase("list")) {
+            showDisabledContracts(player);
+            return;
+        }
+        player.sendMessage(Component.text("Usage: /contracts admin list", NamedTextColor.RED));
+    }
+
+    private void showDisabledContracts(Player player) {
+        Map<String, String> reasons = manager.getContractConfig().getDisabledReasons();
+        if (reasons.isEmpty()) {
+            player.sendMessage(Component.text("No disabled contracts.", NamedTextColor.GRAY));
+            return;
+        }
+        player.sendMessage(Component.text("=== Disabled Contracts ===", NamedTextColor.GOLD, TextDecoration.BOLD));
+        for (Map.Entry<String, String> entry : reasons.entrySet()) {
+            player.sendMessage(Component.text("- ", NamedTextColor.GRAY)
+                    .append(Component.text(entry.getKey(), NamedTextColor.YELLOW))
+                    .append(Component.text(": " + entry.getValue(), NamedTextColor.RED)));
+        }
     }
 
     private void acceptContract(Player player, String[] args) {
@@ -98,7 +197,15 @@ public class ContractsCommands implements CommandExecutor, TabCompleter {
         if (manager.acceptContract(player, id)) {
             player.sendMessage(Component.text("Contract accepted: " + id, NamedTextColor.GREEN));
         } else {
-            player.sendMessage(Component.text("Failed to accept contract. Check limits or cooldowns.", NamedTextColor.RED));
+            ContractDefinition def = manager.getContractConfig().getContract(id);
+            if (def != null && !manager.canAlignmentAcceptContract(
+                    manager.getAlignmentFor(player), def)) {
+                player.sendMessage(Component.text("Your alignment cannot accept this contract.",
+                        NamedTextColor.RED));
+            } else {
+                player.sendMessage(Component.text("Failed to accept contract. Check limits or cooldowns.",
+                        NamedTextColor.RED));
+            }
         }
     }
 
@@ -202,6 +309,29 @@ public class ContractsCommands implements CommandExecutor, TabCompleter {
 
         player.sendMessage(Component.text("Objective: ", NamedTextColor.YELLOW).append(Component.text(def.objectiveDescription(), NamedTextColor.WHITE)));
         player.sendMessage(Component.text("Duration: ", NamedTextColor.YELLOW).append(Component.text(def.durationMinutes() + " minutes", NamedTextColor.WHITE)));
+
+        var route = def.campusRoute();
+        if (route.originCampus() != null || route.destinationCampus() != null) {
+            player.sendMessage(Component.text("Route: ", NamedTextColor.YELLOW)
+                    .append(Component.text(routeLabel(route), NamedTextColor.WHITE)));
+        }
+        var rule = def.alignmentRule();
+        if (rule.requiredAlignment() != null) {
+            player.sendMessage(Component.text("Required alignment: ", NamedTextColor.YELLOW)
+                    .append(Component.text(rule.requiredAlignment(), NamedTextColor.WHITE)));
+        }
+        if (rule.recommendedAlignment() != null) {
+            player.sendMessage(Component.text("Recommended for: ", NamedTextColor.YELLOW)
+                    .append(Component.text(rule.recommendedAlignment(), NamedTextColor.WHITE)));
+        }
+        if (!rule.forbiddenAlignments().isEmpty()) {
+            player.sendMessage(Component.text("Forbidden for: ", NamedTextColor.YELLOW)
+                    .append(Component.text(String.join(", ", rule.forbiddenAlignments()), NamedTextColor.WHITE)));
+        }
+        if (def.rewardReputation() > 0) {
+            player.sendMessage(Component.text("Reputation reward: ", NamedTextColor.YELLOW)
+                    .append(Component.text(String.valueOf(def.rewardReputation()), NamedTextColor.WHITE)));
+        }
     }
 
     private void completeContract(Player player, String[] args) {
@@ -255,7 +385,9 @@ public class ContractsCommands implements CommandExecutor, TabCompleter {
 
     private void sendHelp(Player player) {
         player.sendMessage(Component.text("=== City Contracts Help ===", NamedTextColor.GOLD, TextDecoration.BOLD));
-        player.sendMessage(Component.text("/contracts board - View available contracts", NamedTextColor.YELLOW));
+        player.sendMessage(Component.text("/contracts board [campus] - View available contracts", NamedTextColor.YELLOW));
+        player.sendMessage(Component.text("/contracts board alignment <id> - Contracts your alignment can accept", NamedTextColor.YELLOW));
+        player.sendMessage(Component.text("/contracts board type <type> - Filter by contract type", NamedTextColor.YELLOW));
         player.sendMessage(Component.text("/contracts info <id> - View contract details", NamedTextColor.YELLOW));
         player.sendMessage(Component.text("/contracts accept <id> - Accept a contract", NamedTextColor.YELLOW));
         player.sendMessage(Component.text("/contracts active - List your active contracts", NamedTextColor.YELLOW));
@@ -268,7 +400,8 @@ public class ContractsCommands implements CommandExecutor, TabCompleter {
     public @Nullable List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, @NotNull String[] args) {
         if (!(sender instanceof Player player)) return null;
         if (args.length == 1) {
-            return List.of("board", "list", "accept", "active", "progress", "info", "complete", "abandon", "help");
+            return List.of("board", "list", "accept", "active", "progress", "info", "complete",
+                    "abandon", "admin", "help");
         }
         if (args.length == 2) {
             if (args[0].equalsIgnoreCase("accept") || args[0].equalsIgnoreCase("info")) {
@@ -277,6 +410,29 @@ public class ContractsCommands implements CommandExecutor, TabCompleter {
             if (args[0].equalsIgnoreCase("complete") || args[0].equalsIgnoreCase("abandon") || args[0].equalsIgnoreCase("progress")) {
                 return manager.getPersistence().getPlayerContracts(player.getUniqueId()).stream()
                     .map(ActiveContract::getContractId).collect(Collectors.toList());
+            }
+            if (args[0].equalsIgnoreCase("admin") && player.hasPermission("sunway.contracts.admin")) {
+                return List.of("list");
+            }
+            if (args[0].equalsIgnoreCase("board") || args[0].equalsIgnoreCase("list")) {
+                List<String> options = new ArrayList<>(List.of("alignment", "type"));
+                for (com.sunwayMinecraft.alignments.domain.Campus campus :
+                        com.sunwayMinecraft.alignments.domain.Campus.values()) {
+                    options.add(campus.getId());
+                }
+                return options;
+            }
+        }
+        if (args.length == 3 && (args[0].equalsIgnoreCase("board") || args[0].equalsIgnoreCase("list"))) {
+            if (args[1].equalsIgnoreCase("alignment")) {
+                return manager.getContractConfig().getContracts().values().stream()
+                        .map(def -> def.alignmentRule().requiredAlignment())
+                        .filter(id -> id != null).distinct().collect(Collectors.toList());
+            }
+            if (args[1].equalsIgnoreCase("type")) {
+                return java.util.Arrays.stream(com.sunwayMinecraft.contracts.domain.ContractCategory.values())
+                        .map(category -> category.name().toLowerCase(Locale.ROOT))
+                        .collect(Collectors.toList());
             }
         }
         return null;
