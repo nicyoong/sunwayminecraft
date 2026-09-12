@@ -377,6 +377,16 @@ permissions:
     description: Allows admins to manage and validate districts
     default: op
 
+  sunway.district.use:
+    description: Allows players to view district information
+    default: true
+
+  sunway.district.admin:
+    description: Allows admins to manage and validate districts
+    default: op
+
+  sunway.district.admin.bypass:
+    description: Bypasses alignment access rules and archived read-only restrictions
   sunway.align.use:
     description: Allows players to view and manage their Triple Alliance alignment
     default: true

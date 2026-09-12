@@ -11,6 +11,7 @@ import com.sunwayMinecraft.residency.admin.AdminSelectionManager;
 import com.sunwayMinecraft.residency.ResidencyBootstrap;
 import com.sunwayMinecraft.residency.ResidencyManager;
 import com.sunwayMinecraft.districts.DistrictBootstrap;
+import com.sunwayMinecraft.districts.service.DistrictAlignmentService;
 import com.sunwayMinecraft.districts.DistrictManager;
 import com.sunwayMinecraft.coinflip.*;
 import com.sunwayMinecraft.switches.*;
@@ -81,6 +82,7 @@ public class PluginInitializer {
 
   // Districts
   private DistrictManager districtManager;
+  private DistrictAlignmentService districtAlignmentService;
 
   // Coin flip
   private CoinFlipSystem coinFlipSystem;
@@ -210,7 +212,9 @@ public class PluginInitializer {
   }
 
   private void initDistrictSystem() {
-    districtManager = new DistrictBootstrap(plugin).initialize();
+    DistrictBootstrap districtBootstrap = new DistrictBootstrap(plugin);
+    districtManager = districtBootstrap.initialize();
+    districtAlignmentService = districtBootstrap.getAlignmentService();
   }
 
   private void initCoinFlipSystem() {
@@ -387,6 +391,10 @@ public class PluginInitializer {
 
   public AdminSelectionManager getResidencySelectionManager() {
     return residencySelectionManager;
+  }
+
+  public DistrictAlignmentService getDistrictAlignmentService() {
+    return districtAlignmentService;
   }
 
   public DistrictManager getDistrictManager() {

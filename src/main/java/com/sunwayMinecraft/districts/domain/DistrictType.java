@@ -7,5 +7,10 @@ public enum DistrictType {
     MARKET,
     ENTERTAINMENT,
     CIVIC,
-    MIXED_USE
+    MIXED_USE,
+    CAMPUS,
+    INDUSTRIAL,
+    TRANSIT,
+    SANCTUARY,
+    ARCHIVED
 }

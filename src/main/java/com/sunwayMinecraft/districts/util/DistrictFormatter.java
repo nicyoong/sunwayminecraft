@@ -20,6 +20,11 @@ public final class DistrictFormatter {
             case ENTERTAINMENT -> "Entertainment";
             case CIVIC -> "Civic";
             case MIXED_USE -> "Mixed-Use";
+            case CAMPUS -> "Campus";
+            case INDUSTRIAL -> "Industrial";
+            case TRANSIT -> "Transit";
+            case SANCTUARY -> "Sanctuary";
+            case ARCHIVED -> "Archived";
         };
     }
 
