@@ -22,4 +22,9 @@ public record ContractCampusRoute(
         && originCampus.equalsIgnoreCase(this.originCampus)
         && destinationCampus.equalsIgnoreCase(this.destinationCampus);
   }
+
+  /** The campus to attribute a completion to: origin when set, else destination. */
+  public String homeCampusOrOrigin() {
+    return originCampus != null ? originCampus : destinationCampus;
+  }
 }

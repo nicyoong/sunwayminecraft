@@ -30,6 +30,7 @@ public class ContractsManager {
     private EventModifierService eventModifierService;
     private CityMetricsManager metricsManager;
     private Function<UUID, Optional<String>> alignmentLookup = uuid -> Optional.empty();
+    private boolean warnedNoEconomy = false;
     private java.util.function.ObjIntConsumer<UUID> reputationRewarder = (uuid, amount) -> { };
 
     /** Applies a signed reputation delta to the player's alignment membership. */
@@ -181,32 +182,93 @@ public class ContractsManager {
         }
 
         ContractDefinition def = contractConfig.getContract(ac.getContractId());
-        if (def == null || economy == null) return false;
+        if (def == null) return false;
 
-        double reward = def.rewardMoney();
-        boolean boosted = false;
-        if (eventModifierService != null) {
-            double multiplier = eventModifierService.getRewardMultiplier(def.category());
-            reward *= multiplier;
-            boosted = multiplier > 1.0;
+        // Idempotency: remove from the live list before paying so a repeated
+        // command cannot double-award the same completion.
+        persistence.getPlayerContracts(player.getUniqueId()).remove(ac);
+
+        String alignmentId = alignmentLookup.apply(player.getUniqueId()).orElse(null);
+        Reward reward = computeReward(def, alignmentId);
+
+        double money = reward.money();
+        if (money > 0) {
+            if (economy != null) {
+                economy.depositPlayer(player, money);
+            } else if (!warnedNoEconomy) {
+                warnedNoEconomy = true;
+                logWarning("Vault economy unavailable; contract money rewards are disabled");
+            }
         }
 
-        // Payout
-        economy.depositPlayer(player, reward);
-        
-        persistence.getPlayerContracts(player.getUniqueId()).remove(ac);
+        if (reward.reputation() > 0 && alignmentId != null) {
+            reputationRewarder.accept(player.getUniqueId(), (int) reward.reputation());
+        }
+
+        String campus = def.campusRoute().homeCampusOrOrigin();
+        Instant now = Instant.now();
+        persistence.recordCompletion(player.getUniqueId(), def.id(), alignmentId, campus,
+                now, money, reward.reputation());
         persistence.save();
 
         if (metricsManager != null) {
             metricsManager.increment(CityMetricKeys.CONTRACTS_COMPLETED);
-            metricsManager.increment(CityMetricKeys.CONTRACTS_PAYOUTS_TOTAL, reward);
-            if (boosted) {
+            metricsManager.increment(CityMetricKeys.CONTRACTS_PAYOUTS_TOTAL, money);
+            if (reward.boosted()) {
                 metricsManager.increment(CityMetricKeys.CONTRACTS_EVENT_BOOSTED_COMPLETIONS);
             }
+            if (alignmentId != null) {
+                metricsManager.increment(CityMetricKeys.CONTRACTS_COMPLETED + "." + alignmentId);
+            }
         }
-        
+        if (pluginLog() != null) {
+            pluginLog().info("Contract '" + def.id() + "' completed by " + player.getName()
+                    + ": $" + money + ", " + reward.reputation() + " rep"
+                    + (reward.boosted() ? " (boosted)" : ""));
+        }
         return true;
     }
+
+    private void logWarning(String message) {
+        if (pluginLog() != null) pluginLog().warning(message);
+    }
+
+    private java.util.logging.Logger pluginLog() {
+        return plugin == null ? null : plugin.getLogger();
+    }
+
+    /**
+     * Money and reputation for a completion: base contract reward, plus the
+     * recommended-alignment and cross-campus bonuses, with the active city-event
+     * multiplier applied to the money total.
+     */
+    Reward computeReward(ContractDefinition def, String alignmentId) {
+        double money = def.rewardMoney();
+        long reputation = def.rewardReputation();
+
+        ContractAlignmentRule rule = def.alignmentRule();
+        if (alignmentId != null && rule.recommendedAlignment() != null
+                && alignmentId.equalsIgnoreCase(rule.recommendedAlignment())) {
+            money += settingsConfig.getRecommendedBonusMoney();
+            reputation += settingsConfig.getRecommendedBonusReputation();
+        }
+        String origin = def.campusRoute().originCampus();
+        String destination = def.campusRoute().destinationCampus();
+        if (origin != null && destination != null && !origin.equalsIgnoreCase(destination)) {
+            money += settingsConfig.getCrossCampusBonusMoney();
+            reputation += settingsConfig.getCrossCampusBonusReputation();
+        }
+
+        boolean boosted = false;
+        if (eventModifierService != null) {
+            double multiplier = eventModifierService.getRewardMultiplier(def.category());
+            money *= multiplier;
+            boosted = multiplier > 1.0;
+        }
+        return new Reward(money, reputation, boosted);
+    }
+
+    record Reward(double money, long reputation, boolean boosted) {}
 
     public void abandonContract(Player player, ActiveContract ac) {
         ContractDefinition def = contractConfig.getContract(ac.getContractId());
