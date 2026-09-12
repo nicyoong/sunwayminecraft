@@ -1,0 +1,38 @@
+# Templates for dynamically generated emergency contracts. The
+# DynamicContractService instantiates one of these with a unique id and a
+# short expiry when an admin runs /contracts admin generate <template>,
+# when the scheduled interval fires, or when an optional trigger hook
+# (district contest / treasury) calls generate() directly.
+#
+# Fields mirror contracts.yml. Endpoints must exist in contract-endpoints.yml
+# or the generated contract is rejected at generation time.
+templates:
+  emergency_supply_drop:
+    display_name: "Emergency Supply Drop"
+    description: "A campus urgently needs supplies delivered."
+    contract_type: EMERGENCY
+    origin_campus: sunway
+    destination_campus: taylors
+    reward_money: 350.0
+    reward_reputation: 6
+    duration_minutes: 25
+    start_endpoint: city_depot
+    end_endpoint: taylors_lakeside_depot
+    objective_description: "Deliver 4 Golden Apples to the Taylors Lakeside Depot."
+    objective_type: DELIVER_MATERIALS
+    required_materials:
+      GOLDEN_APPLE: 4
+  emergency_research_evac:
+    display_name: "Emergency Research Evacuation"
+    description: "Move volatile research out of the Monash campus."
+    contract_type: EMERGENCY
+    origin_campus: monash
+    destination_campus: sunway
+    origin_alignment: zenith_collective
+    reward_money: 300.0
+    reward_reputation: 5
+    duration_minutes: 20
+    start_endpoint: monash_campus_depot
+    end_endpoint: sunway_pyramid_depot
+    objective_description: "Reach the Sunway Pyramid Depot with the sample."
+    objective_type: REACH_DESTINATION

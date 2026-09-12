@@ -1,0 +1,41 @@
+# Triple Alliance contract diplomacy, sabotage and dynamic-emergency settings.
+#
+# Influence turns contract completions into strategic standing for an
+# alignment and, indirectly, its grand alliance. Sabotage targets active
+# contract instances (never world terrain) and is disabled by default so
+# admins opt in. Dynamic emergency contracts are generated from the
+# templates in contract-templates.yml.
+
+enabled: true
+
+# Influence granted for any completed contract.
+influence_per_completion: 5
+
+# Extra influence when the contract's origin and destination campuses differ.
+cross_campus_bonus_influence: 3
+
+# Contracts of type DIPLOMATIC multiply their total influence by this factor.
+diplomatic_contract_multiplier: 2.0
+
+# Flat extra influence for a completed EMERGENCY contract.
+emergency_contract_influence_bonus: 4
+
+# Sabotage (opt-in). Never touches world blocks; only active contracts.
+sabotage_enabled: false
+sabotage_cooldown_seconds: 600
+# 0.0 .. 1.0 chance a sabotage attempt succeeds.
+sabotage_success_chance: 0.5
+# Reputation charged to the saboteur when an attempt fails.
+sabotage_failure_penalty: 2
+# Currency cost charged on every attempt (skipped gracefully if Vault is absent).
+sabotage_item_cost: 50
+
+# Cap on simultaneously live admin/scheduled emergency contracts.
+max_active_dynamic_contracts: 3
+
+# Scheduled generation. Leave interval_minutes at 0 to disable the timer;
+# the district-contest and treasury triggers are optional hooks that fire
+# only when those systems are present and call generate() directly.
+emergency_generation:
+  interval_minutes: 0
+  template: emergency_supply_drop
