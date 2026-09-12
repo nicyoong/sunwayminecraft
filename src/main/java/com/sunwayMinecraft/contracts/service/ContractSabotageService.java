@@ -130,14 +130,17 @@ public class ContractSabotageService {
     private void applySuccess(Player saboteur, int activeId, ActiveContract target,
                               String victimAlignment) {
         database.delayActiveContract(activeId, settings.getSabotageCooldownSeconds());
+        // match the live instance by contract id (a player holds at most one row
+        // per contract under the unique constraint; the DB row id is not yet on
+        // freshly-accepted in-memory objects)
         for (ActiveContract live : persistence.getPlayerContracts(target.getPlayerUuid())) {
-            if (live.getActiveId() == activeId) {
+            if (live.getContractId().equals(target.getContractId())) {
                 live.setProgress(0.0);
                 live.markStage(STAGE_SABOTAGED);
                 persistence.updateProgressState(live);
-                persistence.save();
             }
         }
+        persistence.save();
         if (victimAlignment != null) {
             diplomacy.adminAdjustInfluence(victimAlignment,
                     -Math.max(1, settings.getInfluencePerCompletion()));
