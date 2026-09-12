@@ -9,6 +9,7 @@ public class ActiveContract {
     private final Instant startTime;
     private final Instant expiryTime;
     private double progress; // 0.0 to 1.0
+    private String progressState; // pipe-joined stage flags, e.g. "start"
 
     public ActiveContract(UUID playerUuid, String contractId, Instant startTime, Instant expiryTime) {
         this.playerUuid = playerUuid;
@@ -29,4 +30,25 @@ public class ActiveContract {
     public void completeObjective() { this.progress = 1.0; }
     public boolean isObjectiveComplete() { return progress >= 1.0; }
     public boolean isExpired() { return Instant.now().isAfter(expiryTime); }
+
+    public String getProgressState() { return progressState; }
+
+    public void setProgressState(String progressState) {
+        this.progressState = progressState == null || progressState.isBlank() ? null : progressState;
+    }
+
+    public boolean hasStage(String stage) {
+        if (progressState == null) return false;
+        for (String existing : progressState.split("\\|")) {
+            if (existing.equals(stage)) return true;
+        }
+        return false;
+    }
+
+    /** Records a completion stage; true only the first time it is seen. */
+    public boolean markStage(String stage) {
+        if (hasStage(stage)) return false;
+        progressState = progressState == null ? stage : progressState + "|" + stage;
+        return true;
+    }
 }
