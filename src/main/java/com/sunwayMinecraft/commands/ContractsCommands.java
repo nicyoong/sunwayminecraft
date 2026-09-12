@@ -32,6 +32,7 @@ public class ContractsCommands implements CommandExecutor, TabCompleter {
     private final ContractsManager manager;
     private final ContractVerificationService verificationService;
     private EventModifierService eventModifierService;
+    private ContractsStrategicCommands strategic;
 
     public ContractsCommands(ContractsManager manager, ContractVerificationService verificationService) {
         this.manager = manager;
@@ -40,6 +41,10 @@ public class ContractsCommands implements CommandExecutor, TabCompleter {
 
     public void setEventModifierService(EventModifierService eventModifierService) {
         this.eventModifierService = eventModifierService;
+    }
+
+    public void setStrategicCommands(ContractsStrategicCommands strategic) {
+        this.strategic = strategic;
     }
 
     @Override
@@ -62,12 +67,25 @@ public class ContractsCommands implements CommandExecutor, TabCompleter {
             case "info" -> showInfo(player, args);
             case "complete" -> completeContract(player, args);
             case "abandon" -> abandonContract(player, args);
+            case "sabotage" -> withStrategic(player, s -> s.sabotage(player, args));
+            case "influence" -> withStrategic(player, s -> s.influence(player, args));
+            case "diplomacy" -> withStrategic(player, s -> s.diplomacy(player, args));
+            case "supply" -> withStrategic(player, s -> s.supply(player, args));
             case "admin" -> handleAdmin(player, args);
             case "help" -> sendHelp(player);
             default -> sendHelp(player);
         }
 
         return true;
+    }
+
+    private void withStrategic(Player player, java.util.function.Consumer<ContractsStrategicCommands> action) {
+        if (strategic == null) {
+            player.sendMessage(Component.text("The contract strategic layer is not available.",
+                    NamedTextColor.RED));
+            return;
+        }
+        action.accept(strategic);
     }
 
     private void showBoard(Player player, String[] args) {
@@ -93,7 +111,11 @@ public class ContractsCommands implements CommandExecutor, TabCompleter {
                 ? filtered.length - 1 : filtered.length;
         if (filtered.length >= 2 && !filtered[1].matches("\\d+")) {
             String keyword = filtered[1].toLowerCase(Locale.ROOT);
-            if (keyword.equals("alignment") || keyword.equals("type")) {
+            if (keyword.equals("emergency")) {
+                contracts.removeIf(def -> def.category()
+                        != com.sunwayMinecraft.contracts.domain.ContractCategory.EMERGENCY);
+                filterDescription = "emergency";
+            } else if (keyword.equals("alignment") || keyword.equals("type")) {
                 if (pageArg < 3) {
                     player.sendMessage(Component.text(
                             "Usage: /contracts board " + keyword + " <" + keyword + "> [page]",
@@ -198,11 +220,22 @@ public class ContractsCommands implements CommandExecutor, TabCompleter {
                     NamedTextColor.RED));
             return;
         }
-        if (args.length >= 2 && args[1].equalsIgnoreCase("list")) {
-            showDisabledContracts(player);
+        if (args.length < 2) {
+            player.sendMessage(Component.text("Usage: /contracts admin <list|influence|sabotage|emergency|reload-diplomacy>",
+                    NamedTextColor.RED));
             return;
         }
-        player.sendMessage(Component.text("Usage: /contracts admin list", NamedTextColor.RED));
+        String sub = args[1].toLowerCase(Locale.ROOT);
+        switch (sub) {
+            case "list" -> showDisabledContracts(player);
+            case "influence" -> withStrategic(player, s -> s.adminInfluence(player, args));
+            case "sabotage" -> withStrategic(player, s -> s.adminSabotageReset(player, args));
+            case "emergency" -> withStrategic(player, s -> s.adminEmergency(player, args));
+            case "reload-diplomacy" -> withStrategic(player, s -> s.adminReloadDiplomacy(player));
+            default -> player.sendMessage(Component.text(
+                    "Usage: /contracts admin <list|influence|sabotage|emergency|reload-diplomacy>",
+                    NamedTextColor.RED));
+        }
     }
 
     private void showDisabledContracts(Player player) {
@@ -419,6 +452,10 @@ public class ContractsCommands implements CommandExecutor, TabCompleter {
         player.sendMessage(Component.text("/contracts progress [id] - Show detailed progress", NamedTextColor.YELLOW));
         player.sendMessage(Component.text("/contracts complete <id> - Complete a contract", NamedTextColor.YELLOW));
         player.sendMessage(Component.text("/contracts abandon <id> - Abandon a contract", NamedTextColor.YELLOW));
+        player.sendMessage(Component.text("/contracts sabotage <active_id> - Sabotage a rival's contract", NamedTextColor.YELLOW));
+        player.sendMessage(Component.text("/contracts influence [alignment] - Show alignment influence", NamedTextColor.YELLOW));
+        player.sendMessage(Component.text("/contracts diplomacy - Recent influence activity", NamedTextColor.YELLOW));
+        player.sendMessage(Component.text("/contracts supply - Show your alignment's supply points", NamedTextColor.YELLOW));
     }
 
     @Override
@@ -426,7 +463,7 @@ public class ContractsCommands implements CommandExecutor, TabCompleter {
         if (!(sender instanceof Player player)) return null;
         if (args.length == 1) {
             return List.of("board", "list", "accept", "active", "progress", "info", "complete",
-                    "abandon", "admin", "help");
+                    "abandon", "sabotage", "influence", "diplomacy", "supply", "admin", "help");
         }
         if (args.length == 2) {
             if (args[0].equalsIgnoreCase("accept") || args[0].equalsIgnoreCase("info")) {
@@ -437,10 +474,10 @@ public class ContractsCommands implements CommandExecutor, TabCompleter {
                     .map(ActiveContract::getContractId).collect(Collectors.toList());
             }
             if (args[0].equalsIgnoreCase("admin") && player.hasPermission("sunway.contracts.admin")) {
-                return List.of("list");
+                return List.of("list", "influence", "sabotage", "emergency", "reload-diplomacy");
             }
             if (args[0].equalsIgnoreCase("board") || args[0].equalsIgnoreCase("list")) {
-                List<String> options = new ArrayList<>(List.of("alignment", "type"));
+                List<String> options = new ArrayList<>(List.of("alignment", "type", "campus", "emergency"));
                 for (com.sunwayMinecraft.alignments.domain.Campus campus :
                         com.sunwayMinecraft.alignments.domain.Campus.values()) {
                     options.add(campus.getId());

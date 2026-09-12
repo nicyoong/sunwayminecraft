@@ -234,7 +234,7 @@ class ContractsBoardCommandTest {
         assertTrue(anyContains(shown, "broken: unknown start endpoint: nope"));
         assertTrue(anyContains(shown, "switched_off: disabled in contracts.yml"));
 
-        assertTrue(anyContains(run("admin"), "Usage: /contracts admin list"));
+        assertTrue(anyContains(run("admin"), "Usage: /contracts admin <list"));
     }
 
     @Test
