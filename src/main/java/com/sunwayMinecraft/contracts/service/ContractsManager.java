@@ -29,6 +29,8 @@ public class ContractsManager {
     private final Economy economy;
     private EventModifierService eventModifierService;
     private CityMetricsManager metricsManager;
+    private ContractDiplomacyService diplomacyService;
+    private ContractSupplyService supplyService;
     private Function<UUID, Optional<String>> alignmentLookup = uuid -> Optional.empty();
     private boolean warnedNoEconomy = false;
     private java.util.function.ObjIntConsumer<UUID> reputationRewarder = (uuid, amount) -> { };
@@ -56,6 +58,15 @@ public class ContractsManager {
 
     public void setMetricsManager(CityMetricsManager metricsManager) {
         this.metricsManager = metricsManager;
+    }
+
+    /** Optional strategic hooks; null-safe when the diplomacy/supply layer is absent. */
+    public void setDiplomacyService(ContractDiplomacyService diplomacyService) {
+        this.diplomacyService = diplomacyService;
+    }
+
+    public void setSupplyService(ContractSupplyService supplyService) {
+        this.supplyService = supplyService;
     }
 
     /** Late-bound player alignment resolver; unaligned players resolve to empty. */
@@ -214,6 +225,13 @@ public class ContractsManager {
         persistence.recordCompletion(player.getUniqueId(), def.id(), alignmentId, campus,
                 now, money, reward.reputation());
         persistence.save();
+
+        if (diplomacyService != null) {
+            diplomacyService.recordCompletion(def, player.getUniqueId(), alignmentId);
+        }
+        if (supplyService != null) {
+            supplyService.recordCompletion(def, alignmentId);
+        }
 
         if (metricsManager != null) {
             metricsManager.increment(CityMetricKeys.CONTRACTS_COMPLETED);
