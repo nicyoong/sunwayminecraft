@@ -16,7 +16,9 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Function;
 
 public class ContractsManager {
     private final JavaPlugin plugin;
@@ -27,6 +29,7 @@ public class ContractsManager {
     private final Economy economy;
     private EventModifierService eventModifierService;
     private CityMetricsManager metricsManager;
+    private Function<UUID, Optional<String>> alignmentLookup = uuid -> Optional.empty();
 
     public ContractsManager(JavaPlugin plugin, ContractConfigManager contractConfig, 
                             EndpointConfigManager endpointConfig, SettingsConfigManager settingsConfig,
@@ -47,6 +50,71 @@ public class ContractsManager {
         this.metricsManager = metricsManager;
     }
 
+    /** Late-bound player alignment resolver; unaligned players resolve to empty. */
+    public void setAlignmentLookup(Function<UUID, Optional<String>> alignmentLookup) {
+        this.alignmentLookup = alignmentLookup != null ? alignmentLookup : uuid -> Optional.empty();
+    }
+
+    /** True when the alignment satisfies the contract's required/forbidden rule. */
+    public boolean canAlignmentAcceptContract(String alignmentId, ContractDefinition contract) {
+        return contract != null && contract.alignmentRule().canAccept(alignmentId);
+    }
+
+    /** Enabled contracts the given alignment may accept. */
+    public List<ContractDefinition> getContractsForAlignment(String alignmentId) {
+        return contractConfig.getContracts().values().stream()
+                .filter(def -> def.alignmentRule().canAccept(alignmentId))
+                .toList();
+    }
+
+    /** Enabled contracts whose route starts at, ends at or touches the campus. */
+    public List<ContractDefinition> getContractsByCampus(String campusId) {
+        return contractConfig.getContracts().values().stream()
+                .filter(def -> def.campusRoute().touchesCampus(campusId))
+                .toList();
+    }
+
+    /** Enabled contracts running from the origin campus to the destination campus. */
+    public List<ContractDefinition> getContractsBetweenCampuses(String originCampus,
+                                                                String destinationCampus) {
+        return contractConfig.getContracts().values().stream()
+                .filter(def -> def.campusRoute().isBetween(originCampus, destinationCampus))
+                .toList();
+    }
+
+    /**
+     * Disables contracts whose endpoint references are broken: unknown start or
+     * end ids always, and delivery contracts not ending at a dropoff or depot.
+     */
+    public void validateEndpointReferences() {
+        for (String id : List.copyOf(contractConfig.getContracts().keySet())) {
+            ContractDefinition def = contractConfig.getContract(id);
+            String problem = endpointProblem(def);
+            if (problem != null) {
+                contractConfig.disableContract(id, problem);
+            }
+        }
+    }
+
+    private String endpointProblem(ContractDefinition def) {
+        if (def.startEndpointId() == null
+                || endpointConfig.getEndpoint(def.startEndpointId()) == null) {
+            return "unknown start endpoint: " + def.startEndpointId();
+        }
+        if (def.endEndpointId() == null
+                || endpointConfig.getEndpoint(def.endEndpointId()) == null) {
+            return "unknown end endpoint: " + def.endEndpointId();
+        }
+        if (def.category() == ContractCategory.DELIVERY) {
+            var type = endpointConfig.getEndpoint(def.endEndpointId()).type();
+            if (type != ContractEndpoint.EndpointType.DROPOFF
+                    && type != ContractEndpoint.EndpointType.DEPOT) {
+                return "delivery contracts must end at a dropoff or depot endpoint";
+            }
+        }
+        return null;
+    }
+
     public boolean acceptContract(Player player, String contractId) {
         ContractDefinition def = contractConfig.getContract(contractId);
         if (def == null) return false;
@@ -60,6 +128,8 @@ public class ContractsManager {
         // Check cooldown
         Instant cooldownUntil = persistence.getPlayerCooldowns(uuid).get(contractId);
         if (cooldownUntil != null && Instant.now().isBefore(cooldownUntil)) return false;
+
+        if (!def.alignmentRule().canAccept(alignmentLookup.apply(uuid).orElse(null))) return false;
 
         Instant expiry = Instant.now().plus(Duration.ofMinutes(def.durationMinutes()));
         ActiveContract newContract = new ActiveContract(uuid, contractId, Instant.now(), expiry);

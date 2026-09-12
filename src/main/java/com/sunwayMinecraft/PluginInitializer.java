@@ -248,6 +248,9 @@ public class PluginInitializer {
     
     Economy econ = getEconomy();
     contractsManager = new ContractsManager(plugin, contractConfig, endpointConfig, settingsConfig, persistence, econ);
+    contractsManager.setAlignmentLookup(uuid -> alignmentService != null
+            ? alignmentService.getAlignmentId(uuid) : java.util.Optional.empty());
+    contractsManager.validateEndpointReferences();
     contractVerificationService = new ContractVerificationService(contractsManager);
     plugin.getServer().getPluginManager().registerEvents(
         new ContractObjectiveListener(new ContractObjectiveService(contractsManager)), plugin);
