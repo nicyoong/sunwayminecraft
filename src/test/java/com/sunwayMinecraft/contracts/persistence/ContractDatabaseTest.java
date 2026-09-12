@@ -14,6 +14,7 @@ import java.util.logging.Logger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -116,5 +117,73 @@ class ContractDatabaseTest {
         db.close();
         ContractDatabase reopened = open();
         assertEquals(1, reopened.loadCooldowns().get(player).size());
+    }
+
+    @Test
+    void getActiveContractByIdResolvesOnlyActiveRows() {
+        ContractDatabase db = open();
+        UUID player = UUID.randomUUID();
+        Instant start = Instant.now();
+        db.addActiveContract(new ActiveContract(player, "stone", start, start.plusSeconds(60)));
+        int id = db.getActiveContracts().get(0).getActiveId();
+        assertTrue(id > 0);
+        assertEquals("stone", db.getActiveContractById(id).getContractId());
+        assertNull(db.getActiveContractById(999999), "unknown id resolves to null");
+    }
+
+    @Test
+    void delayActiveContractResetsProgressAndExtendsExpiry() {
+        ContractDatabase db = open();
+        UUID player = UUID.randomUUID();
+        Instant start = Instant.now();
+        ActiveContract ac = new ActiveContract(player, "stone", start, start.plusSeconds(60));
+        ac.setProgress(1.0);
+        db.addActiveContract(ac);
+        int id = db.getActiveContracts().get(0).getActiveId();
+        long expiryBefore = db.getActiveContractById(id).getExpiryTime().toEpochMilli();
+
+        db.delayActiveContract(id, 300);
+
+        ActiveContract delayed = db.getActiveContractById(id);
+        assertEquals(0.0, delayed.getProgress(), "progress reset by the delay");
+        assertTrue(delayed.getExpiryTime().toEpochMilli() > expiryBefore, "expiry extended");
+    }
+
+    @Test
+    void recentInfluenceIsNewestFirstAndHonoursLimit() {
+        ContractDatabase db = open();
+        java.util.UUID player = java.util.UUID.randomUUID();
+        db.logInfluence("azure_hearth", new com.sunwayMinecraft.contracts.domain.InfluenceRecord(
+                0, "old", player, null, null, null, null, 1, "COMPLETION",
+                Instant.parse("2026-01-01T00:00:00Z")));
+        db.logInfluence("azure_hearth", new com.sunwayMinecraft.contracts.domain.InfluenceRecord(
+                0, "new", player, null, null, null, null, 7, "COMPLETION",
+                Instant.parse("2026-06-01T00:00:00Z")));
+
+        List<com.sunwayMinecraft.contracts.domain.InfluenceRecord> recent = db.getRecentInfluence(1);
+        assertEquals(1, recent.size());
+        assertEquals("new", recent.get(0).contractId(), "newest row first");
+        assertEquals(8, db.getAlignmentInfluence("azure_hearth"));
+    }
+
+    @Test
+    void logInfluenceWithNoCreditedAlignmentWritesLedgerButNoTotal() {
+        ContractDatabase db = open();
+        db.logInfluence(null, new com.sunwayMinecraft.contracts.domain.InfluenceRecord(
+                0, "c", null, "a", "b", null, null, 5, "CROSS_ALLIANCE", Instant.now()));
+        assertEquals(5, db.getInfluenceBetween("a", "b"), "ledger row is queryable");
+        assertEquals(0, db.getAlignmentInfluence("a"), "no total credited to a null target");
+    }
+
+    @Test
+    void supplyTotalsRoundTripAndAccumulate() {
+        ContractDatabase db = open();
+        db.addSupplyPoints("azure_hearth", 3);
+        db.addSupplyPoints("azure_hearth", 4);
+        db.addSupplyPoints("zenith_collective", 2);
+        assertEquals(7, db.getSupplyPoints("azure_hearth"));
+        assertEquals(2, db.getSupplyPoints("zenith_collective"));
+        assertEquals(0, db.getSupplyPoints("unknown_alignment"));
+        assertEquals(2, db.getAllSupplyTotals().size());
     }
 }
