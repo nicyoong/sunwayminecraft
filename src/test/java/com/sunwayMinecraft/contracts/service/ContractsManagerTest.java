@@ -341,4 +341,20 @@ class ContractsManagerTest {
         assertFalse(manager.completeContract(player, ac), "the row is gone, so the second call no-ops");
         verify(economy, times(1)).depositPlayer(eq(player), anyDouble());
     }
+
+    @Test
+    void completionForwardsToDiplomacyAndSupplyServices() {
+        ContractDiplomacyService diplomacy = mock(ContractDiplomacyService.class);
+        ContractSupplyService supply = mock(ContractSupplyService.class);
+        manager.setDiplomacyService(diplomacy);
+        manager.setSupplyService(supply);
+
+        ActiveContract ac = activeContract("contract", playerId);
+        ac.completeObjective();
+        active.add(ac);
+
+        assertTrue(manager.completeContract(player, ac));
+        verify(diplomacy).recordCompletion(eq(definitions.getContract("contract")), eq(playerId), isNull());
+        verify(supply).recordCompletion(any(), isNull());
+    }
 }
