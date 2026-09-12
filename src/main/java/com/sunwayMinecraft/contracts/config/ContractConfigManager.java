@@ -228,6 +228,22 @@ public class ContractConfigManager {
     public Map<String, ContractDefinition> getDisabledContracts() { return disabledContracts; }
     public Map<String, String> getDisabledReasons() { return disabledReasons; }
 
+    /**
+     * Injects a runtime contract (e.g. a generated dynamic emergency) into the
+     * usable pool without touching contracts.yml. Overwrites an existing id.
+     */
+    public void addRuntimeContract(ContractDefinition definition) {
+        if (definition == null) return;
+        disabledContracts.remove(definition.id());
+        disabledReasons.remove(definition.id());
+        contracts.put(definition.id(), definition);
+    }
+
+    /** Removes a runtime contract previously added via {@link #addRuntimeContract}. */
+    public void removeRuntimeContract(String id) {
+        if (id != null) contracts.remove(id);
+    }
+
     private static final class ContractDisabledException extends RuntimeException {
         private ContractDisabledException(String reason) {
             super(reason);
