@@ -7,7 +7,7 @@ public class ActiveContract {
     private final UUID playerUuid;
     private final String contractId;
     private final Instant startTime;
-    private final Instant expiryTime;
+    private Instant expiryTime;
     private double progress; // 0.0 to 1.0
     private String progressState; // pipe-joined stage flags, e.g. "start"
     private int activeId; // SQLite row id; 0 until persisted/reloaded
@@ -24,6 +24,13 @@ public class ActiveContract {
     public String getContractId() { return contractId; }
     public int getActiveId() { return activeId; }
     public void setActiveId(int activeId) { this.activeId = activeId; }
+
+    /** Pushes the completion deadline out (a sabotage delay); persisted on save. */
+    public void extendExpiry(java.time.Duration extension) {
+        if (extension != null && !extension.isZero() && !extension.isNegative()) {
+            this.expiryTime = this.expiryTime.plus(extension);
+        }
+    }
     public Instant getStartTime() { return startTime; }
     public Instant getExpiryTime() { return expiryTime; }
     public double getProgress() { return progress; }

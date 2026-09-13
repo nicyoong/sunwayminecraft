@@ -107,9 +107,15 @@ public class ContractSabotageService {
             return SabotageResult.blocked("You cannot sabotage an ally's contract.");
         }
 
-        // Charge the (money) cost up front; skipped gracefully without Vault.
-        if (settings.getSabotageItemCost() > 0 && economy != null) {
-            economy.withdrawPlayer(saboteur, settings.getSabotageItemCost());
+        // Charge the (money) cost up front; require the saboteur to be able to pay it.
+        if (settings.getSabotageItemCost() > 0) {
+            if (economy == null) {
+                // Vault-less: money is not required, so proceed without charging.
+            } else if (economy.getBalance(saboteur) < settings.getSabotageItemCost()) {
+                return SabotageResult.blocked("You cannot afford the sabotage cost.");
+            } else {
+                economy.withdrawPlayer(saboteur, settings.getSabotageItemCost());
+            }
         }
         cooldowns.put(saboteur.getUniqueId(), Instant.now());
 
@@ -129,16 +135,23 @@ public class ContractSabotageService {
 
     private void applySuccess(Player saboteur, int activeId, ActiveContract target,
                               String victimAlignment) {
-        database.delayActiveContract(activeId, settings.getSabotageCooldownSeconds());
+        java.time.Duration delay = java.time.Duration.ofSeconds(settings.getSabotageCooldownSeconds());
         // match the live instance by contract id (a player holds at most one row
         // per contract under the unique constraint; the DB row id is not yet on
         // freshly-accepted in-memory objects)
+        boolean matched = false;
         for (ActiveContract live : persistence.getPlayerContracts(target.getPlayerUuid())) {
             if (live.getContractId().equals(target.getContractId())) {
                 live.setProgress(0.0);
                 live.markStage(STAGE_SABOTAGED);
+                live.extendExpiry(delay); // authoritative on the live object, so save() persists it
                 persistence.updateProgressState(live);
+                matched = true;
             }
+        }
+        if (!matched) {
+            // no live row (e.g. victim offline without a loaded list) - delay in storage directly
+            database.delayActiveContract(activeId, settings.getSabotageCooldownSeconds());
         }
         persistence.save();
         if (victimAlignment != null) {

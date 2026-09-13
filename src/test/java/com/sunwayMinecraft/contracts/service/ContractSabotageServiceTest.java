@@ -34,6 +34,7 @@ import java.util.logging.Logger;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -77,6 +78,11 @@ class ContractSabotageServiceTest {
     }
 
     private ContractSabotageService service(String diplomacyYml, java.util.Random random) throws Exception {
+        return service(diplomacyYml, random, null);
+    }
+
+    private ContractSabotageService service(String diplomacyYml, java.util.Random random,
+                                            net.milkbowl.vault.economy.Economy economy) throws Exception {
         Files.writeString(dataDirectory.resolve("contract-diplomacy.yml"), diplomacyYml);
         persistence = new ContractPersistenceService(plugin());
         ContractDatabase db = persistence.getDatabase();
@@ -90,7 +96,7 @@ class ContractSabotageServiceTest {
         diplomacy = new ContractDiplomacyService(db, settings, id -> null);
         Function<UUID, Optional<String>> lookup =
                 uuid -> Optional.ofNullable(alignments.getOrDefault(uuid, "azure_hearth"));
-        return new ContractSabotageService(db, persistence, config, settings, diplomacy, null,
+        return new ContractSabotageService(db, persistence, config, settings, diplomacy, economy,
                 lookup, (uuid, delta) -> reputationDeltas.add(delta), plugin(), random);
     }
 
@@ -233,29 +239,43 @@ class ContractSabotageServiceTest {
     }
 
     @Test
-    @org.junit.jupiter.api.Disabled("BUG-SABOTAGE-DELAY (medium): the 'delay completion' effect of a "
-            + "successful sabotage is silently undone. applySuccess calls "
-            + "ContractDatabase.delayActiveContract (extends expires_at in SQLite) and then "
-            + "persistence.save(), which upserts the live ActiveContract whose expiryTime is an "
-            + "immutable field captured at acceptance - overwriting the extended expiry back to the "
-            + "original. Reproduction: sabotage with success chance 1.0, re-read the row, and the "
-            + "expiry equals the acceptance-time expiry instead of acceptance + cooldown. Verified "
-            + "failing during authoring with the annotation removed. Suggested fix: keep the delay "
-            + "authoritative on the live object (mutable/extended expiry) or make the persistence "
-            + "upsert preserve a later stored expiry.")
+    void sabotageIsBlockedWhenThePlayerCannotAffordTheCost() throws Exception {
+        net.milkbowl.vault.economy.Economy economy = mock(net.milkbowl.vault.economy.Economy.class);
+        when(economy.getBalance(any(org.bukkit.OfflinePlayer.class))).thenReturn(10.0);
+        ContractSabotageService svc = service(
+                "sabotage_enabled: true\nsabotage_success_chance: 1.0\nsabotage_item_cost: 50\n",
+                new java.util.Random(0), economy);
+        int id = victimActiveContract("stone", false);
+        ContractSabotageService.SabotageResult result = svc.attempt(playerWith("Broke"), id);
+        assertFalse(result.attempted());
+        assertTrue(result.message().contains("afford"));
+    }
+
+    @Test
     void successfulSabotageExtendsTheVictimExpiryInStorage() throws Exception {
         ContractSabotageService svc = service(
                 "sabotage_enabled: true\nsabotage_success_chance: 1.0\nsabotage_cooldown_seconds: 3600\n",
                 new java.util.Random(0));
         int id = victimActiveContract("stone", false);
-        long expiryBefore = persistence.getDatabase().getActiveContractById(id)
-                .getExpiryTime().toEpochMilli();
+        long expiryBefore = victimStoredExpiryMillis();
 
         assertTrue(svc.attempt(playerWith("Delayer"), id).success());
 
-        long expiryAfter = persistence.getDatabase().getActiveContractById(id)
-                .getExpiryTime().toEpochMilli();
-        assertTrue(expiryAfter > expiryBefore,
+        assertEquals(0.0, victimStoredProgress(), "progress reset in storage");
+        assertTrue(victimStoredExpiryMillis() > expiryBefore,
                 "a successful sabotage must leave the contract expiry extended in storage");
+    }
+
+    // save() uses INSERT OR REPLACE, so the row id churns; read the victim's row by identity.
+    private long victimStoredExpiryMillis() {
+        return persistence.getDatabase().getActiveContracts().stream()
+                .filter(c -> c.getPlayerUuid().equals(victimId) && c.getContractId().equals("stone"))
+                .mapToLong(c -> c.getExpiryTime().toEpochMilli()).findFirst().orElseThrow();
+    }
+
+    private double victimStoredProgress() {
+        return persistence.getDatabase().getActiveContracts().stream()
+                .filter(c -> c.getPlayerUuid().equals(victimId) && c.getContractId().equals("stone"))
+                .mapToDouble(ActiveContract::getProgress).findFirst().orElseThrow();
     }
 }
