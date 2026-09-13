@@ -176,6 +176,28 @@ class ContractDatabaseTest {
     }
 
     @Test
+    void addActiveContractReturnsAStableIdAcrossUpserts() {
+        ContractDatabase db = open();
+        UUID player = UUID.randomUUID();
+        Instant start = Instant.now();
+        ActiveContract ac = new ActiveContract(player, "stone", start, start.plusSeconds(600));
+
+        int first = db.addActiveContract(ac);
+        assertTrue(first > 0, "insert assigns a row id");
+
+        // a later save (update path) must keep the same id, not renumber
+        ac.setProgress(0.5);
+        ac.extendExpiry(java.time.Duration.ofSeconds(60));
+        int again = db.addActiveContract(ac);
+        assertEquals(first, again, "upsert preserves the row id");
+
+        // a different contract for the same player gets its own id
+        int otherId = db.addActiveContract(
+                new ActiveContract(player, "brick", start, start.plusSeconds(600)));
+        assertTrue(otherId > 0 && otherId != first);
+    }
+
+    @Test
     void supplyTotalsRoundTripAndAccumulate() {
         ContractDatabase db = open();
         db.addSupplyPoints("azure_hearth", 3);

@@ -92,6 +92,26 @@ class ContractPersistenceServiceTest {
         assertTrue(service.getPlayerCooldowns(playerId).isEmpty());
     }
 
+    @Test
+    void saveStampsAStableActiveIdOnTheLiveContract() {
+        JavaPlugin plugin = pluginFor(dataDirectory);
+        UUID playerId = UUID.randomUUID();
+        ContractPersistenceService service = serviceFor(plugin);
+        ActiveContract active = new ActiveContract(playerId, "stone",
+                Instant.now(), Instant.now().plusSeconds(600));
+        assertEquals(0, active.getActiveId(), "a fresh contract has no id yet");
+
+        service.getPlayerContracts(playerId).add(active);
+        service.save();
+        int stamped = active.getActiveId();
+        assertTrue(stamped > 0, "save back-fills the row id onto the live object");
+
+        // a later save must not renumber the id (so /contracts sabotage <id> stays valid)
+        active.setProgress(0.4);
+        service.save();
+        assertEquals(stamped, active.getActiveId(), "id is stable across saves");
+    }
+
     private JavaPlugin pluginFor(Path directory) {
         JavaPlugin plugin = mock(JavaPlugin.class);
         when(plugin.getDataFolder()).thenReturn(directory.toFile());

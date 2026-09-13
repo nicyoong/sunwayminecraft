@@ -95,12 +95,21 @@ public class ContractDatabase {
         }
     }
 
-    /** Inserts or replaces the single active instance of a contract for a player. */
-    public void addActiveContract(ActiveContract contract) {
-        String sql = "INSERT OR REPLACE INTO player_active_contracts"
+    /**
+     * Inserts or updates the single active instance of a contract for a player,
+     * preserving the existing row id on update (a plain INSERT OR REPLACE would
+     * drop the row and hand out a fresh AUTOINCREMENT id every save). Returns
+     * the stable row id, or 0 on failure.
+     */
+    public int addActiveContract(ActiveContract contract) {
+        String upsert = "INSERT INTO player_active_contracts"
                 + " (player_uuid, contract_id, accepted_at, expires_at, progress, progress_state,"
-                + " status) VALUES (?, ?, ?, ?, ?, ?, 'active')";
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+                + " status) VALUES (?, ?, ?, ?, ?, ?, 'active')"
+                + " ON CONFLICT(player_uuid, contract_id) DO UPDATE SET"
+                + " accepted_at = excluded.accepted_at, expires_at = excluded.expires_at,"
+                + " progress = excluded.progress, progress_state = excluded.progress_state,"
+                + " status = 'active'";
+        try (PreparedStatement stmt = connection.prepareStatement(upsert)) {
             stmt.setString(1, contract.getPlayerUuid().toString());
             stmt.setString(2, contract.getContractId());
             stmt.setLong(3, contract.getStartTime().toEpochMilli());
@@ -110,6 +119,18 @@ public class ContractDatabase {
             stmt.executeUpdate();
         } catch (SQLException e) {
             plugin.getLogger().severe("Error adding active contract: " + e.getMessage());
+            return 0;
+        }
+        try (PreparedStatement stmt = connection.prepareStatement(
+                "SELECT id FROM player_active_contracts WHERE player_uuid = ? AND contract_id = ?")) {
+            stmt.setString(1, contract.getPlayerUuid().toString());
+            stmt.setString(2, contract.getContractId());
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next() ? rs.getInt(1) : 0;
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().severe("Error reading active contract id: " + e.getMessage());
+            return 0;
         }
     }
 

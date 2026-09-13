@@ -40,7 +40,10 @@ public class ContractPersistenceService {
     public void save() {
         for (List<ActiveContract> playerContracts : activeContracts.values()) {
             for (ActiveContract contract : playerContracts) {
-                database.addActiveContract(contract);
+                int id = database.addActiveContract(contract);
+                if (id > 0) {
+                    contract.setActiveId(id); // stamp the stable row id on the live object
+                }
             }
         }
         // rows still active in SQLite but gone from the live lists must disappear
