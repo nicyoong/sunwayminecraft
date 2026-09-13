@@ -5,5 +5,12 @@ public enum ContractCategory {
     HAULING,
     MAINTENANCE,
     SURVEY,
-    RECOVERY
+    RECOVERY,
+    DELIVERY,
+    PROCUREMENT,
+    ESCORT,
+    CONSTRUCTION,
+    RESEARCH,
+    DIPLOMATIC,
+    EMERGENCY
 }

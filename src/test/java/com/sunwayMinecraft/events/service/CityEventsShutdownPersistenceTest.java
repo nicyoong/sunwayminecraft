@@ -75,6 +75,9 @@ class CityEventsShutdownPersistenceTest {
                     "an event active at shutdown must survive a restart");
         } finally {
             // SQLite connections keep the db files locked on Windows; close so @TempDir can delete them
+            if (restarted.getContractPersistence() != null) {
+                restarted.getContractPersistence().close();
+            }
             if (restarted.getCoinFlipDatabase() != null) {
                 restarted.getCoinFlipDatabase().close();
             }

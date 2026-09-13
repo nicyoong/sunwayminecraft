@@ -14,7 +14,10 @@ import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockbukkit.mockbukkit.MockBukkit;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -28,6 +31,17 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.*;
 
 class ContractVerificationServiceTest {
+    // A live (mocked) server registers the item/material registries that
+    // ItemStack construction needs; without it these tests are order-dependent.
+    @BeforeEach
+    void setUp() {
+        MockBukkit.mock();
+    }
+
+    @AfterEach
+    void tearDown() {
+        MockBukkit.unmock();
+    }
     @Test
     void reachingDestinationMarksAnActivePlayersContractComplete() {
         Fixture fixture = new Fixture(ContractObjectiveType.REACH_DESTINATION, Map.of());
@@ -104,7 +118,7 @@ class ContractVerificationServiceTest {
         ContractVerificationService.VerificationResult result = fixture.service.verifyCompletion(fixture.player, expired);
 
         assertFalse(result.success());
-        assertEquals("Contract has expired.", result.message());
+        assertEquals("Contract expired.", result.message());
         verify(fixture.manager).failContract(fixture.player, expired);
     }
 
@@ -116,11 +130,54 @@ class ContractVerificationServiceTest {
 
         when(fixture.definitions.getContract("contract")).thenReturn(fixture.definition(ContractObjectiveType.REACH_DESTINATION, Map.of()));
         when(fixture.endpoints.getEndpoint("end")).thenReturn(null);
-        assertEquals("Destination endpoint not found.", fixture.service.verifyCompletion(fixture.player, fixture.active).message());
+        assertEquals("Destination endpoint unavailable.", fixture.service.verifyCompletion(fixture.player, fixture.active).message());
 
         when(fixture.endpoints.getEndpoint("end")).thenReturn(new ContractEndpoint("end", "Destination",
                 ContractEndpoint.EndpointType.DROPOFF, new Location(fixture.world, 100, 64, 100), 2));
-        assertTrue(fixture.service.verifyCompletion(fixture.player, fixture.active).message().contains("must be at"));
+        assertTrue(fixture.service.verifyCompletion(fixture.player, fixture.active).message().contains("Wrong endpoint"));
+    }
+
+    @Test
+    void haulingContractRequiresTheStartVisitBeforeCompletion() {
+        Fixture fixture = new Fixture(ContractObjectiveType.DELIVER_MATERIALS, Map.of(Material.STONE, 1));
+        // HAULING category gates on the start visit; make the fixture's definition hauling
+        ContractDefinition hauling = new ContractDefinition("contract", ContractCategory.HAULING,
+                "name", "description", 50, 30, 10, "start", "end", Map.of(Material.STONE, 1),
+                "objective", ContractObjectiveType.DELIVER_MATERIALS);
+        when(fixture.definitions.getContract("contract")).thenReturn(hauling);
+        when(fixture.endpoints.getEndpoint("start")).thenReturn(new ContractEndpoint("start", "Depot",
+                ContractEndpoint.EndpointType.DEPOT, new Location(fixture.world, 10, 64, 10), 2));
+        PlayerInventory inventory = mock(PlayerInventory.class);
+        when(fixture.player.getInventory()).thenReturn(inventory);
+        when(inventory.containsAtLeast(any(ItemStack.class), anyInt())).thenReturn(true);
+        when(inventory.getContents()).thenReturn(new ItemStack[] { new ItemStack(Material.STONE, 2) });
+
+        ContractVerificationService.VerificationResult blocked =
+                fixture.service.verifyCompletion(fixture.player, fixture.active);
+        assertFalse(blocked.success());
+        assertTrue(blocked.message().contains("first"), "start visit is required before delivery");
+
+        fixture.active.markStage(ContractObjectiveService.STAGE_START);
+        assertTrue(fixture.service.verifyCompletion(fixture.player, fixture.active).success());
+    }
+
+    @Test
+    void alignmentRestrictionChangedSinceAcceptanceBlocksCompletion() {
+        Fixture fixture = new Fixture(ContractObjectiveType.REACH_DESTINATION, Map.of());
+        ContractDefinition gated = new ContractDefinition("contract", ContractCategory.COURIER,
+                "name", "description", 50, 30, 10, "start", "end", Map.of(), "objective",
+                ContractObjectiveType.REACH_DESTINATION,
+                new com.sunwayMinecraft.contracts.domain.ContractAlignmentRule(
+                        "lagoon_covenant", null, java.util.List.of()),
+                com.sunwayMinecraft.contracts.domain.ContractCampusRoute.NONE, 0, true);
+        when(fixture.definitions.getContract("contract")).thenReturn(gated);
+        when(fixture.manager.getAlignmentFor(fixture.player))
+                .thenReturn("azure_hearth");
+
+        ContractVerificationService.VerificationResult result =
+                fixture.service.verifyCompletion(fixture.player, fixture.active);
+        assertFalse(result.success());
+        assertTrue(result.message().contains("alignment"), "a mid-contract switch fails clearly");
     }
 
     private static final class Fixture {

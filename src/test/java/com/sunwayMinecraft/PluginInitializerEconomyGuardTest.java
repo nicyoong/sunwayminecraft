@@ -70,6 +70,9 @@ class PluginInitializerEconomyGuardTest {
     }
 
     private void closeDatabases(PluginInitializer initializer) {
+        if (initializer.getContractPersistence() != null) {
+            initializer.getContractPersistence().close();
+        }
         if (initializer.getCoinFlipDatabase() != null) {
             initializer.getCoinFlipDatabase().close();
         }
