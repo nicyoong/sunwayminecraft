@@ -6,7 +6,7 @@ plugins {
 group = 'com'
 // Releases override this via -PpluginVersion=<x.y.z> (see release.yml),
 // so the built jar reports the tagged version instead of the dev snapshot
-version = project.findProperty('pluginVersion') ?: '1.8-SNAPSHOT'
+version = project.findProperty('pluginVersion') ?: '2.0-SNAPSHOT'
 
 repositories {
     mavenCentral()
