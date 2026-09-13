@@ -17,10 +17,12 @@ import java.util.stream.Collectors;
 
 public class ResidencyCommands implements TabExecutor {
     private final ResidencyManager manager;
+    private final com.sunwayMinecraft.districts.service.DistrictResidencyGuard districtGuard;
     private final Map<UUID, String> pendingLeaveConfirm = new HashMap<>();
 
-    public ResidencyCommands(ResidencyManager manager) {
+    public ResidencyCommands(ResidencyManager manager, com.sunwayMinecraft.districts.service.DistrictResidencyGuard districtGuard) {
         this.manager = manager;
+        this.districtGuard = districtGuard;
     }
 
     @Override
@@ -93,6 +95,14 @@ public class ResidencyCommands implements TabExecutor {
                 UnitTenancyRecord record = manager.getRepository().getTenancy(unit.getId());
                 if (!(record.getLeaseState() == LeaseState.VACANT || record.getLeaseState() == LeaseState.LISTED)) {
                     player.sendMessage(Message.error("This unit is not available."));
+                    return true;
+                }
+
+                java.util.Optional<String> districtDenial = districtGuard == null
+                        ? java.util.Optional.empty()
+                        : districtGuard.checkRentalAllowed(player, unit.getDistrictId());
+                if (districtDenial.isPresent()) {
+                    player.sendMessage(Message.error(districtDenial.get()));
                     return true;
                 }
 

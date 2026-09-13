@@ -1,0 +1,50 @@
+# District control and capture settings
+#
+# Presence-based control point contests. A district only runs a contest when
+# its per-district contest_enabled flag is set (in districts.yml or via
+# /district admin contest start), so the feature is off until admins opt in.
+
+enabled: true
+
+contest_tick_interval_seconds: 5
+control_point_radius: 0
+
+# Presence scoring: each aligned player inside the contest zone contributes
+# points_per_player_per_tick to their alignment every tick.
+points_per_player_per_tick: 2.0
+minimum_players_to_contest: 1
+maximum_control_points: 500
+points_required_to_capture: 100
+
+# When nobody is present, progress decays by points_per_player_per_tick per
+# tick; a fully decayed district falls back to neutral when
+# allow_neutral_reset is true.
+decay_when_uncontested: true
+allow_neutral_reset: true
+
+# Broadcasts and logging.
+broadcast_control_changes: true
+broadcast_contest_start: true
+broadcast_contest_end: true
+broadcast_capture: true
+contest_log_enabled: true
+
+# Cooldown (seconds) after a capture during which the district cannot be
+# contested again.
+capture_cooldown_seconds: 300
+
+# Capture rewards. Money requires Vault + an economy provider; reputation is
+# delivered to the alignment hook when one is wired.
+reward_controllers_on_capture: false
+reward_money: 100.0
+reward_reputation: 0
+reward_players_present: true
+minimum_contribution_points: 10
+reward_cooldown_seconds: 3600
+
+# Message templates. Placeholders:
+#   {district} {alignment} {alliance} {percent}
+capture_message: "§6{district} §7has been captured by §f{alignment}§7!"
+contest_start_message: "§e{district} §7is being contested by §f{alignment}§7!"
+contest_end_message: "§7The contest for §e{district} §7has ended."
+contest_action_bar: "District contest: {alignment} {percent}%"

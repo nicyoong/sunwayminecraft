@@ -11,6 +11,10 @@ import com.sunwayMinecraft.residency.admin.AdminSelectionManager;
 import com.sunwayMinecraft.residency.ResidencyBootstrap;
 import com.sunwayMinecraft.residency.ResidencyManager;
 import com.sunwayMinecraft.districts.DistrictBootstrap;
+import com.sunwayMinecraft.districts.config.DistrictControlSettingsConfig;
+import com.sunwayMinecraft.districts.config.DistrictSettingsConfig;
+import com.sunwayMinecraft.districts.service.DistrictControlService;
+import com.sunwayMinecraft.districts.service.DistrictResidencyGuard;
 import com.sunwayMinecraft.districts.service.DistrictAlignmentService;
 import com.sunwayMinecraft.districts.DistrictManager;
 import com.sunwayMinecraft.coinflip.*;
@@ -82,8 +86,14 @@ public class PluginInitializer {
   private AdminSelectionManager residencySelectionManager;
 
   // Districts
+  private final java.util.function.Function<java.util.UUID, java.util.Optional<String>> playerAlignmentResolver =
+          uuid -> java.util.Optional.empty(); // alignment cache plugs in here when alignments land
   private DistrictManager districtManager;
+  private DistrictSettingsConfig districtSettings;
+  private DistrictResidencyGuard districtResidencyGuard;
   private DistrictAlignmentService districtAlignmentService;
+  private DistrictControlService districtControlService;
+  private DistrictControlSettingsConfig districtControlSettings;
 
   // Coin flip
   private CoinFlipSystem coinFlipSystem;
@@ -216,14 +226,22 @@ public class PluginInitializer {
 
   private void initResidencySystem() {
     residencySelectionManager = new AdminSelectionManager(plugin);
+    // districts initialize after residency, so the guard binds its dependencies lazily
+    districtResidencyGuard = new DistrictResidencyGuard(
+        () -> districtAlignmentService, () -> districtSettings,
+        () -> cityMetricsManager == null ? null : cityMetricsManager::increment);
     Economy econ = getEconomy();
     residencyManager = new ResidencyBootstrap(plugin, econ, residencySelectionManager).initialize();
   }
 
   private void initDistrictSystem() {
-    DistrictBootstrap districtBootstrap = new DistrictBootstrap(plugin);
+    DistrictBootstrap districtBootstrap = new DistrictBootstrap(plugin, playerAlignmentResolver,
+        () -> cityMetricsManager == null ? null : cityMetricsManager::increment,
+        () -> getEconomy());
     districtManager = districtBootstrap.initialize();
+    districtSettings = districtBootstrap.getSettings();
     districtAlignmentService = districtBootstrap.getAlignmentService();
+    districtControlService = districtBootstrap.getControlService();
   }
 
   private void initCoinFlipSystem() {
@@ -471,6 +489,26 @@ public class PluginInitializer {
 
   public DistrictAlignmentService getDistrictAlignmentService() {
     return districtAlignmentService;
+  }
+
+  public com.sunwayMinecraft.districts.persistence.DistrictControlRepository getDistrictControlRepository() {
+    return districtControlService == null ? null : districtControlService.getRepository();
+  }
+
+  public DistrictControlService getDistrictControlService() {
+    return districtControlService;
+  }
+
+  public DistrictControlSettingsConfig getDistrictControlSettings() {
+    return districtControlSettings;
+  }
+
+  public DistrictResidencyGuard getDistrictResidencyGuard() {
+    return districtResidencyGuard;
+  }
+
+  public DistrictSettingsConfig getDistrictSettings() {
+    return districtSettings;
   }
 
   public DistrictManager getDistrictManager() {

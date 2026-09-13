@@ -62,7 +62,7 @@ public class CommandRegistrar {
     // Residency / Storefronts
     if (init.getResidencyManager() != null) {
       ResidencyCommands residencyCmds =
-              new ResidencyCommands(init.getResidencyManager());
+              new ResidencyCommands(init.getResidencyManager(), init.getDistrictResidencyGuard());
       registerCommand("residency", residencyCmds);
 
       StorefrontCommands storefrontCmds =
@@ -79,7 +79,11 @@ public class CommandRegistrar {
     // Districts / Zoning
     if (init.getDistrictManager() != null) {
       DistrictCommands districtCmds =
-              new DistrictCommands(init.getDistrictManager(), init.getDistrictAlignmentService());
+              new DistrictCommands(init.getDistrictManager(), init.getDistrictAlignmentService(),
+                      new com.sunwayMinecraft.commands.DistrictAdminSubCommands(init.getDistrictManager(),
+                              init.getDistrictManager().getConfigManager()),
+                      new com.sunwayMinecraft.commands.DistrictControlCommands(init.getDistrictControlService(),
+                              init.getDistrictControlSettings()));
       registerCommand("district", districtCmds);
 
       DistrictAdminCommands districtAdminCmds =

@@ -391,6 +391,8 @@ permissions:
 
   sunway.district.admin.bypass:
     description: Bypasses alignment access rules and archived read-only restrictions
+    default: op
+
   sunway.align.use:
     description: Allows players to view and manage their Triple Alliance alignment
     default: true

@@ -1,6 +1,6 @@
 package com.sunwayMinecraft.districts.domain;
 
-import com.sunwayMinecraft.districts.region.Region3i;
+import com.sunwayMinecraft.districts.region.DistrictShape;
 
 import java.util.Collections;
 import java.util.List;
@@ -11,7 +11,7 @@ public class DistrictDefinition {
     private final String displayName;
     private final String shortName;
     private final String world;
-    private final Region3i region;
+    private final DistrictShape shape;
     private final boolean enabled;
     private final DistrictType districtType;
     private final int prestigeTier;
@@ -30,7 +30,7 @@ public class DistrictDefinition {
                               String displayName,
                               String shortName,
                               String world,
-                              Region3i region,
+                              com.sunwayMinecraft.districts.region.Region3i region,
                               boolean enabled,
                               DistrictType districtType,
                               int prestigeTier,
@@ -43,7 +43,8 @@ public class DistrictDefinition {
                               ApprovalBias recommendedApprovalBias,
                               boolean allowPublicEvents,
                               boolean signatureArea) {
-        this(id, displayName, shortName, world, region, enabled, districtType, prestigeTier,
+        this(id, displayName, shortName, world, DistrictShape.cuboid(region), enabled,
+                districtType, prestigeTier,
                 publicSummary, tags, publicVisible, listingPriority, storefrontPriority,
                 residencyPriority, recommendedApprovalBias, allowPublicEvents, signatureArea,
                 DistrictOwnership.neutral());
@@ -53,7 +54,7 @@ public class DistrictDefinition {
                               String displayName,
                               String shortName,
                               String world,
-                              Region3i region,
+                              DistrictShape shape,
                               boolean enabled,
                               DistrictType districtType,
                               int prestigeTier,
@@ -71,7 +72,7 @@ public class DistrictDefinition {
         this.displayName = Objects.requireNonNull(displayName, "displayName");
         this.shortName = shortName;
         this.world = Objects.requireNonNull(world, "world");
-        this.region = Objects.requireNonNull(region, "region");
+        this.shape = Objects.requireNonNull(shape, "shape");
         this.enabled = enabled;
         this.districtType = Objects.requireNonNull(districtType, "districtType");
         this.prestigeTier = prestigeTier;
@@ -92,7 +93,7 @@ public class DistrictDefinition {
     public String getShortName() { return shortName; }
     public String getWorld() { return world; }
     public String getWorldName() { return world; }
-    public Region3i getRegion() { return region; }
+    public DistrictShape getShape() { return shape; }
     public boolean isEnabled() { return enabled; }
     public DistrictType getDistrictType() { return districtType; }
     public int getPrestigeTier() { return prestigeTier; }
@@ -106,6 +107,15 @@ public class DistrictDefinition {
     public boolean isAllowPublicEvents() { return allowPublicEvents; }
     public boolean isSignatureArea() { return signatureArea; }
     public DistrictOwnership getOwnership() { return ownership; }
+
+    /** Returns a copy of this definition with new ownership and/or type. */
+    public DistrictDefinition getDefinitionWith(DistrictOwnership newOwnership, DistrictType newType) {
+        return new DistrictDefinition(id, displayName, shortName, world, shape, enabled, newType,
+                prestigeTier, publicSummary, tags, publicVisible, listingPriority,
+                storefrontPriority, residencyPriority, recommendedApprovalBias,
+                allowPublicEvents, signatureArea,
+                newOwnership == null ? DistrictOwnership.neutral() : newOwnership);
+    }
 
     public DistrictAccessRule getAccessRule() {
         return DistrictAccessRule.forOwnership(ownership);

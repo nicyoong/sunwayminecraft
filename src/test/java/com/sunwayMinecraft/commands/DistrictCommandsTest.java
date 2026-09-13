@@ -4,10 +4,12 @@ import com.sunwayMinecraft.districts.DistrictManager;
 import com.sunwayMinecraft.districts.domain.DistrictDefinition;
 import com.sunwayMinecraft.districts.domain.DistrictOwnership;
 import com.sunwayMinecraft.districts.domain.DistrictType;
+import com.sunwayMinecraft.districts.region.DistrictShape;
 import com.sunwayMinecraft.districts.region.Region3i;
 import com.sunwayMinecraft.districts.service.DistrictAlignmentService;
 import org.bukkit.Location;
 import org.bukkit.command.Command;
+import org.bukkit.command.CommandSender;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -32,7 +34,7 @@ class DistrictCommandsTest {
     private DistrictManager districtManager;
     private DistrictCommands commands;
 
-    private static final Region3i REGION = new Region3i("world", 0, 0, 0, 9, 9, 9);
+    private static final DistrictShape REGION = DistrictShape.cuboid(new Region3i("world", 0, 0, 0, 9, 9, 9));
 
     @BeforeEach
     void setUp() {
@@ -43,7 +45,22 @@ class DistrictCommandsTest {
         DistrictAlignmentService service = new DistrictAlignmentService(
                 mock(com.sunwayMinecraft.districts.config.DistrictsConfigManager.class),
                 uuid -> Optional.empty());
-        commands = new DistrictCommands(districtManager, service);
+        com.sunwayMinecraft.districts.config.DistrictControlSettingsConfig controlSettings =
+                mock(com.sunwayMinecraft.districts.config.DistrictControlSettingsConfig.class);
+        com.sunwayMinecraft.districts.persistence.DistrictControlRepository controlRepository =
+                mock(com.sunwayMinecraft.districts.persistence.DistrictControlRepository.class);
+        when(controlRepository.loadAllStates()).thenReturn(java.util.Map.of());
+        com.sunwayMinecraft.districts.service.DistrictControlService controlService =
+                new com.sunwayMinecraft.districts.service.DistrictControlService(
+                        null,
+                        mock(com.sunwayMinecraft.districts.config.DistrictsConfigManager.class),
+                        mock(com.sunwayMinecraft.districts.region.DistrictLocationResolver.class),
+                        controlSettings, controlRepository,
+                        uuid -> java.util.Optional.empty(), () -> null, null, () -> null);
+        commands = new DistrictCommands(districtManager, service,
+                new com.sunwayMinecraft.commands.DistrictAdminSubCommands(districtManager,
+                        mock(com.sunwayMinecraft.districts.config.DistrictsConfigManager.class)),
+                new com.sunwayMinecraft.commands.DistrictControlCommands(controlService, controlSettings));
     }
 
     @AfterEach
@@ -143,5 +160,18 @@ class DistrictCommandsTest {
             messages.add(message);
         }
         return messages;
+    }
+
+    @Test
+    void contestFromConsoleDoesNotCrashAndExplainsThePlayerOnlyRule() {
+        // a permitted console exercises the fixed path: before BUG-DIST2 the
+        // hard cast to Player threw ClassCastException here
+        org.bukkit.command.CommandSender console = mock(CommandSender.class);
+        when(console.hasPermission(org.mockito.ArgumentMatchers.anyString())).thenReturn(true);
+
+        assertTrue(commands.onCommand(console, command("district"), "district",
+                new String[]{"contest"}));
+        org.mockito.Mockito.verify(console).sendMessage(org.mockito.ArgumentMatchers.argThat(
+                (String message) -> message != null && message.contains("Only players")));
     }
 }

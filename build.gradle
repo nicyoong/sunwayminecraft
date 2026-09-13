@@ -42,12 +42,12 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     testImplementation 'org.mockito:mockito-core:5.14.2'
-    testImplementation ("io.papermc.paper:paper-api:26.2.build.123-stable")
+    testImplementation ("io.papermc.paper:paper-api:26.2.build.111-stable")
     testImplementation 'org.mockbukkit.mockbukkit:mockbukkit-v26.2:4.116.1'
     testImplementation ("com.github.MilkBowl:VaultAPI:1.7.1")
 
     // 26.2 Paper API
-    compileOnly("io.papermc.paper:paper-api:26.2.build.123-stable")
+    compileOnly("io.papermc.paper:paper-api:26.2.build.111-stable")
 
     // Bukkit API (match your server version)
     // compileOnly 'org.spigotmc:spigot-api:1.21.5-R0.1-SNAPSHOT'
@@ -71,10 +71,14 @@ dependencies {
 test {
     useJUnitPlatform()
     finalizedBy jacocoTestReport
+    maxParallelForks = 1
+    // MockBukkit suites leak native handles across many mock cycles on Windows;
+    // a fresh JVM per class keeps runs deterministic on this machine
+    forkEvery = 1
     // Mockito's inline mock maker must attach an agent to the test JVM;
     // without this flag Byte Buddy falls back to an external attach process,
     // which fails under memory pressure
-    jvmArgs "-Djdk.attach.allowAttachSelf=true"
+    jvmArgs '-Xmx2g', '-Djdk.attach.allowAttachSelf=true'
     testLogging {
         events = ["passed", "skipped", "failed"]
         exceptionFormat = "full"

@@ -32,6 +32,11 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 class PluginInitializerEconomyGuardTest {
+    private final List<PluginInitializer> createdInitializers = new ArrayList<>();
+    // The initializer registers a PlayerJoinEvent listener with the mocked
+    // plugin; MockBukkit's unmock does not clear static handler lists, so the
+    // registration must be removed manually or later addPlayer calls NPE.
+    private SunwayMinecraft registeredPlugin;
     @TempDir
     Path dataDirectory;
 
@@ -46,29 +51,43 @@ class PluginInitializerEconomyGuardTest {
 
     @AfterEach
     void tearDown() {
+        for (PluginInitializer initializer : createdInitializers) {
+            // close SQLite connections so @TempDir cleanup works on Windows
+            if (initializer.getCoinFlipDatabase() != null) {
+                initializer.getCoinFlipDatabase().close();
+            }
+            if (initializer.getDistrictControlRepository() != null) {
+                initializer.getDistrictControlRepository().close();
+            }
+            if (initializer.getAlignmentRepository() != null) {
+                initializer.getAlignmentRepository().close();
+            }
+            if (initializer.getAlignmentSeasonRepository() != null) {
+                initializer.getAlignmentSeasonRepository().close();
+            }
+        }
+
+        org.bukkit.event.HandlerList.unregisterAll();
         MockBukkit.unmock();
     }
 
     @Test
     void startupSurvivesVaultPresentWithoutEconomyRegistration() throws Exception {
         SunwayMinecraft plugin = pluginMock();
+        registeredPlugin = plugin;
 
         PluginInitializer initializer = new PluginInitializer(plugin);
-        try {
-            assertNull(initializer.getCoinFlipSystem(),
-                    "coinflip must disable itself when no economy provider is registered");
-            assertNotNull(initializer.getResidencyManager(),
-                    "residency must initialize without an economy provider");
-            assertNotNull(initializer.getContractsManager(),
-                    "contracts must initialize without an economy provider");
-            assertTrue(severeRecords.stream().anyMatch(record ->
-                            record.getMessage().contains("no economy provider is registered")),
-                    "expected a severe log explaining the missing economy registration");
-        } finally {
-            closeDatabases(initializer);
-        }
-    }
+        createdInitializers.add(initializer);
 
+        assertNull(initializer.getCoinFlipSystem(),
+                "coinflip must disable itself when no economy provider is registered");
+        assertNotNull(initializer.getResidencyManager(),
+                "residency must initialize without an economy provider");
+        assertNotNull(initializer.getContractsManager(),
+                "contracts must initialize without an economy provider");
+        assertTrue(severeRecords.stream().anyMatch(record ->
+                        record.getMessage().contains("no economy provider is registered")),
+                "expected a severe log explaining the missing economy registration");
     private void closeDatabases(PluginInitializer initializer) {
         if (initializer.getContractPersistence() != null) {
             initializer.getContractPersistence().close();

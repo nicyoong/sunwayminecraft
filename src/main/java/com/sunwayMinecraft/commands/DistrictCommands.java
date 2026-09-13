@@ -24,10 +24,15 @@ public class DistrictCommands implements CommandExecutor, TabCompleter {
 
     private final DistrictManager districtManager;
     private final DistrictAlignmentService alignmentService;
+    private final DistrictAdminSubCommands adminSubCommands;
+    private final DistrictControlCommands controlCommands;
 
-    public DistrictCommands(DistrictManager districtManager, DistrictAlignmentService alignmentService) {
+    public DistrictCommands(DistrictManager districtManager, DistrictAlignmentService alignmentService,
+                            DistrictAdminSubCommands adminSubCommands, DistrictControlCommands controlCommands) {
         this.districtManager = districtManager;
         this.alignmentService = alignmentService;
+        this.adminSubCommands = adminSubCommands;
+        this.controlCommands = controlCommands;
     }
 
     @Override
@@ -48,6 +53,13 @@ public class DistrictCommands implements CommandExecutor, TabCompleter {
                 return handleList(sender, args);
             case "info":
                 return handleInfo(sender, args);
+            case "admin":
+                return adminSubCommands.handle(sender, args);
+            case "contest":
+                return controlCommands.handleContest(sender,
+                        sender instanceof Player p ? p : null);
+            case "control":
+                return controlCommands.handleControl(sender, sender instanceof Player p ? p : null, args);
             default:
                 sender.sendMessage(Component.text("Unknown subcommand.", NamedTextColor.RED));
                 sender.sendMessage(
@@ -233,7 +245,7 @@ public class DistrictCommands implements CommandExecutor, TabCompleter {
         }
 
         if (args.length == 1) {
-            return filterPrefix(args[0], List.of("list", "info"));
+            return filterPrefix(args[0], List.of("list", "info", "admin", "contest", "control"));
         }
 
         if (args.length == 2 && args[0].equalsIgnoreCase("list")) {
