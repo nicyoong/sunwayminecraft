@@ -165,9 +165,10 @@ public class ContractsStrategicCommands {
                     NamedTextColor.RED));
             return;
         }
-        String op = args[3].toLowerCase();
-        String alignment = args[4].toLowerCase();
-        int amount = parseInt(args.length >= 6 ? args[5] : "0");
+        // args: [admin, influence, <op>, <alignment>, <amount>]
+        String op = args[2].toLowerCase();
+        String alignment = args[3].toLowerCase();
+        int amount = parseInt(args[4]);
         int delta = op.equals("remove") ? -amount : amount;
         diplomacy.adminAdjustInfluence(alignment, delta);
         sender.sendMessage(Component.text("Adjusted " + alignment + " influence by " + delta
@@ -182,7 +183,8 @@ public class ContractsStrategicCommands {
             sender.sendMessage(Component.text("Usage: /contracts admin sabotage reset <player>", NamedTextColor.RED));
             return;
         }
-        Player target = Bukkit.getPlayer(args[4]);
+        // args: [admin, sabotage, reset, <player>]
+        Player target = Bukkit.getPlayer(args[3]);
         if (target == null) { sender.sendMessage(Component.text("Player not online.", NamedTextColor.RED)); return; }
         sabotage.resetCooldown(target.getUniqueId());
         sender.sendMessage(Component.text("Cleared sabotage cooldown for " + target.getName() + ".",
@@ -193,15 +195,16 @@ public class ContractsStrategicCommands {
     public void adminEmergency(CommandSender sender, String[] args) {
         if (!sender.hasPermission(ADMIN)) { sender.sendMessage(denied()); return; }
         if (dynamic == null) { sender.sendMessage(unavailable()); return; }
-        String op = args.length >= 4 ? args[3].toLowerCase() : "";
+        // args: [admin, emergency, <op>, [template]]
+        String op = args.length >= 3 ? args[2].toLowerCase() : "";
         switch (op) {
             case "generate" -> {
-                if (args.length < 5) {
+                if (args.length < 4) {
                     sender.sendMessage(Component.text("Usage: /contracts admin emergency generate <template>",
                             NamedTextColor.RED));
                     return;
                 }
-                dynamic.generate(args[4].toLowerCase()).ifPresentOrElse(
+                dynamic.generate(args[3].toLowerCase()).ifPresentOrElse(
                         id -> sender.sendMessage(Component.text("Generated " + id + ".", NamedTextColor.GREEN)),
                         () -> sender.sendMessage(Component.text("Generation refused (template, cap or endpoints).",
                                 NamedTextColor.RED)));

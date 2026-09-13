@@ -162,10 +162,6 @@ class ContractsStrategicCommandsTest {
     // off-by-one is fixed.
 
     @Test
-    @org.junit.jupiter.api.Disabled("BUG-ADMIN-OFFBYONE-1 (high): adminInfluence reads op from "
-            + "args[3] and alignment from args[4], but the dispatcher passes [admin, influence, add, "
-            + "<alignment>, <amount>], so it treats the alignment as the op, the amount as the "
-            + "alignment, and always adjusts by 0. Expected: adjust azure_hearth by 25.")
     void adminInfluenceAddAppliesAmountToAlignment() {
         withServices();
         when(diplomacy.getInfluence("azure_hearth")).thenReturn(25);
@@ -175,12 +171,6 @@ class ContractsStrategicCommandsTest {
     }
 
     @Test
-    @org.junit.jupiter.api.Disabled("BUG-ADMIN-OFFBYONE-2 (high): adminSabotageReset guards on "
-            + "args.length < 4 then reads Bukkit.getPlayer(args[4]); for "
-            + "/contracts admin sabotage reset <player> the array is "
-            + "[admin, sabotage, reset, <player>] (length 4) so args[4] is out of bounds -> the "
-            + "command throws IndexOutOfBoundsException instead of clearing the cooldown. Expected "
-            + "index args[3].")
     void adminSabotageResetClearsTargetCooldown() {
         withServices();
         PlayerMock target = server.addPlayer("Victim");
@@ -190,9 +180,6 @@ class ContractsStrategicCommandsTest {
     }
 
     @Test
-    @org.junit.jupiter.api.Disabled("BUG-ADMIN-OFFBYONE-3 (high): adminEmergency reads the op from "
-            + "args[3], but for /contracts admin emergency <op> the op is args[2]; the 'clear' branch "
-            + "is therefore unreachable and 'generate' reads args[4]. Expected: clear() removes all.")
     void adminEmergencyClearRemovesAllDynamicContracts() {
         withServices();
         DynamicContractService dynamic = mock(DynamicContractService.class);
