@@ -28,15 +28,37 @@ public class ContractVerificationService {
 
         if (ac.isExpired()) {
             manager.failContract(player, ac);
-            return new VerificationResult(false, "Contract has expired.");
+            return new VerificationResult(false, "Contract expired.");
+        }
+
+        // Safety: the alignment restriction may have changed since acceptance.
+        String currentAlignment = manager.getAlignmentFor(player);
+        if (!def.alignmentRule().canAccept(currentAlignment)) {
+            return new VerificationResult(false,
+                    "Your alignment no longer satisfies this contract.");
+        }
+
+        // Hauling, construction and diplomatic contracts require the start visit first.
+        if (ContractObjectiveService.requiresStartVisit(def) && !ac.hasStage(ContractObjectiveService.STAGE_START)) {
+            ContractEndpoint start = manager.getEndpointConfig().getEndpoint(def.startEndpointId());
+            return new VerificationResult(false, "Objective incomplete: go to "
+                    + (start != null ? start.name() : "the start point") + " first.");
         }
 
         ContractEndpoint endPoint = manager.getEndpointConfig().getEndpoint(def.endEndpointId());
-        if (endPoint == null) return new VerificationResult(false, "Destination endpoint not found.");
+        if (endPoint == null) {
+            java.util.logging.Logger logger = manager.getLogger();
+            if (logger != null) {
+                logger.warning("Contract " + def.id()
+                        + " references a missing or disabled endpoint: " + def.endEndpointId());
+            }
+            return new VerificationResult(false, "Destination endpoint unavailable.");
+        }
 
         // Distance check
         if (!ContractObjectiveService.isWithinEndpoint(player.getLocation(), endPoint)) {
-            return new VerificationResult(false, "You must be at " + endPoint.name() + " to complete this.");
+            return new VerificationResult(false, "Wrong endpoint: you must be at "
+                    + endPoint.name() + " to complete this.");
         }
 
         return switch (def.objectiveType()) {
@@ -44,7 +66,7 @@ public class ContractVerificationService {
             case REACH_DESTINATION -> completeObjective(ac, "Destination reached.");
             case INTERACT_AT_DESTINATION -> ac.isObjectiveComplete()
                     ? new VerificationResult(true, "Objective met.")
-                    : new VerificationResult(false, "Interact with the target before completing this contract.");
+                    : new VerificationResult(false, "Objective incomplete: interact with the target first.");
         };
     }
 

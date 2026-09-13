@@ -231,6 +231,10 @@ permissions:
     description: Allows admins to manage City Contracts.
     default: op
 
+  sunway.contracts.sabotage:
+    description: Allows players to attempt sabotage on rivals' active contracts.
+    default: true
+
   sunway.events.use:
     description: Allows players to view City Events.
     default: true

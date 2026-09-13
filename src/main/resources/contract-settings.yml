@@ -1,2 +1,26 @@
 max_active_contracts: 3
 remote_accept_enabled: false
+
+# When false, a player can hold at most one instance of a given contract at a
+# time; re-accepting an id already active for them is rejected.
+allow_multiple_same_contract: false
+
+# Abandonment cooldown in seconds. When > 0 it replaces the per-contract
+# cooldown_minutes for abandoned and failed contracts.
+abandonment_cooldown_seconds: 0
+
+# Completion bonuses, applied to the contract's own reward_money/reward_reputation.
+# The recommended bonus applies when the completer belongs to the contract's
+# recommended_alignment; the cross-campus bonus applies when the contract's route
+# spans two different campuses.
+reward:
+  recommended_alignment_bonus_money: 50.0
+  recommended_alignment_bonus_reputation: 2
+  cross_campus_bonus_money: 75.0
+  cross_campus_bonus_reputation: 3
+
+# Reputation penalty for abandoning a contract. Diplomatic and emergency
+# contracts use the higher penalty instead of the base one.
+abandonment:
+  reputation_penalty: 1
+  diplomatic_emergency_reputation_penalty: 3
