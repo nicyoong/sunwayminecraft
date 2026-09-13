@@ -53,6 +53,9 @@ class PluginInitializerEconomyGuardTest {
     void tearDown() {
         for (PluginInitializer initializer : createdInitializers) {
             // close SQLite connections so @TempDir cleanup works on Windows
+            if (initializer.getContractPersistence() != null) {
+                initializer.getContractPersistence().close();
+            }
             if (initializer.getCoinFlipDatabase() != null) {
                 initializer.getCoinFlipDatabase().close();
             }
@@ -88,19 +91,6 @@ class PluginInitializerEconomyGuardTest {
         assertTrue(severeRecords.stream().anyMatch(record ->
                         record.getMessage().contains("no economy provider is registered")),
                 "expected a severe log explaining the missing economy registration");
-    private void closeDatabases(PluginInitializer initializer) {
-        if (initializer.getContractPersistence() != null) {
-            initializer.getContractPersistence().close();
-        }
-        if (initializer.getCoinFlipDatabase() != null) {
-            initializer.getCoinFlipDatabase().close();
-        }
-        if (initializer.getAlignmentRepository() != null) {
-            initializer.getAlignmentRepository().close();
-        }
-        if (initializer.getAlignmentSeasonRepository() != null) {
-            initializer.getAlignmentSeasonRepository().close();
-        }
     }
 
     private final List<LogRecord> severeRecords = new ArrayList<>();
